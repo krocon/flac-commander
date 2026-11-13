@@ -22,6 +22,8 @@ pub struct Secondary {
     pub title: &'static str,
     pub size: (f64, f64),
     pub min_size: (f64, f64),
+    /// Opened again at the next start if it was open when the app was closed.
+    pub restored: bool,
 }
 
 /// The complete list: a label that is not here is no window of this app.
@@ -31,12 +33,22 @@ pub const SECONDARY: &[Secondary] = &[
         title: "Playlist – FLAC Commander",
         size: (420.0, 520.0),
         min_size: (260.0, 200.0),
+        restored: true,
     },
     Secondary {
         label: "equalizer",
         title: "Equalizer – FLAC Commander",
         size: (520.0, 330.0),
         min_size: (440.0, 280.0),
+        restored: true,
+    },
+    // the skin chooser: big enough to look at the skins, and gone once one is chosen
+    Secondary {
+        label: "skins",
+        title: "Skins – FLAC Commander",
+        size: (860.0, 640.0),
+        min_size: (420.0, 360.0),
+        restored: false,
     },
 ];
 
@@ -144,7 +156,8 @@ pub fn restore(app: &AppHandle) {
         return;
     };
     for spec in SECONDARY {
-        if state.session.window_place(spec.label).is_some_and(|p| p.visible)
+        if spec.restored
+            && state.session.window_place(spec.label).is_some_and(|p| p.visible)
             && let Err(e) = create(app, spec, true)
         {
             log::warn!("window {} not restored: {e}", spec.label);
@@ -235,6 +248,7 @@ mod tests {
     fn only_known_windows_exist() {
         assert!(secondary("playlist").is_some());
         assert!(secondary("equalizer").is_some());
+        assert!(secondary("skins").is_some_and(|s| !s.restored));
         assert!(secondary("main").is_none());
         assert!(secondary("../etc").is_none());
         for spec in SECONDARY {

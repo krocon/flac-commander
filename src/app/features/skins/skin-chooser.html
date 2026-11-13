@@ -1,16 +1,14 @@
-<dialog #dialog aria-labelledby="skin-chooser-title" (close)="store.closeChooser()">
+<dialog #dialog aria-labelledby="skin-chooser-title" (close)="page() || store.closeChooser()">
   <header>
     <h2 id="skin-chooser-title">{{ t.chooseSkin }}</h2>
-    <button type="button" class="plain" [attr.aria-label]="t.close" (click)="store.closeChooser()">
-      ✕
-    </button>
+    <button type="button" class="plain" [attr.aria-label]="t.close" (click)="close()">✕</button>
   </header>
 
   <ul class="skins">
     @for (skin of store.list(); track skin.id) {
       <li [class.active]="skin.id === store.activeId()">
         @if (store.previewUrl(skin); as preview) {
-          <img [src]="preview" [alt]="t.previewOf(skin.name)" width="64" height="88" />
+          <img [src]="preview" [alt]="t.previewOf(skin.name)" />
         } @else {
           <div class="no-preview" aria-hidden="true"></div>
         }
@@ -40,7 +38,7 @@
             class="primary"
             [disabled]="skin.id === store.activeId()"
             [attr.aria-label]="t.activate + ': ' + skin.name"
-            (click)="store.activate(skin.id)"
+            (click)="use(skin.id)"
           >
             {{ t.activate }}
           </button>
@@ -84,6 +82,6 @@
   <p class="hint">{{ t.importHint }}</p>
   <footer>
     <button type="button" (click)="store.import()">{{ t.import }}</button>
-    <button type="button" (click)="store.closeChooser()">{{ t.close }}</button>
+    <button type="button" (click)="close()">{{ t.close }}</button>
   </footer>
 </dialog>

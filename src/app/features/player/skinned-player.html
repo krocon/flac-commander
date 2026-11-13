@@ -126,6 +126,33 @@
           [style.height.px]="c.height"
         />
       }
+      @case ('needle') {
+        <div
+          class="placed needle"
+          role="slider"
+          tabindex="0"
+          [class.dragging]="dragging()"
+          [class.disabled]="!view.seekable()"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [style.background-image]="item.normal"
+          [style.transform-origin]="(c.pivotX ?? 0) + 'px ' + (c.pivotY ?? 0) + 'px'"
+          [style.transform]="'rotate(' + needleAngle(c) + 'deg)'"
+          [attr.aria-label]="t.position"
+          [attr.aria-valuemin]="0"
+          [attr.aria-valuemax]="store.durationMs() ?? 0"
+          [attr.aria-valuenow]="store.positionMs()"
+          [attr.aria-valuetext]="view.positionText()"
+          [attr.aria-disabled]="!view.seekable()"
+          (pointerdown)="needleDown($event, c)"
+          (pointermove)="needleMove($event, c)"
+          (pointerup)="needleUp($event, c)"
+          (pointercancel)="needleUp($event, c)"
+          (keydown)="needleKey($event)"
+        ></div>
+      }
       @case ('image') {
         <div
           class="placed image"

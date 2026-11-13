@@ -123,6 +123,31 @@ fn the_built_in_skins_meet_wcag_aa() {
 }
 
 #[test]
+fn a_needle_needs_a_picture_a_pivot_and_two_angles() {
+    let needle = |edit: fn(&mut serde_json::Value)| {
+        problems_of(|j| {
+            let c = component(j, 3);
+            *c = serde_json::json!({
+                "type": "needle", "x": 10, "y": 80, "width": 30, "height": 100,
+                "states": { "normal": "play.png" },
+                "pivotX": 15, "pivotY": 10, "from": 8, "to": 28, "rest": -2
+            });
+            edit(c);
+        })
+    };
+    let at = "windows.player.components[3]";
+    assert_eq!(needle(|_| {}), [""; 0]);
+    assert_eq!(needle(|c| c["states"] = serde_json::Value::Null), [format!("{at}.states.normal")]);
+    assert_eq!(needle(|c| c["pivotX"] = 31.into()), [at]);
+    assert_eq!(needle(|c| c["pivotY"] = serde_json::Value::Null), [at]);
+    assert_eq!(needle(|c| c["to"] = 8.into()), [at]);
+    assert_eq!(needle(|c| c["from"] = 400.into()), [at]);
+    assert_eq!(needle(|c| c["rest"] = (-400).into()), [format!("{at}.rest")]);
+    // the fields of a needle belong to nothing else
+    assert_eq!(problems_of(|j| component(j, 3)["from"] = 3.into()), [at]);
+}
+
+#[test]
 fn every_file_of_the_built_in_skins_is_embedded() {
     fn files_of(folder: &Path, root: &Path, found: &mut Vec<String>) {
         for entry in std::fs::read_dir(folder).unwrap().map(Result::unwrap) {

@@ -440,15 +440,16 @@ const vinyl = {
     .pivot { position: absolute; left: 270px; top: 36px; width: 52px; height: 52px; border-radius: 50%;
       background: linear-gradient(145deg, #30343b, #1e2125);
       box-shadow: 4px 4px 8px rgba(0,0,0,.55), -3px -3px 7px rgba(255,255,255,.06); }
-    .pivot::after { content: ''; position: absolute; inset: 15px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #f1f3f5, #8b9299 75%); box-shadow: 0 1px 2px #000; }
-    .arm { position: absolute; left: 293px; top: 62px; width: 6px; height: 196px; border-radius: 3px;
-      background: linear-gradient(90deg, #7d848b, #eef1f3 45%, #9aa1a8);
-      box-shadow: 3px 4px 5px rgba(0,0,0,.5); transform: rotate(17deg); transform-origin: 50% 0; }
-    .arm::before { content: ''; position: absolute; left: -5px; top: -34px; width: 16px; height: 26px; border-radius: 4px;
-      background: linear-gradient(90deg, #5d646b, #c9ced3 45%, #6f767d); box-shadow: 2px 3px 4px rgba(0,0,0,.5); }
-    .arm::after { content: ''; position: absolute; left: -6px; bottom: -6px; width: 18px; height: 30px; border-radius: 3px;
-      background: linear-gradient(90deg, #2b2e33, #4a4f56 50%, #2b2e33); box-shadow: 2px 3px 4px rgba(0,0,0,.55), inset 0 -4px 0 #66b5f5; }
+    .arm { position: absolute; inset: 0; filter: drop-shadow(3px 4px 3px rgba(0,0,0,.5)); }
+    .arm i { position: absolute; display: block; }
+    .arm .weight { left: 7px; top: 2px; width: 16px; height: 26px; border-radius: 4px;
+      background: linear-gradient(90deg, #5d646b, #c9ced3 45%, #6f767d); }
+    .arm .tube { left: 12px; top: 30px; width: 6px; height: 186px; border-radius: 3px;
+      background: linear-gradient(90deg, #7d848b, #eef1f3 45%, #9aa1a8); }
+    .arm .cap { left: 4px; top: 27px; width: 22px; height: 22px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #f1f3f5, #8b9299 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
+    .arm .shell { left: 6px; top: 208px; width: 18px; height: 30px; border-radius: 3px;
+      background: linear-gradient(90deg, #2b2e33, #4a4f56 50%, #2b2e33); box-shadow: inset 0 -4px 0 #66b5f5; }
     .well { position: absolute; border-radius: 12px; background: #1c1f23;
       box-shadow: inset 3px 3px 7px rgba(0,0,0,.6), inset -2px -2px 6px rgba(255,255,255,.05); }
     .face { color: #a9cdee; }
@@ -470,7 +471,7 @@ const vinyl = {
   `,
   art: `
     <div class="platter"></div><div class="record"></div>
-    <div class="pivot"></div><div class="arm"></div>
+    <div class="pivot"></div>
     <div class="well" style="left:341px;top:113px;width:286px;height:14px;border-radius:7px"></div>
     <div class="well" style="left:435px;top:227px;width:102px;height:14px;border-radius:7px"></div>
     <div class="well" style="left:340px;top:258px;width:288px;height:130px"></div>
@@ -496,6 +497,22 @@ const vinyl = {
     { type: 'volume', x: 438, y: 230, width: 96, height: 8 },
     { type: 'spectrum', x: 60, y: 350, width: 200, height: 30, color: '#66b5f5' },
     { type: 'playlist', x: 346, y: 264, width: 276, height: 118 },
+  ],
+  // the tonearm: turns from the first groove to the last with the track, and is dragged to seek
+  needles: [
+    {
+      name: 'arm',
+      x: 281,
+      y: 24,
+      width: 30,
+      height: 242,
+      pivotX: 15,
+      pivotY: 38,
+      from: 8,
+      to: 28,
+      rest: -3,
+      html: '<div class="arm"><i class="weight"></i><i class="tube"></i><i class="shell"></i><i class="cap"></i></div>',
+    },
   ],
 };
 
@@ -664,7 +681,12 @@ function inUse(design) {
   return `<style>.m { position: absolute; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }</style>${parts.join('\n')}`;
 }
 
-function screenshot(html, width, height, scale, work) {
+/** A needle as it lies in the window, turned by `angle` degrees around its pivot. */
+function needleHtml(n, angle) {
+  return `<div style="position:absolute;left:${n.x}px;top:${n.y}px;width:${n.width}px;height:${n.height}px;transform-origin:${n.pivotX}px ${n.pivotY}px;transform:rotate(${angle}deg)">${n.html}</div>`;
+}
+
+function screenshot(html, width, height, scale, work, transparent = false) {
   const source = join(work, 'page.html');
   const target = join(work, 'shot.png');
   writeFileSync(source, html);
@@ -679,6 +701,7 @@ function screenshot(html, width, height, scale, work) {
       `--user-data-dir=${join(work, 'profile')}`,
       `--force-device-scale-factor=${scale}`,
       `--window-size=${width},${height}`,
+      ...(transparent ? ['--default-background-color=00000000'] : []),
       `--screenshot=${target}`,
       pathToFileURL(source).href,
     ],
@@ -761,25 +784,26 @@ function chunk(type, body) {
   return out;
 }
 
-/** Cuts a rectangle out of a decoded picture and writes it as an opaque RGB PNG. */
-function cut(image, x, y, width, height) {
-  const raw = Buffer.alloc(height * (width * 3 + 1));
+/** Cuts a rectangle out of a decoded picture and writes it as a PNG, opaque unless `alpha`. */
+function cut(image, x, y, width, height, alpha = false) {
+  const n = alpha ? 4 : 3;
+  const raw = Buffer.alloc(height * (width * n + 1));
   for (let row = 0; row < height; row++) {
-    const line = row * (width * 3 + 1);
+    const line = row * (width * n + 1);
     // filter "sub": smooth artwork packs far better than unfiltered
     raw[line] = 1;
     for (let col = 0; col < width; col++) {
       const from = ((y + row) * image.width + x + col) * 4;
-      for (let k = 0; k < 3; k++) {
+      for (let k = 0; k < n; k++) {
         const left = col > 0 ? image.pixels[from - 4 + k] : 0;
-        raw[line + 1 + col * 3 + k] = (image.pixels[from + k] - left) & 255;
+        raw[line + 1 + col * n + k] = (image.pixels[from + k] - left) & 255;
       }
     }
   }
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
-  header.set([8, 2, 0, 0, 0], 8);
+  header.set([8, alpha ? 6 : 2, 0, 0, 0], 8);
   return Buffer.concat([
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     chunk('IHDR', header),
@@ -818,11 +842,22 @@ function build(design, mockDir) {
     return { type: 'button', action: b.action, x: b.x, y: b.y, width: b.width, height: b.height, states: files };
   });
 
+  // needles: drawn alone on nothing, upright, and cut out with their transparency
+  const needles = (design.needles ?? []).map((n) => {
+    const html = `${page(design, 'none').replace(design.art, '')}<style>html, body { background: none !important; box-shadow: none !important; }</style>${needleHtml(n, 0)}`;
+    const image = decodePng(screenshot(html, design.width, design.height, SCALE, work, true));
+    const file = `assets/${n.name}.png`;
+    writeFileSync(join(out, file), cut(image, n.x * SCALE, n.y * SCALE, n.width * SCALE, n.height * SCALE, true));
+    const { name, html: _, ...placed } = n;
+    return { type: 'needle', ...placed, states: { normal: file } };
+  });
+  const turned = (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');
+
   // the preview and the mock show the skin in use; one button is "on" to show that state too
-  writeFileSync(join(out, 'preview.png'), whole(shot('normal', inUse(design), 1)));
+  writeFileSync(join(out, 'preview.png'), whole(shot('normal', inUse(design) + turned, 1)));
   if (mockDir) {
     mkdirSync(mockDir, { recursive: true });
-    writeFileSync(join(mockDir, `${design.folder}.png`), whole(shot('active', inUse(design))));
+    writeFileSync(join(mockDir, `${design.folder}.png`), whole(shot('active', inUse(design) + turned)));
   }
 
   const manifest = {
@@ -837,7 +872,7 @@ function build(design, mockDir) {
         width: design.width,
         height: design.height,
         background: 'assets/background.png',
-        components: [...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist')],
+        components: [...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
       },
     },
   };

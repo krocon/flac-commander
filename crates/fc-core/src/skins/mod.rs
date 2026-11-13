@@ -206,6 +206,7 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
     embedded!("vinyl":
         "skin.json",
         "preview.png",
+        "assets/arm.png",
         "assets/background.png",
         "assets/equalizer-active.png",
         "assets/equalizer-hover.png",

@@ -2,7 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { setLanguage } from '../../core/i18n/i18n';
 import { LogApi } from '../../core/log/log-api';
 import { SkinApi } from '../../core/skins/skin-api';
-import { FakeLogApi, FakeSkinApi, IMPORTED_INFO, RETRO_SKIN } from '../../../testing/fake-apis';
+import { WindowApi } from '../../core/windows/window-api';
+import {
+  FakeLogApi,
+  FakeSkinApi,
+  FakeWindowApi,
+  IMPORTED_INFO,
+  RETRO_SKIN,
+} from '../../../testing/fake-apis';
 import { SkinChooser } from './skin-chooser';
 import { SkinStore } from './skin.store';
 
@@ -10,8 +17,10 @@ describe('SkinChooser', () => {
   let api: FakeSkinApi;
   let el: HTMLElement;
   let store: SkinStore;
+  let windows: FakeWindowApi;
 
   beforeEach(async () => {
+    windows = new FakeWindowApi();
     setLanguage('de');
     api = new FakeSkinApi();
     api.skins = [...api.skins, IMPORTED_INFO];
@@ -19,6 +28,7 @@ describe('SkinChooser', () => {
       providers: [
         { provide: SkinApi, useValue: api },
         { provide: LogApi, useValue: new FakeLogApi() },
+        { provide: WindowApi, useValue: windows },
       ],
     });
     el = TestBed.createComponent(SkinChooser).nativeElement as HTMLElement;
@@ -74,6 +84,35 @@ describe('SkinChooser', () => {
     api.emit(RETRO_SKIN);
     await vi.waitFor(() => expect(button('Verwenden: Retro').disabled).toBe(true));
     expect(button('Verwenden: Modern').disabled).toBe(false);
+  });
+
+  it('goes away once a skin is chosen, and stays if that failed', async () => {
+    await open();
+    button('Verwenden: Retro').click();
+    await vi.waitFor(() => expect(store.chooserOpen()).toBe(false));
+
+    await open();
+    api.failure = { code: 'internal', message: 'no' };
+    button('Verwenden: Retro').click();
+    await vi.waitFor(() => expect(store.error()).not.toBeNull());
+    expect(store.chooserOpen()).toBe(true);
+  });
+
+  it('as a window of its own it lists the skins at once and closes its window', async () => {
+    windows.open = ['skins'];
+    windows.emit();
+    const fixture = TestBed.createComponent(SkinChooser);
+    fixture.componentRef.setInput('page', true);
+    const page = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(page.querySelectorAll('.skins > li')).toHaveLength(3));
+    expect(page.classList.contains('page')).toBe(true);
+
+    const use = [...page.querySelectorAll('button')].find(
+      (b) => b.getAttribute('aria-label') === 'Verwenden: Retro',
+    );
+    use?.click();
+    await vi.waitFor(() => expect(windows.commands).toEqual(['toggle skins']));
+    expect(api.commands).toEqual(['activate io.github.krocon.retro']);
   });
 
   it('offers to remove imported skins only', async () => {

@@ -229,6 +229,21 @@
           "y": 264,
           "width": 276,
           "height": 118
+        },
+        {
+          "type": "needle",
+          "x": 281,
+          "y": 24,
+          "width": 30,
+          "height": 242,
+          "pivotX": 15,
+          "pivotY": 38,
+          "from": 8,
+          "to": 28,
+          "rest": -3,
+          "states": {
+            "normal": "assets/arm.png"
+          }
         }
       ]
     }

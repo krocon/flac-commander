@@ -88,16 +88,29 @@ describe('App', () => {
         (b) => b.textContent?.trim() === 'Skins',
       );
     await vi.waitFor(() => expect(skinsButton()).toBeDefined());
+    // the chooser is a window of its own
+    skinsButton()?.click();
+    await vi.waitFor(() => expect(windows.commands).toEqual(['toggle skins']));
+    press('k', mod);
+    await vi.waitFor(() => expect(windows.commands).toEqual(['toggle skins', 'toggle skins']));
+    const store = TestBed.inject(SkinStore);
+    expect(store.chooserOpen()).toBe(false);
+
+    // without a window (no desktop backend) it is a dialog over the player
+    windows.failure = { code: 'backend_unavailable', message: 'no backend' };
     skinsButton()?.click();
     await vi.waitFor(() => expect(el.querySelectorAll('.skins > li')).toHaveLength(2));
-
     // jsdom has no `showModal`: whether the chooser is open is asked of the store
-    const store = TestBed.inject(SkinStore);
     expect(store.chooserOpen()).toBe(true);
     el.querySelector('dialog')?.dispatchEvent(new Event('close'));
     expect(store.chooserOpen()).toBe(false);
-    press('k', mod);
-    expect(store.chooserOpen()).toBe(true);
+  });
+
+  it('the skins window shows the chooser and nothing else', async () => {
+    windows.current = 'skins';
+    create();
+    await vi.waitFor(() => expect(el.querySelector('app-skin-chooser.page')).not.toBeNull());
+    expect(el.querySelector('app-player')).toBeNull();
   });
 
   it('always has a key back to the standard skin, whatever the skin shows', async () => {

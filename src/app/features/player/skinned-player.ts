@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { ActionService } from '../../core/actions/action.service';
 import { describeError } from '../../core/errors/app-error';
 import { SkinComponent, SkinPlayerWindow } from '../../core/skins/skin.models';
@@ -91,6 +91,81 @@ export class SkinnedPlayer {
       return this.store.isPlaying() ? this.t.pause : this.t.play;
     }
     return action ? this.actions.label(action) : '';
+  }
+
+  // ---- needle: turns with the position, dragged around its pivot to seek
+
+  /** Set while a needle is dragged: where the pointer and the track were when it began. */
+  private drag: { readonly pointerAngle: number; readonly fraction: number } | null = null;
+  protected readonly dragging = signal(false);
+
+  /** How far the track has got, 0 to 1. */
+  private readonly fraction = computed(() => {
+    const duration = this.store.durationMs() ?? 0;
+    return duration > 0 ? Math.min(1, Math.max(0, this.store.positionMs() / duration)) : 0;
+  });
+
+  protected needleAngle(c: SkinComponent): number {
+    const from = c.from ?? 0;
+    if (!this.view.seekable()) {
+      return c.rest ?? from;
+    }
+    return from + ((c.to ?? from) - from) * this.fraction();
+  }
+
+  protected needleDown(event: PointerEvent, c: SkinComponent): void {
+    if (!this.view.seekable() || event.button !== 0) {
+      return;
+    }
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    this.drag = { pointerAngle: this.pointerAngle(event, c), fraction: this.fraction() };
+    this.dragging.set(true);
+    event.preventDefault();
+  }
+
+  protected needleMove(event: PointerEvent, c: SkinComponent): void {
+    const target = this.dragTarget(event, c);
+    if (target !== null) {
+      this.store.previewSeek(target);
+    }
+  }
+
+  protected needleUp(event: PointerEvent, c: SkinComponent): void {
+    const target = this.dragTarget(event, c);
+    this.drag = null;
+    this.dragging.set(false);
+    if (target !== null) {
+      void this.store.commitSeek(target);
+    }
+  }
+
+  protected needleKey(event: KeyboardEvent): void {
+    const step = { ArrowRight: 5000, ArrowUp: 5000, ArrowLeft: -5000, ArrowDown: -5000 }[event.key];
+    if (step !== undefined && this.view.seekable()) {
+      event.preventDefault();
+      event.stopPropagation();
+      void this.store.seekBy(step);
+    }
+  }
+
+  /** Where in the track (ms) the dragged needle points now; `null` when nothing is dragged. */
+  private dragTarget(event: PointerEvent, c: SkinComponent): number | null {
+    const sweep = (c.to ?? 0) - (c.from ?? 0);
+    if (!this.drag || sweep === 0) {
+      return null;
+    }
+    // the shortest way round from where the drag began
+    const turned = ((this.pointerAngle(event, c) - this.drag.pointerAngle + 540) % 360) - 180;
+    const fraction = Math.min(1, Math.max(0, this.drag.fraction + turned / sweep));
+    return Math.round(fraction * (this.store.durationMs() ?? 0));
+  }
+
+  /** Direction from the pivot to the pointer in degrees. */
+  private pointerAngle(event: PointerEvent, c: SkinComponent): number {
+    const window = (event.currentTarget as HTMLElement).parentElement?.getBoundingClientRect();
+    const pivotX = (window?.left ?? 0) + c.x + (c.pivotX ?? 0);
+    const pivotY = (window?.top ?? 0) + c.y + (c.pivotY ?? 0);
+    return (Math.atan2(event.clientY - pivotY, event.clientX - pivotX) * 180) / Math.PI;
   }
 
   private url(path: string): string {

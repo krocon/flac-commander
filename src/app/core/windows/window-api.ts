@@ -7,7 +7,7 @@ import { subscribe, Unsubscribe } from '../backend/events';
 const EV_WINDOWS_STATE = 'windows://state';
 
 /** Labels of the app's windows (`windows.rs`). */
-export type WindowLabel = 'main' | 'playlist' | 'equalizer';
+export type WindowLabel = 'main' | 'playlist' | 'equalizer' | 'skins';
 export type SecondaryWindow = Exclude<WindowLabel, 'main'>;
 
 /** Payload of `windows://state` and answer of `windows_state`. */
@@ -32,7 +32,7 @@ export class TauriWindowApi extends WindowApi {
       return 'main';
     }
     const label = getCurrentWindow().label;
-    return label === 'playlist' || label === 'equalizer' ? label : 'main';
+    return label === 'playlist' || label === 'equalizer' || label === 'skins' ? label : 'main';
   }
 
   override state(): Promise<WindowsState> {

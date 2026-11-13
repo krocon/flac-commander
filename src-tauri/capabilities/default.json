@@ -5,7 +5,8 @@
   "windows": [
     "main",
     "playlist",
-    "equalizer"
+    "equalizer",
+    "skins"
   ],
   "permissions": [
     "core:default",

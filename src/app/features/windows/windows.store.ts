@@ -22,6 +22,7 @@ export class WindowsStore {
   /** The playlist has a window of its own: the main window does not show it as well. */
   readonly playlistDetached = computed(() => this.openState().includes('playlist'));
   readonly equalizerOpen = computed(() => this.openState().includes('equalizer'));
+  readonly skinsOpen = computed(() => this.openState().includes('skins'));
 
   readonly ready: Promise<void>;
 

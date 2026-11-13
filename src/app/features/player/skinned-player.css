@@ -125,3 +125,33 @@ input[type='range'] {
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
+
+/* a picture that turns with the position and is dragged to seek (a tonearm) */
+.needle {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  cursor: grab;
+  touch-action: none;
+  /* positions arrive a few times a second: glide between them */
+  transition: transform 0.3s linear;
+
+  &.dragging {
+    cursor: grabbing;
+    transition: none;
+  }
+
+  &.disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--player-focus);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .needle {
+    transition: none;
+  }
+}
