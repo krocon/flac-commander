@@ -153,6 +153,9 @@ fn plays_the_list_from_the_opened_track_to_the_end() {
 
     rig.run_to_the_end();
     assert_frames(rig.device.heard.len(), 3 * TRACK_FRAMES, 200);
+    // one track follows the other without silence in between
+    assert!(rig.device.longest_gap <= 2, "a gap of {} frames", rig.device.longest_gap);
+    assert_eq!(rig.session.player().state().underruns, 0);
     // the last track stays current, ready to be played again
     assert_eq!(rig.list(), ["sine.flac", "sine.wav", "[sine.aiff]"]);
     assert_eq!(rig.session.player().state().finished, 3);
@@ -188,6 +191,36 @@ fn repeat_all_starts_the_list_again() {
     assert!(rig.session.player().state().finished >= 4);
     rig.session.player().stop().unwrap();
     rig.device.run_until("stopped", |s| s.status == PlaybackStatus::Stopped);
+}
+
+#[test]
+fn shuffle_and_repeat_go_on_without_gaps_too() {
+    let mut rig = Rig::new();
+    rig.session.set_shuffle(true);
+    rig.session.set_repeat(RepeatMode::All);
+    rig.add(&["sine.flac", "sine.wav", "sine.aiff", "sine-alac.m4a"], PlayAdded::Always);
+    // more than two rounds
+    rig.device.play_frames(9 * TRACK_FRAMES);
+    assert!(rig.device.longest_gap <= 2, "a gap of {} frames", rig.device.longest_gap);
+    assert!(rig.session.player().state().finished >= 8);
+    // the playlist kept up with the engine: the current entry is the playing track
+    let playing = rig.session.player().state().track.unwrap().file_name;
+    let current = rig.session.playlist_state();
+    let entry = current.entries.iter().find(|e| Some(e.id) == current.current_id).unwrap();
+    assert_eq!(entry.file_name, playing);
+}
+
+#[test]
+fn a_track_removed_just_before_its_turn_is_not_played_to_the_end() {
+    let mut rig = Rig::new();
+    rig.add(&["sine.flac", "sine.wav", "sine.aiff"], PlayAdded::Always);
+    // late in the first track: the second one is queued in the engine already
+    rig.device.play_frames(TRACK_FRAMES - 4_800);
+    rig.session.remove(&[rig.id_of("sine.wav")]).unwrap();
+    rig.run_to_the_end();
+    assert_eq!(rig.list(), ["sine.flac", "[sine.aiff]"]);
+    // two tracks' worth of audio, not three
+    assert_frames(rig.device.heard.len(), 2 * TRACK_FRAMES, 4_000);
 }
 
 #[test]

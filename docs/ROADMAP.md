@@ -85,11 +85,19 @@ vorige fertig ist.
 - [ ] Equalizer-Fenster (kommt mit dem Equalizer in Phase 6)
 - [ ] Rahmenlose Fenster, Andocken
 
-## Phase 6 – Advanced Audio
+## Phase 6 – Advanced Audio ✅
 
-- [ ] Equalizer (10 Bänder) und DSP-Kette im Engine-Thread
-- [ ] Spektrumanalyse mit reduzierten Werten für Visualisierungen
-- [ ] Gapless Playback
+- [x] Equalizer: 10 Bänder ±12 dB, Vorverstärkung, fünf Voreinstellungen; im Callback, wirkt sofort; gespeichert
+- [x] Equalizer-Fenster (⌘E / Strg+E) mit senkrechten Reglern
+- [x] Spektrumanalyse: 24 Bänder, ~25-mal pro Sekunde, nur solange ein Visualizer sichtbar ist
+- [x] Visualizer im Standard-Player und als Skin-Baustein `spectrum` (im Retro-Skin eingebaut)
+- [x] Gapless Playback: Folgetitel lückenlos in derselben Warteschlange, auch mit Zufall und Wiederholen
+- [x] Tests: Frequenzgang je Band, Spektrum eines Tons, Titelübergang ohne stilles Frame
+- [ ] Alles davon mit dem Ohr und dem Auge prüfen ([MANUAL-TESTS.md](MANUAL-TESTS.md) A1–A8) – beim Bau war der
+      Bildschirm gesperrt
+- [ ] Limiter gegen Übersteuern bei starken Anhebungen
+- [ ] Eigene Voreinstellungen speichern
+- [ ] Visualisierungen jenseits der Balken
 
 ## Phase 7 – Community und Kompatibilität
 

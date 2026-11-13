@@ -248,6 +248,7 @@ enum Msg {
     SetVolume(f32),
     SetEqualizer(EqSettings),
     SetSpectrum(bool),
+    SetNext(Option<PathBuf>),
     /// From the error callback of output number `output_id`.
     DeviceError {
         output_id: u64,
@@ -343,6 +344,13 @@ impl Player {
         self.send(Msg::SetEqualizer(settings))
     }
 
+    /// Names the track that follows the current one. The engine queues it right behind the
+    /// current track – no gap – and moves on to it by itself; [`PlayerState::finished`] counts
+    /// up and `track` changes. `None`: playback stops at the end of the current track.
+    pub fn set_next(&self, path: Option<PathBuf>) -> AppResult<()> {
+        self.send(Msg::SetNext(path))
+    }
+
     /// Switches the spectrum analysis on or off (it costs a little, so only while shown).
     pub fn set_spectrum(&self, enabled: bool) -> AppResult<()> {
         self.send(Msg::SetSpectrum(enabled))
@@ -406,6 +414,11 @@ struct Track {
     base_ms: u64,
     /// Set while nothing of the track is queued: where the next `play` starts.
     restart_at: Option<u64>,
+    /// Frames of this track queued since the last flush.
+    queued_frames: u64,
+    /// Frames the callback had played (since the last flush) when this track began: more
+    /// than 0 for a track that followed another one without a gap.
+    played_offset: u64,
 }
 
 impl Track {
@@ -451,6 +464,10 @@ struct Engine<B: OutputBackend> {
     output: Option<Output<B::Stream>>,
     outputs_opened: u64,
     track: Option<Track>,
+    /// What follows the current track, as far as the engine was told.
+    next: Option<PathBuf>,
+    /// The next track, opened and being queued behind the current one.
+    upcoming: Option<Track>,
     status: PlaybackStatus,
     volume: f32,
     error: Option<AppError>,
@@ -488,6 +505,8 @@ impl<B: OutputBackend> Engine<B> {
             output: None,
             outputs_opened: 0,
             track: None,
+            next: None,
+            upcoming: None,
             status: PlaybackStatus::Stopped,
             volume: 1.0,
             error: None,
@@ -520,6 +539,7 @@ impl<B: OutputBackend> Engine<B> {
                 Err(RecvTimeoutError::Timeout) => {}
                 Err(RecvTimeoutError::Disconnected) => return,
             }
+            self.move_on_if_next_track_reached();
             self.finish_track_if_played();
             self.publish();
             self.analyse();
@@ -541,6 +561,7 @@ impl<B: OutputBackend> Engine<B> {
                 self.set_playing(false);
                 self.status = PlaybackStatus::Stopped;
                 self.track = None;
+                self.next = None;
                 self.flush();
             }
             Msg::Seek(position_ms) => self.seek(position_ms),
@@ -553,6 +574,16 @@ impl<B: OutputBackend> Engine<B> {
             Msg::SetEqualizer(settings) => {
                 self.equalizer = settings.sanitised();
                 self.shared.equalizer.set(self.equalizer);
+            }
+            Msg::SetNext(path) => {
+                if self.next != path {
+                    self.next = path;
+                    if self.upcoming.is_some() {
+                        // the old next track is queued already: queue anew from here
+                        let position = self.position_ms();
+                        self.reposition(position);
+                    }
+                }
             }
             Msg::SetSpectrum(enabled) => {
                 self.spectrum_enabled = enabled && self.on_spectrum.is_some();
@@ -574,6 +605,7 @@ impl<B: OutputBackend> Engine<B> {
         self.set_playing(false);
         self.status = PlaybackStatus::Stopped;
         self.track = None;
+        self.next = None;
         self.flush();
         self.error = None;
         match self.open_track(path) {
@@ -622,6 +654,8 @@ impl<B: OutputBackend> Engine<B> {
             input_done: false,
             base_ms: 0,
             restart_at: None,
+            queued_frames: 0,
+            played_offset: 0,
         };
         track.resampler = resampler_for(&track.loaded.info, format)?;
         self.shared.input_done.store(false, Ordering::Relaxed);
@@ -742,6 +776,8 @@ impl<B: OutputBackend> Engine<B> {
 
     /// Has the callback drop everything queued and waits until it did.
     fn flush(&mut self) {
+        // what was queued of the next track goes with the rest; it is opened again in time
+        self.upcoming = None;
         if self.output.is_none() {
             return;
         }
@@ -759,6 +795,11 @@ impl<B: OutputBackend> Engine<B> {
             // the callback runs every few milliseconds
             thread::sleep(Duration::from_millis(1));
         }
+        // the callback counts played frames from zero again
+        if let Some(track) = &mut self.track {
+            track.queued_frames = 0;
+            track.played_offset = 0;
+        }
     }
 
     /// The device is gone or broken: close it and keep the position for the next `play`.
@@ -767,6 +808,7 @@ impl<B: OutputBackend> Engine<B> {
         let position = self.position_ms();
         self.set_playing(false);
         self.output = None;
+        self.upcoming = None;
         if let Some(track) = &mut self.track {
             track.restart_at.get_or_insert(position);
         }
@@ -796,13 +838,31 @@ impl<B: OutputBackend> Engine<B> {
         if track.restart_at.is_some() {
             return false;
         }
-        match fill_queue(output, track) {
+        // once the current track is queued completely, the next one follows in the same queue
+        let filling_upcoming = self.upcoming.is_some();
+        let filling = match &mut self.upcoming {
+            Some(upcoming) => upcoming,
+            None => track,
+        };
+        match fill_queue(output, filling) {
             Ok(Progress::Busy) => {
                 self.shared.refilling.store(false, Ordering::Relaxed);
                 true
             }
             Ok(Progress::QueueFull) => false,
             Ok(Progress::TrackQueued) => {
+                if !filling_upcoming && self.next.is_some() {
+                    return self.queue_next_track();
+                }
+                self.shared.input_done.store(true, Ordering::Relaxed);
+                false
+            }
+            Err(e) if filling_upcoming => {
+                // the next track broke: what is queued of it plays out, then playback ends as
+                // if there were no next track – whoever named it will try it and see the error
+                log::warn!("next track given up: {e} ({:?})", e.details);
+                self.upcoming = None;
+                self.next = None;
                 self.shared.input_done.store(true, Ordering::Relaxed);
                 false
             }
@@ -813,12 +873,50 @@ impl<B: OutputBackend> Engine<B> {
         }
     }
 
+    /// Opens the track named as next and puts it in line behind the current one.
+    fn queue_next_track(&mut self) -> bool {
+        let (Some(path), Some(current)) = (self.next.clone(), &self.track) else {
+            return false;
+        };
+        // everything of the current track is queued: this is where the next one begins
+        let boundary = current.played_offset + current.queued_frames;
+        match self.open_track(&path) {
+            Ok(mut upcoming) => {
+                upcoming.played_offset = boundary;
+                self.upcoming = Some(upcoming);
+                true
+            }
+            Err(e) => {
+                log::warn!("next track {} cannot follow: {e} ({:?})", path.display(), e.details);
+                self.next = None;
+                self.shared.input_done.store(true, Ordering::Relaxed);
+                false
+            }
+        }
+    }
+
+    /// The callback has played the current track to its last frame and is in the next one.
+    fn move_on_if_next_track_reached(&mut self) {
+        let Some(boundary) = self.upcoming.as_ref().map(|upcoming| upcoming.played_offset) else {
+            return;
+        };
+        if self.shared.played_frames.load(Ordering::Acquire) >= boundary {
+            if let Some(track) = &self.track {
+                log::info!("finished {}", track.loaded.path.display());
+            }
+            self.track = self.upcoming.take();
+            self.next = None;
+            self.finished += 1;
+        }
+    }
+
     /// At the end of the track: back to the start, stopped.
     fn finish_track_if_played(&mut self) {
         let (Some(output), Some(track)) = (&self.output, &mut self.track) else {
             return;
         };
         let played = self.status == PlaybackStatus::Playing
+            && self.upcoming.is_none()
             && track.input_done
             && track.pending_left() == 0
             && output.queued() == 0;
@@ -839,7 +937,8 @@ impl<B: OutputBackend> Engine<B> {
             return position;
         }
         let played = self.shared.played_frames.load(Ordering::Acquire);
-        let position = track.base_ms + played * 1000 / u64::from(output.format.sample_rate);
+        let in_track = played.saturating_sub(track.played_offset);
+        let position = track.base_ms + in_track * 1000 / u64::from(output.format.sample_rate);
         track.duration_ms().map_or(position, |d| position.min(d))
     }
 
@@ -923,7 +1022,9 @@ fn fill_queue<S>(output: &mut Output<S>, track: &mut Track) -> AppResult<Progres
             let end = track.pending_pos + room.min(track.pending_left());
             let (_, rest) =
                 output.producer.push_partial_slice(&track.pending[track.pending_pos..end]);
-            track.pending_pos = end - rest.len();
+            let pushed = end - rest.len() - track.pending_pos;
+            track.pending_pos += pushed;
+            track.queued_frames += (pushed / channels) as u64;
             return Ok(Progress::Busy);
         }
         if track.input_done {

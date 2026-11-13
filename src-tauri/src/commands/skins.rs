@@ -355,9 +355,10 @@ mod tests {
         assert_eq!(json["player"]["layout"], "absolute");
         assert_eq!(json["player"]["width"], 320);
         assert_eq!(json["player"]["pixelated"], true);
-        let play = &json["player"]["components"][7];
+        let components = json["player"]["components"].as_array().unwrap();
+        let play = components.iter().find(|c| c["action"] == "player.togglePlay").unwrap();
         assert_eq!(play["type"], "button");
-        assert_eq!(play["action"], "player.togglePlay");
+        assert!(components.iter().any(|c| c["type"] == "spectrum"));
         assert_eq!(play["states"]["active"], "assets/play-active.png");
         assert_eq!(json["player"]["components"][0]["fontSize"], 14);
 

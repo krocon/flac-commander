@@ -4,9 +4,9 @@ Plattformübergreifender Musikplayer für lokale Musikbibliotheken: vollständig
 unabhängige Fenster und eine native Audio-Engine in Rust. Die Bedienung greift die Winamp-Tradition auf, Code,
 Architektur und Skin-Format sind eigenständig.
 
-**Stand: Phase 5 abgeschlossen (Mehrfenster).** Die App spielt Playlists aus lokalen Dateien, merkt sich ihren
+**Stand: Phase 6 abgeschlossen (Equalizer, Visualizer, Gapless).** Die App spielt Playlists aus lokalen Dateien, merkt sich ihren
 Zustand und lässt sich mit Skins umgestalten – mitgeliefert sind „Modern" und „Retro", eigene Skins lassen sich als
-ZIP importieren. Die Playlist lässt sich in ein eigenes Fenster legen. Equalizer und Visualisierung folgen ([Roadmap](docs/ROADMAP.md)).
+ZIP importieren. Playlist und Equalizer haben eigene Fenster; Titel gehen lückenlos ineinander über. Der Winamp-Skin-Import folgt ([Roadmap](docs/ROADMAP.md)).
 
 ## Was heute funktioniert
 
@@ -16,15 +16,17 @@ ZIP importieren. Die Playlist lässt sich in ein eigenes Fenster legen. Equalize
 | Wiedergabe | Play, Pause, Stop, Seek, Lautstärke, nächster/vorheriger Titel, Wiederholen (aus/Playlist/Titel), Zufall |
 | Playlist | Dateien per Dialog, Ordner und Dateien per Drag & Drop oder Kommandozeile; Titel, Interpret, Dauer aus den Tags |
 | Formate | FLAC, MP3, WAV, Ogg Vorbis, Opus, AAC/M4A, ALAC, AIFF – jeweils durch Tests an echten Dateien belegt |
-| Engine | eigener Thread, lock-freier Ringpuffer, Resampling auf die Geräterate, framegenaues Seek |
+| Engine | eigener Thread, lock-freier Ringpuffer, Resampling auf die Geräterate, framegenaues Seek, Gapless |
+| Klang | 10-Band-Equalizer mit Vorverstärkung und Voreinstellungen, wirkt sofort |
+| Visualizer | Spektrum-Balken im Player und als Skin-Baustein; aus bei „Bewegung reduzieren" |
 | Robustheit | nicht abspielbare Dateien werden markiert und übersprungen; fehlende Dateien nach dem Neustart markiert; Geräteverlust pausiert |
 | Skins | zur Laufzeit wechselbar; eigenes, rein deklaratives Format mit vollständiger Prüfung; sicherer ZIP-Import ([SKIN-FORMAT.md](docs/SKIN-FORMAT.md)) |
-| Fenster | Playlist als eigenes Fenster; alle Fenster bleiben über das Backend synchron |
+| Fenster | Playlist und Equalizer als eigene Fenster; alle Fenster bleiben über das Backend synchron |
 | Gemerkt wird | Playlist, aktueller Titel mit Position, Lautstärke, Wiederholen, Zufall, Skin, Fensterplätze |
 | Tastatur | zentrales Aktionssystem, Playlist als Listbox bedienbar |
 | Fehler und Protokoll | einheitliche Fehlercodes, Texte in Deutsch und Englisch, Logdatei |
 
-Noch nicht vorhanden: Bibliothek, Equalizer, Visualisierung, Albumcover, Winamp-Skins, Umsortieren der Playlist, Mehrfachauswahl.
+Noch nicht vorhanden: Bibliothek, Albumcover, Winamp-Skins, Umsortieren der Playlist, Mehrfachauswahl.
 Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft.
 
 ### Tastatur
@@ -39,6 +41,7 @@ Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft
 | R / S | Wiederholen umschalten / Zufall |
 | ⌘O bzw. Strg+O | Dateien hinzufügen |
 | ⌘L bzw. Strg+L | Playlist in eigenem Fenster / im Hauptfenster |
+| ⌘E bzw. Strg+E | Equalizer-Fenster |
 | ⌘K bzw. Strg+K | Skin wählen |
 | ⌘0 bzw. Strg+0 | zurück zum Standard-Skin (gilt in jedem Skin) |
 | in der Playlist: ↑ ↓ Pos1 Ende | Auswahl bewegen |

@@ -52,6 +52,9 @@ pub struct Device {
     pub current: Option<Opened>,
     /// Every frame rendered while audio came out (left channel, right channel).
     pub heard: Vec<[f32; 2]>,
+    /// Longest run of silent frames between two frames of audio (a gap in the music).
+    pub longest_gap: usize,
+    silent_run: usize,
     pub states: Receiver<PlayerState>,
 }
 
@@ -73,7 +76,16 @@ impl Device {
     /// A device for a player someone else started with [`fake_backend`].
     pub fn attach(player: Player, link: DeviceLink, states: Receiver<PlayerState>) -> Self {
         let DeviceLink { opened, failures } = link;
-        Self { player, opened, failures, current: None, heard: Vec::new(), states }
+        Self {
+            player,
+            opened,
+            failures,
+            current: None,
+            heard: Vec::new(),
+            longest_gap: 0,
+            silent_run: 0,
+            states,
+        }
     }
 
     /// One callback of the device.
@@ -92,8 +104,17 @@ impl Device {
             return;
         }
         opened.renderer.render(&mut block, FORMAT);
-        self.heard
-            .extend(block.chunks(2).filter(|f| f[0] != 0.0 || f[1] != 0.0).map(|f| [f[0], f[1]]));
+        for frame in block.chunks(2) {
+            if frame[0] == 0.0 && frame[1] == 0.0 {
+                self.silent_run += 1;
+            } else {
+                if !self.heard.is_empty() {
+                    self.longest_gap = self.longest_gap.max(self.silent_run);
+                }
+                self.silent_run = 0;
+                self.heard.push([frame[0], frame[1]]);
+            }
+        }
     }
 
     /// Runs the device until the player reports a state that satisfies `done`.
