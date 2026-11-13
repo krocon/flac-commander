@@ -1,0 +1,64 @@
+<section class="equalizer" [attr.aria-label]="t.equalizer">
+  <div class="top">
+    <label class="switch">
+      <input
+        #enabled
+        type="checkbox"
+        [checked]="store.settings().enabled"
+        (change)="store.setEnabled(enabled.checked)"
+      />
+      {{ t.enabled }}
+    </label>
+    <label class="preset">
+      {{ t.preset }}
+      <select #preset [value]="store.presetId()" (change)="store.applyPreset(preset.value)">
+        @if (store.presetId() === custom) {
+          <option [value]="custom" selected disabled>{{ t.custom }}</option>
+        }
+        @for (item of store.presets(); track item.id) {
+          <option [value]="item.id" [selected]="item.id === store.presetId()">
+            {{ presetName(item.id) }}
+          </option>
+        }
+      </select>
+    </label>
+    <button type="button" (click)="store.reset()">{{ t.reset }}</button>
+  </div>
+
+  <div class="sliders" [class.off]="!store.settings().enabled">
+    <label class="slider preamp">
+      <span class="value" aria-hidden="true">{{ dbText(store.settings().preampDb) }}</span>
+      <input
+        #preamp
+        type="range"
+        step="0.5"
+        [min]="-max"
+        [max]="max"
+        [value]="store.settings().preampDb"
+        [attr.aria-label]="t.preamp"
+        [attr.aria-valuetext]="dbText(store.settings().preampDb)"
+        (input)="store.setPreamp(preamp.valueAsNumber, false)"
+        (change)="store.setPreamp(preamp.valueAsNumber, true)"
+      />
+      <span class="name">{{ t.preamp }}</span>
+    </label>
+    @for (band of bands(); track band.index) {
+      <label class="slider">
+        <span class="value" aria-hidden="true">{{ dbText(band.gain) }}</span>
+        <input
+          #gain
+          type="range"
+          step="0.5"
+          [min]="-max"
+          [max]="max"
+          [value]="band.gain"
+          [attr.aria-label]="band.name"
+          [attr.aria-valuetext]="dbText(band.gain)"
+          (input)="store.setGain(band.index, gain.valueAsNumber, false)"
+          (change)="store.setGain(band.index, gain.valueAsNumber, true)"
+        />
+        <span class="name" aria-hidden="true">{{ band.label }}</span>
+      </label>
+    }
+  </div>
+</section>

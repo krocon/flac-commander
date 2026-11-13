@@ -13,6 +13,7 @@
 
 use crate::audio::decode::{Decoder, TrackInfo};
 use crate::audio::dts::{DTS_SCAN_SAMPLES, is_dts_in_pcm};
+use crate::audio::equalizer::{EqControl, EqSettings, Equalizer};
 use crate::audio::output::{self, OutputFormat, remap_channels};
 use crate::audio::resample::StreamResampler;
 use crate::error::{AppError, AppResult, ErrorCode};
@@ -57,6 +58,7 @@ pub struct PlayerState {
     pub underruns: u64,
     /// Tracks played to their end since the start: a change tells the playlist to go on.
     pub finished: u64,
+    pub equalizer: EqSettings,
 }
 
 impl Default for PlayerState {
@@ -69,6 +71,7 @@ impl Default for PlayerState {
             error: None,
             underruns: 0,
             finished: 0,
+            equalizer: EqSettings::default(),
         }
     }
 }
@@ -91,6 +94,7 @@ struct Shared {
     /// then is expected.
     refilling: AtomicBool,
     underruns: AtomicU64,
+    equalizer: EqControl,
 }
 
 /// Length of the fade when playback starts, pauses or the volume changes (against clicks).
@@ -101,6 +105,7 @@ pub struct Renderer {
     consumer: rtrb::Consumer<f32>,
     shared: Arc<Shared>,
     gain: f32,
+    equalizer: Equalizer,
 }
 
 impl Renderer {
@@ -149,6 +154,7 @@ impl Renderer {
         let (audio, silence) = out.split_at_mut(wanted);
         silence.fill(0.0);
         let (filled, missing) = self.consumer.pop_partial_slice(audio);
+        self.equalizer.process(filled, channels, format.sample_rate, &self.shared.equalizer);
         for frame in filled.chunks_mut(channels) {
             if self.gain != target {
                 self.gain = if self.gain < target {
@@ -225,6 +231,7 @@ enum Msg {
     Unload,
     Seek(u64),
     SetVolume(f32),
+    SetEqualizer(EqSettings),
     /// From the error callback of output number `output_id`.
     DeviceError {
         output_id: u64,
@@ -298,6 +305,11 @@ impl Player {
     /// `volume` is clamped to `0.0..=1.0`; anything that is not a number is ignored.
     pub fn set_volume(&self, volume: f32) -> AppResult<()> {
         self.send(Msg::SetVolume(volume))
+    }
+
+    /// Values out of range are clamped.
+    pub fn set_equalizer(&self, settings: EqSettings) -> AppResult<()> {
+        self.send(Msg::SetEqualizer(settings))
     }
 
     fn send(&self, msg: Msg) -> AppResult<()> {
@@ -401,6 +413,7 @@ struct Engine<B: OutputBackend> {
     volume: f32,
     error: Option<AppError>,
     finished: u64,
+    equalizer: EqSettings,
     state: Arc<Mutex<PlayerState>>,
     on_state: Box<dyn Fn(&PlayerState) + Send>,
     published: Option<(PlayerState, Instant)>,
@@ -428,6 +441,7 @@ impl<B: OutputBackend> Engine<B> {
             volume: 1.0,
             error: None,
             finished: 0,
+            equalizer: EqSettings::default(),
             state,
             on_state,
             published: None,
@@ -477,6 +491,10 @@ impl<B: OutputBackend> Engine<B> {
                     self.volume = volume.clamp(0.0, 1.0);
                     self.shared.volume.store(self.volume.to_bits(), Ordering::Relaxed);
                 }
+            }
+            Msg::SetEqualizer(settings) => {
+                self.equalizer = settings.sanitised();
+                self.shared.equalizer.set(self.equalizer);
             }
             Msg::DeviceError { output_id, error } => {
                 if self.output.as_ref().is_some_and(|o| o.id == output_id) {
@@ -559,7 +577,12 @@ impl<B: OutputBackend> Engine<B> {
             .store(self.shared.flush_requested.load(Ordering::Relaxed), Ordering::Relaxed);
         self.shared.played_frames.store(0, Ordering::Relaxed);
         self.shared.underruns.store(0, Ordering::Relaxed);
-        let renderer = Renderer { consumer, shared: self.shared.clone(), gain: 0.0 };
+        let renderer = Renderer {
+            consumer,
+            shared: self.shared.clone(),
+            gain: 0.0,
+            equalizer: Equalizer::default(),
+        };
         self.outputs_opened += 1;
         let id = self.outputs_opened;
         let tx = self.tx.clone();
@@ -766,6 +789,7 @@ impl<B: OutputBackend> Engine<B> {
             error: self.error.clone(),
             underruns: self.shared.underruns.load(Ordering::Relaxed),
             finished: self.finished,
+            equalizer: self.equalizer,
         };
         if let Some((last, at)) = &self.published {
             if *last == state {

@@ -355,11 +355,19 @@ fn the_session_is_saved_and_restored() {
         rig.session.add_paths(std::slice::from_ref(&vanishing), PlayAdded::Never);
         rig.session.set_repeat(RepeatMode::All);
         rig.session.player().set_volume(0.3).unwrap();
+        let mut gains_db = [0.0; 10];
+        gains_db[0] = 6.0;
+        let equalizer =
+            fc_core::audio::equalizer::EqSettings { enabled: true, preamp_db: -3.0, gains_db };
+        rig.session.player().set_equalizer(equalizer).unwrap();
         rig.session.play_entry(rig.id_of("sine.wav"));
         rig.device.play_frames(24_000);
         rig.session.player().pause().unwrap();
         rig.device.wait_for("paused at half", |s| {
-            s.status == PlaybackStatus::Paused && s.position_ms >= 490 && s.volume == 0.3
+            s.status == PlaybackStatus::Paused
+                && s.position_ms >= 490
+                && s.volume == 0.3
+                && s.equalizer.enabled
         });
         rig.session.save_now();
     }
@@ -374,6 +382,9 @@ fn the_session_is_saved_and_restored() {
     });
     assert_eq!(restored.status, PlaybackStatus::Stopped);
     assert_eq!(restored.volume, 0.3);
+    assert!(restored.equalizer.enabled);
+    assert_eq!(restored.equalizer.preamp_db, -3.0);
+    assert_eq!(restored.equalizer.gains_db[0], 6.0);
     assert!(rig.device.heard.is_empty());
 
     // the file that disappeared is marked once the tags were looked for

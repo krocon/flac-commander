@@ -185,6 +185,8 @@ pub fn run() {
             commands::player::player_stop,
             commands::player::player_seek,
             commands::player::player_set_volume,
+            commands::player::player_set_equalizer,
+            commands::player::equalizer_presets,
             commands::playlist::playlist_state,
             commands::playlist::playlist_open,
             commands::playlist::playlist_play,

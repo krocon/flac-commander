@@ -3,6 +3,7 @@
 
 use crate::AppState;
 use fc_core::AppResult;
+use fc_core::audio::equalizer::{EqPreset, EqSettings, PRESETS};
 use fc_core::audio::player::PlayerState;
 use tauri::State;
 
@@ -37,4 +38,47 @@ pub async fn player_seek(state: State<'_, AppState>, position_ms: u64) -> AppRes
 #[tauri::command]
 pub async fn player_set_volume(state: State<'_, AppState>, volume: f32) -> AppResult<()> {
     state.session.player().set_volume(volume)
+}
+
+/// Sets the equalizer; the engine clamps every value to its range.
+#[tauri::command]
+pub async fn player_set_equalizer(
+    state: State<'_, AppState>,
+    settings: EqSettings,
+) -> AppResult<()> {
+    state.session.player().set_equalizer(settings)
+}
+
+/// The equalizer settings the app offers to start from.
+#[tauri::command]
+pub async fn equalizer_presets() -> AppResult<&'static [EqPreset]> {
+    Ok(PRESETS)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn equalizer_settings_come_as_the_frontend_sends_them() {
+        let json = r#"{"enabled":true,"preampDb":-3,"gainsDb":[1,2,3,4,5,6,7,8,9,10]}"#;
+        let settings: EqSettings = serde_json::from_str(json).unwrap();
+        assert!(settings.enabled);
+        assert_eq!(settings.preamp_db, -3.0);
+        assert_eq!(settings.gains_db[9], 10.0);
+        // the wrong number of bands is refused instead of guessed
+        assert!(serde_json::from_str::<EqSettings>(r#"{"gainsDb":[1,2,3]}"#).is_err());
+    }
+
+    #[test]
+    fn presets_go_to_the_frontend_with_their_id() {
+        let json = serde_json::to_value(PRESETS).unwrap();
+        assert_eq!(
+            json[0],
+            serde_json::json!({
+                "id": "flat", "preampDb": 0.0,
+                "gainsDb": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            })
+        );
+    }
 }

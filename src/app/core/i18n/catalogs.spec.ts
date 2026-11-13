@@ -1,5 +1,6 @@
 import '../../app-texts';
 import '../../features/diagnostics/diagnostics-texts';
+import '../../features/equalizer/equalizer-texts';
 import '../../features/player/player-texts';
 import '../../features/playlist/playlist-texts';
 import '../../features/skins/skins-texts';
@@ -14,6 +15,7 @@ describe('text catalogs', () => {
     expect(catalogs.map(([name]) => name).sort()).toEqual([
       'app',
       'diagnostics',
+      'equalizer',
       'errors',
       'player',
       'playlist',

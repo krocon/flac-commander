@@ -238,6 +238,32 @@ fn volume_scales_the_output_and_is_clamped() {
 }
 
 #[test]
+fn the_equalizer_shapes_what_comes_out_and_shows_in_the_state() {
+    use fc_core::audio::equalizer::EqSettings;
+    // the fixture is a 440 Hz sine: the 500 Hz band reaches it almost fully
+    let mut gains_db = [0.0; 10];
+    gains_db[4] = -12.0;
+    let settings = EqSettings { enabled: true, preamp_db: 0.0, gains_db };
+
+    let mut device = Device::new();
+    device.player.set_equalizer(settings).unwrap();
+    device.load("sine.flac", true);
+    let end = device.run_to_the_end();
+    assert_eq!(end.equalizer, settings);
+    let cut_db = 20.0 * (device.heard_rms() / STEREO_RMS).log10();
+    assert!((-12.5..=-8.0).contains(&cut_db), "440 Hz changed by {cut_db:.1} dB");
+
+    // switched off: the same track at its own level again; wild values are clamped
+    device.heard.clear();
+    let off = EqSettings { enabled: false, preamp_db: 99.0, gains_db };
+    device.player.set_equalizer(off).unwrap();
+    device.player.play().unwrap();
+    let end = device.run_to_the_end();
+    assert_eq!(end.equalizer.preamp_db, 12.0);
+    assert!((device.heard_rms() - STEREO_RMS).abs() < 0.002, "rms {}", device.heard_rms());
+}
+
+#[test]
 fn playback_starts_and_pauses_without_a_click() {
     let mut device = Device::new();
     device.load("sine.flac", true);
@@ -433,6 +459,8 @@ fn the_state_serialises_as_the_frontend_expects() {
     assert!(json["error"].is_null());
     assert_eq!(json["underruns"], 0);
     assert_eq!(json["finished"], 0);
+    assert_eq!(json["equalizer"]["enabled"], false);
+    assert_eq!(json["equalizer"]["gainsDb"].as_array().unwrap().len(), 10);
     assert_eq!(json["track"]["fileName"], "sine.flac");
     assert!(json["track"]["path"].as_str().unwrap().ends_with("sine.flac"));
     assert_eq!(

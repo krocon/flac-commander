@@ -21,6 +21,7 @@ export class WindowsStore {
   readonly error = this.errorState.asReadonly();
   /** The playlist has a window of its own: the main window does not show it as well. */
   readonly playlistDetached = computed(() => this.openState().includes('playlist'));
+  readonly equalizerOpen = computed(() => this.openState().includes('equalizer'));
 
   readonly ready: Promise<void>;
 

@@ -192,6 +192,8 @@ pub const ACTIONS: &[&str] = &[
     "player.repeat",
     "player.shuffle",
     "app.skins",
+    "window.playlist",
+    "window.equalizer",
 ];
 pub const TEXT_SOURCES: &[&str] =
     &["track.title", "track.artist", "track.details", "player.status"];

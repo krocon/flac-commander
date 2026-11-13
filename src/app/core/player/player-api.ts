@@ -1,7 +1,7 @@
 import { call } from '../backend/call';
 import { subscribe, Unsubscribe } from '../backend/events';
 import { toAppError } from '../errors/app-error';
-import { PlayerState } from './player.models';
+import { EqualizerPreset, EqualizerSettings, PlayerState } from './player.models';
 
 /** Event names = `src-tauri/src/events.rs`. */
 const EV_PLAYER_STATE = 'player://state';
@@ -19,6 +19,8 @@ export abstract class PlayerApi {
   abstract seek(positionMs: number): Promise<void>;
   /** `volume`: 0 … 1 */
   abstract setVolume(volume: number): Promise<void>;
+  abstract setEqualizer(settings: EqualizerSettings): Promise<void>;
+  abstract equalizerPresets(): Promise<readonly EqualizerPreset[]>;
   abstract onState(handler: (state: PlayerState) => void): Promise<Unsubscribe>;
 }
 
@@ -50,6 +52,14 @@ export class TauriPlayerApi extends PlayerApi {
 
   override setVolume(volume: number): Promise<void> {
     return call<void>('player_set_volume', { volume });
+  }
+
+  override setEqualizer(settings: EqualizerSettings): Promise<void> {
+    return call<void>('player_set_equalizer', { settings });
+  }
+
+  override equalizerPresets(): Promise<readonly EqualizerPreset[]> {
+    return call<readonly EqualizerPreset[]>('equalizer_presets');
   }
 
   override onState(handler: (state: PlayerState) => void): Promise<Unsubscribe> {

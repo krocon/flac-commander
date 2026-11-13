@@ -82,11 +82,13 @@ describe('App', () => {
 
   it('opens the skin chooser by button and by key', async () => {
     create();
-    // `.flow header`: the chooser dialog has a header with a button of its own
-    await vi.waitFor(() =>
-      expect(el.querySelector('.flow header button:not(.first)')).not.toBeNull(),
-    );
-    el.querySelector<HTMLButtonElement>('.flow header button:not(.first)')?.click();
+    // in `.flow header`: the chooser dialog has a header with a button of its own
+    const skinsButton = () =>
+      [...el.querySelectorAll<HTMLButtonElement>('.flow header button')].find(
+        (b) => b.textContent?.trim() === 'Skins',
+      );
+    await vi.waitFor(() => expect(skinsButton()).toBeDefined());
+    skinsButton()?.click();
     await vi.waitFor(() => expect(el.querySelectorAll('.skins > li')).toHaveLength(2));
 
     // jsdom has no `showModal`: whether the chooser is open is asked of the store
@@ -164,6 +166,28 @@ describe('App', () => {
     // shortcuts work in every window
     press('ArrowUp');
     await vi.waitFor(() => expect(player.commands).toEqual(['volume 1.00']));
+  });
+
+  it('opens the equalizer window by button and key, and is the equalizer alone in it', async () => {
+    create();
+    await vi.waitFor(() => expect(el.querySelector('.flow header')).not.toBeNull());
+    const buttons = [...el.querySelectorAll<HTMLButtonElement>('.flow header button')];
+    const equalizer = buttons.find((b) => b.textContent?.includes('Equalizer'));
+    equalizer?.click();
+    await vi.waitFor(() => expect(windows.commands).toEqual(['toggle equalizer']));
+    await vi.waitFor(() => expect(equalizer?.getAttribute('aria-pressed')).toBe('true'));
+    press('e', mod);
+    await vi.waitFor(() => expect(windows.commands).toHaveLength(2));
+    // the main window keeps its own layout: the equalizer lives in its window
+    expect(el.querySelector('app-equalizer')).toBeNull();
+
+    TestBed.resetTestingModule();
+    windows = new FakeWindowApi();
+    windows.current = 'equalizer';
+    create();
+    await vi.waitFor(() => expect(el.querySelector('.solo app-equalizer')).not.toBeNull());
+    expect(el.querySelector('app-player')).toBeNull();
+    expect(el.querySelector('app-playlist')).toBeNull();
   });
 
   it('shows where dropped files go while they are dragged over the window', async () => {

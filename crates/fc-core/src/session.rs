@@ -5,6 +5,7 @@
 //! track ends, passes over tracks that cannot be played, reads tags in the background and saves
 //! the state.
 
+use crate::audio::equalizer::EqSettings;
 use crate::audio::formats::{extension_of, is_playable_extension};
 use crate::audio::player::{OutputBackend, PlaybackStatus, Player, PlayerState};
 use crate::error::{AppResult, ErrorCode};
@@ -56,6 +57,7 @@ struct Inner {
     finished_seen: u64,
     failures_in_a_row: u32,
     volume: f32,
+    equalizer: EqSettings,
     position_ms: u64,
     /// Id of the active skin: kept here only to be saved with the rest.
     skin: Option<String>,
@@ -105,6 +107,7 @@ impl Inner {
             current,
             position_ms: if current.is_some() { self.position_ms } else { 0 },
             skin: self.skin.clone(),
+            equalizer: self.equalizer,
             windows: self.windows.clone(),
             ..SavedState::default()
         }
@@ -189,8 +192,9 @@ impl Inner {
             changed = true;
         }
 
-        if state.volume != self.volume {
+        if state.volume != self.volume || state.equalizer != self.equalizer {
             self.volume = state.volume;
+            self.equalizer = state.equalizer;
             self.save();
         }
         if changed {
@@ -240,6 +244,7 @@ impl Session {
             finished_seen: 0,
             failures_in_a_row: 0,
             volume: saved.volume,
+            equalizer: saved.equalizer,
             position_ms: saved.position_ms,
             skin: saved.skin.clone(),
             windows: saved.windows.clone(),
@@ -251,6 +256,7 @@ impl Session {
             lock(&hook).on_player_state(state);
         })?;
         player.set_volume(saved.volume)?;
+        player.set_equalizer(saved.equalizer)?;
         {
             let mut inner = lock(&inner);
             inner.player = Some(player.clone());

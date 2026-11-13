@@ -1,0 +1,98 @@
+:host {
+  display: flex;
+  min-height: 0;
+}
+
+.equalizer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  background: var(--player-surface);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  font-size: 12px;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.switch,
+.preset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+input[type='checkbox'] {
+  accent-color: var(--player-accent);
+}
+
+select,
+button {
+  font: inherit;
+  color: var(--player-foreground);
+  background: var(--player-surface-raised);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 3px 8px;
+}
+
+button {
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.sliders {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(10, 1fr);
+  flex: 1;
+  gap: 4px;
+  min-height: 140px;
+  padding: 8px 4px;
+  background: var(--player-background);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+
+  /* still adjustable while off – it just has no effect yet */
+  &.off {
+    opacity: 0.55;
+  }
+}
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 0;
+
+  &.preamp {
+    border-right: 1px solid var(--player-border);
+  }
+}
+
+.value,
+.name {
+  font-family: var(--player-font-mono);
+  font-size: 10px;
+  color: var(--player-muted);
+  white-space: nowrap;
+}
+
+/* a vertical slider: up is more */
+input[type='range'] {
+  flex: 1;
+  min-height: 60px;
+  width: 20px;
+  margin: 0;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  accent-color: var(--player-accent);
+}
