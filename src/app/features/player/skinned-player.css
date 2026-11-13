@@ -150,6 +150,24 @@ input[type='range'] {
   }
 }
 
+/* a piece of the background of a window that has grown */
+.slice {
+  position: absolute;
+  background-repeat: no-repeat;
+}
+
+.pixelated .slice {
+  image-rendering: pixelated;
+}
+
+/* a round picture of which more or less is shown as the track goes on (tape on a reel) */
+.pack {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+  transition: clip-path 0.3s linear;
+}
+
 /* a picture that turns while music plays (a reel) */
 .spinner {
   background-repeat: no-repeat;
@@ -175,5 +193,9 @@ input[type='range'] {
 
   .spinner {
     animation: none;
+  }
+
+  .pack {
+    transition: none;
   }
 }

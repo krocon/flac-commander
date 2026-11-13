@@ -8,6 +8,8 @@ export interface SkinInfo {
   readonly description: string | null;
   /** Path of the preview picture inside the skin. */
   readonly preview: string | null;
+  /** Words to find the skin by. */
+  readonly keywords?: readonly string[];
   readonly builtIn: boolean;
 }
 
@@ -39,7 +41,8 @@ export type SkinComponentType =
   | 'image'
   | 'spectrum'
   | 'needle'
-  | 'spinner';
+  | 'spinner'
+  | 'pack';
 
 export interface SkinStates {
   readonly normal: string | null;
@@ -64,12 +67,44 @@ export interface SkinComponent {
   /** A `needle` only: the point it turns around, from the top left of its box. */
   readonly pivotX?: number | null;
   readonly pivotY?: number | null;
-  /** A `needle` only: degrees (clockwise) at the start and the end of the track, and at rest. */
+  /**
+   * A `needle`: degrees (clockwise) at the start and the end of the track, and at rest.
+   * A `pack`: the diameter of the circle shown, in CSS pixels.
+   */
   readonly from?: number | null;
   readonly to?: number | null;
   readonly rest?: number | null;
   /** A `spinner` only: milliseconds for one turn. */
   readonly period?: number | null;
+}
+
+/** Along each axis one line of the background is drawn out when the window grows. */
+export interface SkinResize {
+  readonly stretchX: number | null;
+  readonly stretchY: number | null;
+  readonly maxWidth: number | null;
+  readonly maxHeight: number | null;
+}
+
+/** Largest side of a window a skin lets grow (`MAX_WINDOW_SIDE` in fc-core). */
+export const MAX_WINDOW_SIDE = 4000;
+
+/** Smallest and largest size of a skin's window; the same where a side is fixed. */
+export function sizeRange(player: SkinPlayerWindow): {
+  readonly min: readonly [number, number];
+  readonly max: readonly [number, number];
+} {
+  const width = player.width ?? 0;
+  const height = player.height ?? 0;
+  const most = (line: number | null | undefined, max: number | null | undefined, least: number) =>
+    line === null || line === undefined ? least : Math.max(max ?? MAX_WINDOW_SIDE, least);
+  return {
+    min: [width, height],
+    max: [
+      most(player.resize?.stretchX, player.resize?.maxWidth, width),
+      most(player.resize?.stretchY, player.resize?.maxHeight, height),
+    ],
+  };
 }
 
 export interface SkinPlayerWindow {
@@ -79,6 +114,8 @@ export interface SkinPlayerWindow {
   readonly height: number | null;
   readonly background: string | null;
   readonly pixelated: boolean;
+  /** How the window may grow; without it the size is fixed. */
+  readonly resize?: SkinResize | null;
   readonly components: readonly SkinComponent[];
 }
 

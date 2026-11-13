@@ -5,6 +5,13 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "Less, but better: a matt light panel, round push buttons and a single red one.",
+  "keywords": [
+    "minimal",
+    "light",
+    "functional",
+    "sixties",
+    "red"
+  ],
   "preview": "preview.png",
   "theme": {
     "background": "#e8e7e3",
@@ -28,6 +35,9 @@
       "width": 340,
       "height": 560,
       "background": "assets/background.png",
+      "resize": {
+        "stretchY": 440
+      },
       "components": [
         {
           "type": "text",

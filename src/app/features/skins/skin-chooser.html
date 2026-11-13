@@ -4,8 +4,18 @@
     <button type="button" class="plain" [attr.aria-label]="t.close" (click)="close()">✕</button>
   </header>
 
+  <input
+    #filter
+    class="filter"
+    type="search"
+    [attr.aria-label]="t.filter"
+    [placeholder]="t.filterHint"
+    [value]="query()"
+    (input)="query.set(filter.value)"
+  />
+
   <ul class="skins">
-    @for (skin of store.list(); track skin.id) {
+    @for (skin of shown(); track skin.id) {
       <li [class.active]="skin.id === store.activeId()">
         @if (store.previewUrl(skin); as preview) {
           <img [src]="preview" [alt]="t.previewOf(skin.name)" />
@@ -30,6 +40,15 @@
           </p>
           @if (skin.description) {
             <p class="description">{{ skin.description }}</p>
+          }
+          @if (skin.keywords?.length) {
+            <p class="keywords">
+              @for (keyword of skin.keywords; track keyword) {
+                <button type="button" class="keyword" (click)="query.set(keyword)">
+                  {{ keyword }}
+                </button>
+              }
+            </p>
           }
         </div>
         <div class="buttons">
@@ -60,6 +79,10 @@
           }
         </div>
       </li>
+    } @empty {
+      @if (query()) {
+        <li class="none">{{ t.noMatch }}</li>
+      }
     }
   </ul>
 

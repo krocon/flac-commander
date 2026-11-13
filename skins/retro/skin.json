@@ -5,6 +5,13 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "Pixels, bevels and a green display: a fixed-size player in the spirit of the nineties.",
+  "keywords": [
+    "retro",
+    "pixel",
+    "nineties",
+    "green",
+    "dark"
+  ],
   "preview": "preview.png",
   "theme": {
     "background": "#232733",
@@ -29,6 +36,9 @@
       "height": 440,
       "background": "assets/background.png",
       "pixelated": true,
+      "resize": {
+        "stretchY": 300
+      },
       "components": [
         {
           "type": "text",

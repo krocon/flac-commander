@@ -629,9 +629,8 @@ const panel = {
 
 // ---- "Reel": a tape machine, white front, two reels that turn
 
-const reelHtml = (pack) => `
+const reelHtml = () => `
   <div class="reel">
-    <div class="tape" style="inset:${112 - pack}px"></div>
     <b></b><b style="transform:rotate(120deg)"></b><b style="transform:rotate(240deg)"></b>
     <div class="core"></div><div class="tag"></div>
   </div>`;
@@ -678,7 +677,7 @@ const reelDeck = {
     .reel { position: absolute; inset: 0; border-radius: 50%;
       background: radial-gradient(circle, transparent 0 104px, rgba(150,150,144,.55) 104px 106px, rgba(255,255,255,.5) 106px 110px, rgba(120,120,115,.8) 110px 112px);
       box-shadow: inset 0 0 0 112px rgba(255,255,255,.2); filter: drop-shadow(0 3px 4px rgba(0,0,0,.28)); }
-    .reel .tape { position: absolute; border-radius: 50%; background: repeating-radial-gradient(circle, #40302a 0 1.5px, #32251f 1.5px 3px); box-shadow: 0 0 0 1px #1d1512; }
+    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #40302a 0 1.5px, #32251f 1.5px 3px); }
     .reel b { position: absolute; left: 50%; top: 50%; width: 40px; height: 108px; margin-left: -20px; transform-origin: 50% 0;
       background: linear-gradient(90deg, rgba(225,225,220,.88), rgba(248,248,245,.92) 50%, rgba(215,215,210,.88)); border-radius: 0 0 14px 14px; box-shadow: 0 0 0 1px rgba(0,0,0,.14); }
     .reel .core { position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px; border-radius: 50%;
@@ -735,8 +734,13 @@ const reelDeck = {
     { type: 'playlist', x: 334, y: 286, width: 280, height: 126 },
   ],
   spinners: [
-    { name: 'reel-left', x: 38, y: 18, width: 224, height: 224, period: 3200, html: reelHtml(96) },
-    { name: 'reel-right', x: 378, y: 18, width: 224, height: 224, period: 3200, html: reelHtml(48) },
+    { name: 'reel-left', x: 38, y: 18, width: 224, height: 224, period: 3200, html: reelHtml() },
+    { name: 'reel-right', x: 378, y: 18, width: 224, height: 224, period: 3200, html: reelHtml() },
+  ],
+  // the tape: wound off the left reel and on to the right one as the track goes on
+  packs: [
+    { name: 'tape-left', x: 54, y: 34, width: 192, height: 192, from: 192, to: 92, html: '<div class="wound"></div>' },
+    { name: 'tape-right', x: 394, y: 34, width: 192, height: 192, from: 92, to: 192, html: '<div class="wound"></div>' },
   ],
 };
 
@@ -1039,7 +1043,523 @@ const walk = {
   spinners: [bigHub('hub-left', 184, 150), bigHub('hub-right', 288, 150)],
 };
 
-const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk];
+// ---- "Meter": dark steel, two meter windows, a cassette in its bay
+
+const meter = {
+  folder: 'meter',
+  manifest: {
+    id: 'io.github.krocon.meter',
+    name: 'Meter',
+    description: 'Dark steel with two meter windows, a cassette in its bay and a red ring around play.',
+    theme: {
+      background: '#2a3138', surface: '#151a1f', surfaceRaised: '#3a434c', foreground: '#eef2f5', muted: '#a9b4be',
+      accent: '#ff6b60', accentContrast: '#1c0200', border: '#0b0e11', ok: '#7fdca0', danger: '#ffa39b', focus: '#7fc4ff',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontMono: '"Helvetica Neue", Helvetica, Arial, sans-serif', radius: 3,
+    },
+  },
+  width: 380,
+  height: 640,
+  pad: 4,
+  css: `
+    body { background: repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 .5px, rgba(0,0,0,.06) .5px 1px, transparent 1px 2.5px), linear-gradient(#333c45, #252b31);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .vu { position: absolute; top: 20px; width: 160px; height: 84px; border-radius: 5px; background: linear-gradient(#12161a, #191f25); overflow: hidden;
+      box-shadow: inset 0 2px 6px #000, 0 0 0 1px #0b0e11, 0 1px 0 1px rgba(255,255,255,.12); }
+    .vu::before { content: ''; position: absolute; inset: 0;
+      background: repeating-conic-gradient(from -42deg at 50% 190%, #a9b4be 0 .7deg, transparent .7deg 4deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 190%, transparent 0 138px, #000 138px 146px, transparent 146px); }
+    .vu::after { content: ''; position: absolute; inset: 0;
+      background: conic-gradient(from 18deg at 50% 190%, #ff6b60 0 24deg, transparent 24deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 190%, transparent 0 131px, #000 131px 135px, transparent 135px); }
+    .bay { position: absolute; left: 24px; top: 116px; width: 332px; height: 170px; border-radius: 8px; background: #12161a; box-shadow: inset 0 3px 8px #000, 0 1px 0 rgba(255,255,255,.12); }
+    .shell { position: absolute; left: 44px; top: 126px; width: 292px; height: 150px; border-radius: 6px; background: linear-gradient(#d3d8dd, #b4bbc2);
+      box-shadow: 0 3px 6px rgba(0,0,0,.6), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.3); }
+    .band { position: absolute; left: 12px; top: 8px; width: 268px; height: 54px; border-radius: 3px; background: #151a1f; box-shadow: inset 0 -3px 0 #ff6b60; }
+    .glass { position: absolute; left: 62px; top: 68px; width: 168px; height: 46px; border-radius: 23px; background: linear-gradient(#211a15, #0f0c0a); box-shadow: inset 0 2px 5px #000, 0 0 0 2px #8e959c; overflow: hidden; }
+    .glass::before, .glass::after { content: ''; position: absolute; top: -18px; width: 82px; height: 82px; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
+    .glass::before { left: -3px; } .glass::after { right: -15px; width: 70px; height: 70px; top: -12px; }
+    .foot { position: absolute; left: 66px; bottom: 0; width: 160px; height: 26px; background: #9aa1a8; clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%); }
+    .slot { position: absolute; border-radius: 7px; background: #12161a; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.12); }
+    .well { position: absolute; border-radius: 4px; background: #151a1f; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.12); }
+    ${COG_CSS}
+    .face { color: #eef2f5; }
+    .face svg { width: 20px; height: 20px; }
+    .knob { border-radius: 50%; background: radial-gradient(circle at 50% 25%, #4d5863, #1e242a 78%); box-shadow: 0 0 0 1px #0b0e11, 0 3px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.22); }
+    .knob.red { color: #ff6b60; box-shadow: 0 0 0 1px #0b0e11, 0 3px 4px rgba(0,0,0,.5), inset 0 0 0 4px #ff6b60, inset 0 0 0 5px #0b0e11; }
+    .knob.red svg { width: 28px; height: 28px; }
+    .tab { border-radius: 4px; color: #a9b4be; }
+    .tab svg { width: 18px; height: 18px; }
+    .hover .knob { background: radial-gradient(circle at 50% 25%, #5e6a76, #272e35 78%); }
+    .hover .tab { color: #fff; background: rgba(255,255,255,.07); }
+    .pressed .knob { background: radial-gradient(circle at 50% 70%, #3b444d, #171c21 78%); }
+    .pressed .knob:not(.red) { box-shadow: 0 0 0 1px #0b0e11, inset 0 2px 5px rgba(0,0,0,.7); }
+    .pressed .tab { color: #fff; background: rgba(0,0,0,.3); }
+    .active .knob.red { color: #fff; box-shadow: 0 0 0 1px #0b0e11, 0 0 10px 2px rgba(255,107,96,.55), inset 0 0 0 4px #ff6b60, inset 0 0 0 5px #0b0e11, inset 0 0 16px rgba(255,107,96,.5); }
+    .active .tab { color: #ff6b60; box-shadow: inset 0 -2px 0 #ff6b60; }
+  `,
+  art: `
+    <div class="vu" style="left:24px"></div><div class="vu" style="left:196px"></div>
+    <div class="bay"></div>
+    <div class="shell"><div class="band"></div><div class="glass"></div><div class="foot"></div></div>
+    <div class="slot" style="left:22px;top:315px;width:336px;height:14px"></div>
+    <div class="slot" style="left:170px;top:441px;width:132px;height:14px"></div>
+    <div class="well" style="left:24px;top:476px;width:332px;height:150px"></div>
+  `,
+  buttons: [
+    button('player.open', 'open', 42, 357, 46, 46, 'knob'),
+    button('player.previous', 'previous', 88, 350, 60, 60, 'knob'),
+    button('player.togglePlay', 'play', 148, 338, 84, 84, 'knob red', PLAY),
+    button('player.next', 'next', 232, 350, 60, 60, 'knob'),
+    button('player.stop', 'stop', 292, 357, 46, 46, 'knob'),
+    button('player.repeat', 'repeat', 24, 430, 46, 36, 'tab', TOGGLE),
+    button('player.shuffle', 'shuffle', 70, 430, 46, 36, 'tab', TOGGLE),
+    button('window.equalizer', 'equalizer', 116, 430, 46, 36, 'tab', TOGGLE),
+    button('app.skins', 'skins', 310, 430, 46, 36, 'tab'),
+  ],
+  components: [
+    { type: 'spectrum', x: 38, y: 58, width: 132, height: 38, color: '#f3ecd6' },
+    { type: 'time', source: 'position', x: 208, y: 54, width: 136, height: 44, fontSize: 30, align: 'center', color: '#f3ecd6' },
+    { type: 'text', source: 'track.title', x: 66, y: 138, width: 248, height: 22, fontSize: 15, color: '#eef2f5' },
+    { type: 'text', source: 'track.artist', x: 66, y: 160, width: 248, height: 18, fontSize: 12, color: '#ff6b60' },
+    { type: 'text', source: 'player.status', x: 24, y: 294, width: 200, height: 16, fontSize: 10, color: '#a9b4be' },
+    { type: 'time', source: 'duration', x: 276, y: 294, width: 80, height: 16, fontSize: 11, align: 'right', color: '#a9b4be' },
+    { type: 'seekbar', x: 24, y: 318, width: 332, height: 8 },
+    { type: 'volume', x: 172, y: 444, width: 128, height: 8 },
+    { type: 'playlist', x: 28, y: 480, width: 324, height: 142 },
+  ],
+  spinners: [smallHub('hub-left', 140, 203), smallHub('hub-right', 232, 203)],
+};
+
+// ---- "Ferro": one big black cassette with white hubs
+
+const ferro = {
+  folder: 'ferro',
+  manifest: {
+    id: 'io.github.krocon.ferro',
+    name: 'Ferro',
+    description: 'One big black cassette: ribbed shell, white hubs and a number in pale blue.',
+    theme: {
+      background: '#1b1b1c', surface: '#101011', surfaceRaised: '#2e2e30', foreground: '#f3f3f0', muted: '#b1b1ad',
+      accent: '#7dbdff', accentContrast: '#06121f', border: '#000000', ok: '#7fdca0', danger: '#ff9d94', focus: '#ffd166',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontMono: '"Helvetica Neue", Helvetica, Arial, sans-serif', radius: 3,
+    },
+  },
+  width: 400,
+  height: 570,
+  pad: 2,
+  css: `
+    body { background: linear-gradient(#232324, #161617); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .shell { position: absolute; left: 14px; top: 14px; width: 372px; height: 240px; border-radius: 9px;
+      background: repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 1px, transparent 1px 4px), repeating-linear-gradient(-45deg, rgba(255,255,255,.035) 0 1px, transparent 1px 4px), linear-gradient(#262627, #171718);
+      box-shadow: 0 4px 8px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px #000; }
+    .paper { position: absolute; left: 18px; top: 14px; width: 336px; height: 30px; border-radius: 3px 3px 0 0; background: #f3f3f0;
+      background-image: repeating-linear-gradient(#0000 0 13px, rgba(0,0,0,.35) 13px 14px); background-position: 46px 0; background-size: 280px 100%; background-repeat: no-repeat; }
+    .paper::before { content: 'SIDE A'; position: absolute; left: 8px; top: 4px; font-size: 8px; font-weight: 700; letter-spacing: .1em; color: #1b1b1c; }
+    .band { position: absolute; left: 18px; top: 44px; width: 336px; height: 54px; background: #101011; }
+    .eye { position: absolute; top: 112px; width: 60px; height: 50px; border-radius: 12px; background: #f3f3f0; box-shadow: inset 0 0 0 1px #000; }
+    .mid { position: absolute; left: 150px; top: 118px; width: 72px; height: 38px; border-radius: 4px; background: linear-gradient(90deg, #3a2417 0 55%, #f3f3f0 55% 75%, #1b1b1c 75%); box-shadow: inset 0 2px 4px #000, 0 0 0 1px #000; }
+    .type { position: absolute; left: 22px; top: 176px; font-size: 21px; letter-spacing: .02em; color: #9d9d99; }
+    .type b { font-weight: 800; color: #d4d4d0; }
+    .num { position: absolute; right: 22px; top: 170px; font-size: 30px; font-weight: 300; color: #7dbdff; }
+    .foot { position: absolute; left: 70px; bottom: 0; width: 232px; height: 30px; background: #111112; clip-path: polygon(6% 0, 94% 0, 100% 100%, 0 100%); }
+    .foot::after { content: ''; position: absolute; left: 36px; top: 10px; width: 160px; height: 10px; background: radial-gradient(circle, #f3f3f0 3.5px, transparent 4px) 0 0 / 40px 10px; }
+    .slot { position: absolute; border-radius: 7px; background: #0b0b0c; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.1); }
+    .well { position: absolute; border-radius: 4px; background: #101011; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.1); }
+    .cog { position: absolute; inset: 0; border-radius: 50%; background: #f3f3f0; box-shadow: inset 0 0 0 4px #f3f3f0, inset 0 0 0 10px #1b1b1c, 0 0 0 1px #000; }
+    .cog i { position: absolute; left: 16px; top: 3px; width: 4px; height: 30px; background: linear-gradient(#f3f3f0 0 8px, transparent 8px 22px, #f3f3f0 22px); }
+    .cog i:nth-child(2) { transform: rotate(60deg); } .cog i:nth-child(3) { transform: rotate(120deg); }
+    .face { color: #f3f3f0; }
+    .face svg { width: 20px; height: 20px; }
+    .bar { border-radius: 4px; background: linear-gradient(#323234, #1d1d1e); box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.16); }
+    .mini { border-radius: 4px; color: #b1b1ad; }
+    .mini svg { width: 18px; height: 18px; }
+    .hover .bar { background: linear-gradient(#434346, #262627); }
+    .hover .mini { color: #fff; background: rgba(255,255,255,.07); }
+    .pressed .bar { background: linear-gradient(#1d1d1e, #262627); box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.7); }
+    .pressed .mini { color: #fff; background: rgba(0,0,0,.4); }
+    .active .bar { color: #7dbdff; box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.16), inset 0 -3px 0 #7dbdff; }
+    .active .mini { color: #7dbdff; box-shadow: inset 0 -2px 0 #7dbdff; }
+  `,
+  art: `
+    <div class="shell">
+      <div class="paper"></div><div class="band"></div>
+      <div class="eye" style="left:84px"></div><div class="eye" style="left:228px"></div><div class="mid"></div>
+      <div class="type"><b>FLAC</b> Fe·I lossless</div><div class="num">90</div>
+      <div class="foot"></div>
+    </div>
+    <div class="slot" style="left:14px;top:285px;width:372px;height:14px"></div>
+    <div class="slot" style="left:168px;top:373px;width:150px;height:14px"></div>
+    <div class="well" style="left:16px;top:406px;width:368px;height:150px"></div>
+  `,
+  buttons: [
+    button('player.previous', 'previous', 20, 308, 72, 48, 'bar'),
+    button('player.togglePlay', 'play', 92, 308, 72, 48, 'bar', PLAY),
+    button('player.stop', 'stop', 164, 308, 72, 48, 'bar'),
+    button('player.next', 'next', 236, 308, 72, 48, 'bar'),
+    button('player.open', 'open', 308, 308, 72, 48, 'bar'),
+    button('player.repeat', 'repeat', 18, 362, 46, 36, 'mini', TOGGLE),
+    button('player.shuffle', 'shuffle', 64, 362, 46, 36, 'mini', TOGGLE),
+    button('window.equalizer', 'equalizer', 110, 362, 46, 36, 'mini', TOGGLE),
+    button('app.skins', 'skins', 336, 362, 46, 36, 'mini'),
+  ],
+  components: [
+    { type: 'text', source: 'track.title', x: 42, y: 62, width: 240, height: 24, fontSize: 16, color: '#f3f3f0' },
+    { type: 'text', source: 'track.artist', x: 42, y: 86, width: 240, height: 18, fontSize: 12, color: '#7dbdff' },
+    { type: 'spectrum', x: 288, y: 66, width: 72, height: 34, color: '#7dbdff' },
+    { type: 'time', source: 'position', x: 16, y: 262, width: 80, height: 18, fontSize: 13, color: '#f3f3f0' },
+    { type: 'text', source: 'player.status', x: 100, y: 262, width: 200, height: 18, fontSize: 10, align: 'center', color: '#b1b1ad' },
+    { type: 'time', source: 'duration', x: 304, y: 262, width: 80, height: 18, fontSize: 13, align: 'right', color: '#b1b1ad' },
+    { type: 'seekbar', x: 16, y: 288, width: 368, height: 8 },
+    { type: 'volume', x: 170, y: 376, width: 146, height: 8 },
+    { type: 'playlist', x: 20, y: 410, width: 360, height: 142 },
+  ],
+  spinners: [
+    { name: 'hub-left', x: 110, y: 133, width: 36, height: 36, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
+    { name: 'hub-right', x: 254, y: 133, width: 36, height: 36, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
+  ],
+};
+
+// ---- "Mixtape": a loud label in sky blue, white and black, written by hand
+
+const mixtape = {
+  folder: 'mixtape',
+  manifest: {
+    id: 'io.github.krocon.mixtape',
+    name: 'Mixtape',
+    description: 'A loud cassette label in sky blue, white and black, the titles written by hand.',
+    theme: {
+      background: '#f3efe7', surface: '#ffffff', surfaceRaised: '#ffffff', foreground: '#161616', muted: '#565656',
+      accent: '#0a6a9e', accentContrast: '#ffffff', border: '#161616', ok: '#1f6b3a', danger: '#a3231b', focus: '#b83216',
+      fontFamily: '"Marker Felt", "Segoe Print", "Comic Sans MS", sans-serif', fontMono: '"Marker Felt", "Segoe Print", "Comic Sans MS", sans-serif', radius: 4,
+    },
+  },
+  width: 400,
+  height: 580,
+  pad: 4,
+  css: `
+    body { background: linear-gradient(#f7f3ec, #ebe6dc); font-family: "Helvetica Neue", "Arial Narrow", Arial, sans-serif; }
+    .shell { position: absolute; left: 16px; top: 16px; width: 368px; height: 238px; border-radius: 10px; background: linear-gradient(#f1ebdf, #dfd8c9);
+      box-shadow: 0 4px 8px rgba(60,40,10,.4), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.3); }
+    .lab { position: absolute; left: 14px; top: 12px; width: 340px; height: 184px; border-radius: 6px; background: #2bb7ea; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .white { position: absolute; left: 10px; top: 10px; width: 232px; height: 62px; border-radius: 3px; background: #fff;
+      background-image: linear-gradient(#2bb7ea, #2bb7ea); background-size: 204px 1.5px; background-position: 20px 32px; background-repeat: no-repeat; }
+    .white::before { content: 'A'; position: absolute; left: 5px; top: 2px; font: 800 17px "Helvetica Neue", Arial, sans-serif; color: #161616; }
+    .c60 { position: absolute; right: 10px; top: 10px; width: 80px; height: 40px; background: #161616; color: #fff; font: 800 25px/40px "Helvetica Neue", Arial, sans-serif; text-align: center; letter-spacing: .02em; }
+    .say { position: absolute; top: 96px; font: 800 20px/22px "Helvetica Neue", "Arial Narrow", Arial, sans-serif; color: #fff; letter-spacing: .01em; }
+    .gap { position: absolute; left: 96px; top: 88px; width: 148px; height: 52px; border-radius: 6px; background: #e9e2d2; box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); }
+    .gap::after { content: ''; position: absolute; left: 48px; top: 10px; width: 52px; height: 26px; border-radius: 3px; background: linear-gradient(90deg, #5a2f22 0 60%, #1b1b1b 60%); box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
+    .base { position: absolute; left: 0; bottom: 0; width: 340px; height: 36px; border-radius: 0 0 6px 6px; background: #161616; color: #fff; font: 800 22px/36px "Helvetica Neue", "Arial Narrow", Arial, sans-serif; padding-left: 14px; letter-spacing: .04em; }
+    .base i { position: absolute; right: 14px; top: 9px; padding: 0 8px; border: 1.5px solid #fff; font: italic 700 9px/15px "Helvetica Neue", Arial, sans-serif; letter-spacing: .1em; }
+    .foot { position: absolute; left: 86px; bottom: 0; width: 196px; height: 30px; background: #cfc8b8; clip-path: polygon(6% 0, 94% 0, 100% 100%, 0 100%); }
+    .foot::after { content: ''; position: absolute; left: 38px; top: 10px; width: 120px; height: 10px; background: radial-gradient(circle, #161616 3.5px, transparent 4px) 0 0 / 30px 10px; }
+    .slot { position: absolute; border-radius: 7px; background: #d2ccbf; box-shadow: inset 0 1px 2px rgba(0,0,0,.5), 0 1px 0 #fff; }
+    .card { position: absolute; border-radius: 4px; background: #fff; box-shadow: 0 0 0 1.5px #161616, 4px 4px 0 #2bb7ea; }
+    ${COG_CSS}
+    .cog { background: #fff; box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 8px #161616, 0 0 0 2px #161616; }
+    .cog i { background: linear-gradient(#fff 0 6px, transparent 6px 18px, #fff 18px); }
+    .face { color: #fff; }
+    .face svg { width: 22px; height: 22px; }
+    .puck { border-radius: 50%; background: #161616; box-shadow: 3px 3px 0 #2bb7ea; }
+    .puck.blue { color: #161616; background: #2bb7ea; box-shadow: 0 0 0 2px #161616, 3px 3px 0 2px #161616; }
+    .tag { border-radius: 4px; color: #161616; background: #fff; box-shadow: 0 0 0 1.5px #161616; }
+    .tag svg { width: 17px; height: 17px; }
+    .hover .puck { background: #333; }
+    .hover .puck.blue { background: #5acbf2; }
+    .hover .tag { background: #e3f5fc; }
+    .pressed .puck { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #2bb7ea; }
+    .pressed .puck.blue { transform: translate(2px, 2px); box-shadow: 0 0 0 2px #161616, 1px 1px 0 2px #161616; }
+    .pressed .tag { background: #161616; color: #fff; }
+    .active .puck.blue { background: #fff; }
+    .active .tag { color: #fff; background: #0a6a9e; }
+  `,
+  art: `
+    <div class="shell">
+      <div class="lab"><div class="white"></div><div class="c60">C-60</div>
+        <div class="say" style="left:14px">HI-FI</div><div class="gap"></div><div class="say" style="left:256px;top:86px">LOW<br>NOISE</div>
+        <div class="base">LOSSLESS<i>STEREO</i></div></div>
+      <div class="foot"></div>
+    </div>
+    <div class="slot" style="left:14px;top:285px;width:372px;height:14px"></div>
+    <div class="slot" style="left:176px;top:391px;width:140px;height:14px"></div>
+    <div class="card" style="left:18px;top:424px;width:360px;height:138px"></div>
+  `,
+  buttons: [
+    button('player.open', 'open', 30, 314, 56, 56, 'puck'),
+    button('player.previous', 'previous', 96, 314, 56, 56, 'puck'),
+    button('player.togglePlay', 'play', 164, 306, 72, 72, 'puck blue', PLAY),
+    button('player.next', 'next', 248, 314, 56, 56, 'puck'),
+    button('player.stop', 'stop', 314, 314, 56, 56, 'puck'),
+    button('player.repeat', 'repeat', 16, 380, 50, 38, 'tag', TOGGLE),
+    button('player.shuffle', 'shuffle', 66, 380, 50, 38, 'tag', TOGGLE),
+    button('window.equalizer', 'equalizer', 116, 380, 50, 38, 'tag', TOGGLE),
+    button('app.skins', 'skins', 334, 380, 50, 38, 'tag'),
+  ],
+  components: [
+    { type: 'text', source: 'track.title', x: 64, y: 40, width: 206, height: 28, fontSize: 17, color: '#161616' },
+    { type: 'text', source: 'track.artist', x: 64, y: 72, width: 206, height: 24, fontSize: 14, color: '#0a6a9e' },
+    { type: 'time', source: 'position', x: 16, y: 262, width: 80, height: 20, fontSize: 15, color: '#161616' },
+    { type: 'text', source: 'player.status', x: 96, y: 262, width: 100, height: 20, fontSize: 11, color: '#565656' },
+    { type: 'spectrum', x: 200, y: 262, width: 100, height: 18, color: '#0a6a9e' },
+    { type: 'time', source: 'duration', x: 304, y: 262, width: 80, height: 20, fontSize: 15, align: 'right', color: '#565656' },
+    { type: 'seekbar', x: 16, y: 288, width: 368, height: 8 },
+    { type: 'volume', x: 178, y: 394, width: 136, height: 8 },
+    { type: 'playlist', x: 22, y: 428, width: 352, height: 130 },
+  ],
+  spinners: [smallHub('hub-left', 136, 128), smallHub('hub-right', 222, 128)],
+};
+
+// ---- "System": white marks on black, one reel that turns, one green light
+
+const systemSkin = {
+  folder: 'system',
+  manifest: {
+    id: 'io.github.krocon.system',
+    name: 'System',
+    description: 'White marks on black: dots, hairlines, a reel that turns and a single green light.',
+    theme: {
+      background: '#0c0c0c', surface: '#000000', surfaceRaised: '#1f1f1f', foreground: '#f5f5f5', muted: '#a9a9a9',
+      accent: '#49e58f', accentContrast: '#00210e', border: '#5c5c5c', ok: '#49e58f', danger: '#ff8f85', focus: '#7fc4ff',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontMono: '"Helvetica Neue", Helvetica, Arial, sans-serif', radius: 1,
+    },
+  },
+  width: 380,
+  height: 610,
+  pad: 5,
+  css: `
+    body { background: #0c0c0c; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .word { position: absolute; left: 24px; top: 18px; font-size: 12px; font-weight: 700; color: #f5f5f5; letter-spacing: .01em; }
+    .dots { position: absolute; height: 8px; background: radial-gradient(circle, #f5f5f5 2.6px, transparent 3px) 0 0 / 14px 8px; }
+    .line { position: absolute; height: 1px; background: #f5f5f5; opacity: .5; }
+    .scale { position: absolute; left: 24px; top: 190px; width: 10px; height: 60px; border: 1px solid #f5f5f5;
+      background: linear-gradient(#ff5a4f 0 30%, transparent 30%), repeating-linear-gradient(#0000 0 4px, #f5f5f5 4px 5px); }
+    .seat { position: absolute; left: 196px; top: 92px; width: 164px; height: 164px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(245,245,245,.5); }
+    .led { position: absolute; width: 7px; height: 7px; border-radius: 50%; }
+    .frame { position: absolute; background: #000; box-shadow: inset 0 0 0 1px #5c5c5c; }
+    .wheel { position: absolute; inset: 6px; border-radius: 50%; border: 9px solid #f5f5f5;
+      background: radial-gradient(circle, #0c0c0c 0 5px, #f5f5f5 5px 22px, transparent 22px); }
+    .wheel b { position: absolute; left: 50%; top: 50%; width: 22px; height: 67px; margin-left: -11px; transform-origin: 50% 0; background: #f5f5f5; }
+    .face { color: #f5f5f5; }
+    .face svg { width: 18px; height: 18px; }
+    .dot { border-radius: 50%; box-shadow: inset 0 0 0 1.5px #f5f5f5; }
+    .dot.full { color: #0c0c0c; background: #f5f5f5; }
+    .dot.full svg { width: 22px; height: 22px; }
+    .hover .dot { background: #2a2a2a; }
+    .hover .dot.full { background: #fff; box-shadow: 0 0 0 3px #0c0c0c, 0 0 0 4.5px #f5f5f5; }
+    .pressed .dot { color: #0c0c0c; background: #f5f5f5; }
+    .pressed .dot.full { background: #a9a9a9; }
+    .active .dot { color: #49e58f; box-shadow: inset 0 0 0 1.5px #49e58f; }
+    .active .dot.full { color: #00210e; background: #49e58f; box-shadow: 0 0 10px 1px rgba(73,229,143,.6); }
+  `,
+  art: `
+    <div class="word">systems</div>
+    <div class="dots" style="left:250px;top:22px;width:56px"></div>
+    <div class="led" style="left:320px;top:22px;background:#49e58f"></div><div class="led" style="left:334px;top:22px;background:#f5f5f5"></div><div class="led" style="left:348px;top:22px;background:#ff5a4f"></div>
+    <div class="line" style="left:24px;top:40px;width:332px"></div>
+    <div class="scale"></div>
+    <div class="seat"></div>
+    <div class="dots" style="left:24px;top:262px;width:112px"></div>
+    <div class="line" style="left:24px;top:352px;width:332px;opacity:.25"></div>
+    <div class="frame" style="left:24px;top:418px;width:332px;height:174px"></div>
+  `,
+  buttons: [
+    button('player.previous', 'previous', 22, 292, 54, 54, 'dot'),
+    button('player.togglePlay', 'play', 86, 292, 54, 54, 'dot full', PLAY),
+    button('player.stop', 'stop', 150, 292, 54, 54, 'dot'),
+    button('player.next', 'next', 214, 292, 54, 54, 'dot'),
+    button('player.open', 'open', 278, 292, 54, 54, 'dot'),
+    button('player.repeat', 'repeat', 22, 362, 46, 46, 'dot', TOGGLE),
+    button('player.shuffle', 'shuffle', 68, 362, 46, 46, 'dot', TOGGLE),
+    button('window.equalizer', 'equalizer', 114, 362, 46, 46, 'dot', TOGGLE),
+    button('app.skins', 'skins', 312, 362, 46, 46, 'dot'),
+  ],
+  components: [
+    { type: 'text', source: 'track.title', x: 24, y: 50, width: 332, height: 22, fontSize: 15, color: '#f5f5f5' },
+    { type: 'text', source: 'track.artist', x: 24, y: 72, width: 332, height: 16, fontSize: 11, color: '#a9a9a9' },
+    { type: 'time', source: 'position', x: 24, y: 104, width: 160, height: 56, fontSize: 44, color: '#f5f5f5' },
+    { type: 'text', source: 'player.status', x: 24, y: 162, width: 100, height: 14, fontSize: 10, color: '#49e58f' },
+    { type: 'time', source: 'duration', x: 104, y: 162, width: 80, height: 14, fontSize: 10, align: 'right', color: '#a9a9a9' },
+    { type: 'spectrum', x: 44, y: 190, width: 140, height: 60, color: '#f5f5f5' },
+    { type: 'seekbar', x: 24, y: 276, width: 332, height: 6 },
+    { type: 'volume', x: 172, y: 382, width: 130, height: 6 },
+    { type: 'playlist', x: 28, y: 422, width: 324, height: 166 },
+  ],
+  spinners: [
+    { name: 'wheel', x: 196, y: 92, width: 164, height: 164, period: 3000, html: '<div class="wheel"><b></b><b style="transform:rotate(120deg)"></b><b style="transform:rotate(240deg)"></b></div>' },
+  ],
+};
+
+// ---- "Console": matt grey, keys you press into the surface, small lights above them
+
+const consoleSkin = {
+  folder: 'console',
+  manifest: {
+    id: 'io.github.krocon.console',
+    name: 'Console',
+    description: 'Matt grey with hollow keys you press into the surface, small lights and one red key.',
+    theme: {
+      background: '#c5c7c9', surface: '#d7d9db', surfaceRaised: '#e7e9eb', foreground: '#1b1d1f', muted: '#44484c',
+      accent: '#00513f', accentContrast: '#ffffff', border: '#8b8e91', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontMono: '"Helvetica Neue", Helvetica, Arial, sans-serif', radius: 4,
+    },
+  },
+  width: 400,
+  height: 580,
+  pad: 5,
+  css: `
+    body { background: linear-gradient(160deg, #ccced0, #bbbdbf); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .lcd { position: absolute; border-radius: 6px; background: #d7d9db; box-shadow: inset 0 2px 5px rgba(0,0,0,.4), inset 0 0 0 1px rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.7); }
+    .slot { position: absolute; border-radius: 7px; background: #a9acae; box-shadow: inset 0 1px 2px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.7); }
+    .rail { position: absolute; left: 22px; top: 262px; width: 356px; height: 66px; border-radius: 8px; background: #2a2c2e; box-shadow: inset 0 2px 4px #000, 0 1px 0 rgba(255,255,255,.7); }
+    .grill { position: absolute; width: 18px; height: 18px; background: radial-gradient(circle, #44484c 1.6px, transparent 2px) 0 0 / 6px 6px; }
+    .tiny { position: absolute; font-size: 8px; letter-spacing: .06em; color: #44484c; text-align: center; white-space: nowrap; }
+    .face { color: #2a2c2e; }
+    .face svg { width: 22px; height: 22px; }
+    .bowl { border-radius: 50%; top: 18px !important; background: linear-gradient(160deg, #a9acae, #e9ebed);
+      box-shadow: 0 0 0 3px #d2d4d6, 0 0 0 4px #8b8e91, 0 4px 6px rgba(0,0,0,.3), inset 0 3px 6px rgba(0,0,0,.25); }
+    .bowl::before { content: ''; position: absolute; left: 50%; top: -15px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #5a5e62; }
+    .cell { border-radius: 5px; background: linear-gradient(160deg, #b3b6b8, #e3e5e7); box-shadow: 0 0 0 1px #17181a, inset 0 3px 5px rgba(0,0,0,.22); }
+    .cell.red { color: #fff; background: linear-gradient(160deg, #c22a20, #ee5a4d); }
+    .hover .bowl, .hover .cell { background: linear-gradient(160deg, #b7babc, #f5f7f9); }
+    .hover .cell.red { background: linear-gradient(160deg, #d2382d, #f77467); }
+    .pressed .bowl { background: linear-gradient(160deg, #94979a, #cfd1d3); box-shadow: 0 0 0 3px #d2d4d6, 0 0 0 4px #8b8e91, inset 0 5px 9px rgba(0,0,0,.4); }
+    .pressed .cell { background: linear-gradient(160deg, #94979a, #cfd1d3); box-shadow: 0 0 0 1px #17181a, inset 0 5px 8px rgba(0,0,0,.4); }
+    .pressed .cell.red { background: linear-gradient(160deg, #9d1f17, #cf453a); }
+    .active .bowl::before { background: #19e0b6; box-shadow: 0 0 6px 2px rgba(25,224,182,.8); }
+    .active .bowl { color: #00513f; }
+    .active .cell { color: #00513f; background: linear-gradient(160deg, #9fd9cc, #d9f3ee); box-shadow: 0 0 0 1px #17181a, inset 0 3px 5px rgba(0,0,0,.22), inset 0 -3px 0 #19e0b6; }
+  `,
+  art: `
+    <div class="lcd" style="left:22px;top:18px;width:356px;height:100px"></div>
+    <div class="slot" style="left:22px;top:129px;width:356px;height:14px"></div>
+    <div class="rail"></div>
+    <div class="tiny" style="left:22px;top:332px;width:70px">repeat</div><div class="tiny" style="left:93px;top:332px;width:70px">shuffle</div><div class="tiny" style="left:164px;top:332px;width:70px">eq</div><div class="tiny" style="left:235px;top:332px;width:70px">skin</div><div class="tiny" style="left:306px;top:332px;width:70px">stop</div>
+    <div class="grill" style="left:24px;top:352px"></div><div class="tiny" style="left:48px;top:356px">volume</div>
+    <div class="slot" style="left:96px;top:353px;width:282px;height:14px"></div>
+    <div class="lcd" style="left:22px;top:380px;width:356px;height:184px"></div>
+  `,
+  buttons: [
+    button('player.previous', 'previous', 24, 150, 88, 106, 'bowl'),
+    button('player.togglePlay', 'play', 112, 150, 88, 106, 'bowl', PLAY),
+    button('player.next', 'next', 200, 150, 88, 106, 'bowl'),
+    button('player.open', 'open', 288, 150, 88, 106, 'bowl'),
+    button('player.repeat', 'repeat', 23, 264, 71, 62, 'cell', TOGGLE),
+    button('player.shuffle', 'shuffle', 94, 264, 71, 62, 'cell', TOGGLE),
+    button('window.equalizer', 'equalizer', 165, 264, 71, 62, 'cell', TOGGLE),
+    button('app.skins', 'skins', 236, 264, 71, 62, 'cell'),
+    button('player.stop', 'stop', 307, 264, 70, 62, 'cell red'),
+  ],
+  components: [
+    { type: 'text', source: 'track.title', x: 36, y: 26, width: 328, height: 24, fontSize: 16, color: '#1b1d1f' },
+    { type: 'text', source: 'track.artist', x: 36, y: 50, width: 328, height: 18, fontSize: 12, color: '#44484c' },
+    { type: 'time', source: 'position', x: 36, y: 72, width: 96, height: 38, fontSize: 28, color: '#1b1d1f' },
+    { type: 'spectrum', x: 140, y: 78, width: 130, height: 28, color: '#00513f' },
+    { type: 'text', source: 'player.status', x: 276, y: 78, width: 88, height: 14, fontSize: 10, align: 'right', color: '#00513f' },
+    { type: 'time', source: 'duration', x: 276, y: 94, width: 88, height: 14, fontSize: 11, align: 'right', color: '#44484c' },
+    { type: 'seekbar', x: 24, y: 132, width: 352, height: 8 },
+    { type: 'volume', x: 98, y: 356, width: 278, height: 8 },
+    { type: 'playlist', x: 26, y: 384, width: 348, height: 176 },
+  ],
+};
+
+// ---- "Dial": one big turned knob; its mark shows the position and turning it seeks
+
+const dial = {
+  folder: 'dial',
+  manifest: {
+    id: 'io.github.krocon.dial',
+    name: 'Dial',
+    description: 'One big turned aluminium knob: its green mark shows the position, turning it seeks.',
+    theme: {
+      background: '#e3e4e5', surface: '#f3f4f5', surfaceRaised: '#ffffff', foreground: '#1c1d1f', muted: '#54575a',
+      accent: '#256b0c', accentContrast: '#ffffff', border: '#a5a7a9', ok: '#256b0c', danger: '#a3231b', focus: '#1f5fbf',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', fontMono: '"Helvetica Neue", Helvetica, Arial, sans-serif', radius: 3,
+    },
+  },
+  width: 360,
+  height: 680,
+  pad: 5,
+  css: `
+    body { background: linear-gradient(#f0f1f2, #d9dadb); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .seat { position: absolute; left: 56px; top: 116px; width: 248px; height: 248px; border-radius: 50%; background: linear-gradient(#d2d3d4, #f6f7f8);
+      box-shadow: inset 0 2px 5px rgba(0,0,0,.25), 0 1px 0 #fff; }
+    .ticks { position: absolute; left: 40px; top: 100px; width: 280px; height: 280px; border-radius: 50%;
+      background: repeating-conic-gradient(from 220deg, #54575a 0 .8deg, transparent .8deg 10deg);
+      -webkit-mask-image: radial-gradient(circle, transparent 0 131px, #000 131px 138px, transparent 138px), conic-gradient(from 219deg, #000 0 282deg, transparent 282deg); -webkit-mask-composite: source-in; }
+    .sign { position: absolute; top: 352px; font-size: 14px; color: #54575a; }
+    .shade { position: absolute; left: 70px; top: 136px; width: 220px; height: 220px; border-radius: 50%; box-shadow: 0 12px 16px rgba(0,0,0,.3), 0 2px 3px rgba(0,0,0,.35); }
+    .slot { position: absolute; border-radius: 7px; background: #c9cacb; box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 #fff; }
+    .sheet { position: absolute; border-radius: 3px; background: #f3f4f5; box-shadow: inset 0 0 0 1px #a5a7a9; }
+    .cap { position: absolute; font-size: 8px; letter-spacing: .08em; color: #54575a; white-space: nowrap; }
+    .turn { position: absolute; inset: 0; border-radius: 50%;
+      background: conic-gradient(from 0deg, #fdfdfd, #b9bbbd 12%, #f4f5f6 25%, #aeb0b2 37%, #fdfdfd 50%, #b9bbbd 62%, #f4f5f6 75%, #aeb0b2 87%, #fdfdfd);
+      box-shadow: inset 0 0 0 1px #8f9193, inset 0 0 0 7px rgba(255,255,255,.35), inset 0 0 0 8px rgba(0,0,0,.12); }
+    .turn::after { content: ''; position: absolute; left: 50%; top: 12px; width: 6px; height: 34px; margin-left: -3px; border-radius: 3px; background: #4fb81f; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+    .face { color: #1c1d1f; }
+    .face svg { width: 18px; height: 18px; }
+    .pad { border-radius: 50%; background: linear-gradient(#ffffff, #dcddde); box-shadow: 0 0 0 1px #9c9ea0, 0 2px 3px rgba(0,0,0,.2); }
+    .pad.dark { color: #fff; background: linear-gradient(#3c3e40, #1c1d1f); box-shadow: 0 0 0 1px #000, 0 2px 3px rgba(0,0,0,.3); }
+    .pad.dark svg { width: 24px; height: 24px; }
+    .hover .pad { background: linear-gradient(#fff, #ebeced); }
+    .hover .pad.dark { background: linear-gradient(#4e5052, #26272a); }
+    .pressed .pad { background: linear-gradient(#d0d1d2, #e6e7e8); box-shadow: 0 0 0 1px #9c9ea0, inset 0 2px 4px rgba(0,0,0,.3); }
+    .pressed .pad.dark { background: linear-gradient(#1c1d1f, #2c2d30); box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.7); }
+    .active .pad { color: #256b0c; box-shadow: 0 0 0 1px #256b0c, 0 0 0 3px rgba(79,184,31,.45); }
+    .active .pad.dark { color: #7fe24d; box-shadow: 0 0 0 1px #000, 0 0 0 3px #4fb81f; }
+  `,
+  art: `
+    <div class="ticks"></div><div class="seat"></div><div class="shade"></div>
+    <div class="sign" style="left:66px">–</div><div class="sign" style="right:66px">+</div>
+    <div class="cap" style="left:118px;top:473px">volume</div>
+    <div class="slot" style="left:116px;top:485px;width:128px;height:14px"></div>
+    <div class="sheet" style="left:22px;top:516px;width:316px;height:148px"></div>
+  `,
+  buttons: [
+    button('player.open', 'open', 26, 408, 52, 52, 'pad'),
+    button('player.previous', 'previous', 84, 408, 52, 52, 'pad'),
+    button('player.togglePlay', 'play', 144, 398, 72, 72, 'pad dark', PLAY),
+    button('player.next', 'next', 224, 408, 52, 52, 'pad'),
+    button('player.stop', 'stop', 282, 408, 52, 52, 'pad'),
+    button('player.repeat', 'repeat', 20, 468, 46, 46, 'pad', TOGGLE),
+    button('player.shuffle', 'shuffle', 66, 468, 46, 46, 'pad', TOGGLE),
+    button('window.equalizer', 'equalizer', 248, 468, 46, 46, 'pad', TOGGLE),
+    button('app.skins', 'skins', 294, 468, 46, 46, 'pad'),
+  ],
+  components: [
+    { type: 'time', source: 'position', x: 24, y: 14, width: 312, height: 44, fontSize: 34, align: 'center', color: '#1c1d1f' },
+    { type: 'text', source: 'track.title', x: 24, y: 60, width: 312, height: 22, fontSize: 15, align: 'center', color: '#1c1d1f' },
+    { type: 'text', source: 'track.artist', x: 24, y: 82, width: 312, height: 16, fontSize: 11, align: 'center', color: '#54575a' },
+    { type: 'text', source: 'player.status', x: 24, y: 376, width: 90, height: 16, fontSize: 10, color: '#256b0c' },
+    { type: 'spectrum', x: 120, y: 374, width: 120, height: 18, color: '#256b0c' },
+    { type: 'time', source: 'duration', x: 246, y: 376, width: 90, height: 16, fontSize: 11, align: 'right', color: '#54575a' },
+    { type: 'volume', x: 118, y: 488, width: 124, height: 8 },
+    { type: 'playlist', x: 26, y: 520, width: 308, height: 140 },
+  ],
+  needles: [
+    { name: 'knob', x: 70, y: 130, width: 220, height: 220, pivotX: 110, pivotY: 110, from: -140, to: 140, rest: -140, html: '<div class="turn"></div>' },
+  ],
+};
+
+// What every skin says about itself beyond its looks: words to find it by, and the row of
+// its background that is drawn out when the window is made taller (it runs through the playlist).
+const MORE = {
+  hifi: { keywords: ['hi-fi', 'receiver', 'aluminium', 'amber', 'dark', 'skeuomorphic'], resize: { stretchY: 400 } },
+  neon: { keywords: ['neon', 'synthwave', 'retro', 'dark', 'glow', 'eighties'], resize: { stretchY: 410 } },
+  tape: { keywords: ['cassette', 'tape', 'light', 'seventies', 'orange', 'skeuomorphic'], resize: { stretchY: 440 } },
+  vinyl: { keywords: ['turntable', 'record', 'vinyl', 'dark', 'soft', 'neumorphic', 'landscape'], resize: { stretchY: 340 } },
+  panel: { keywords: ['minimal', 'light', 'functional', 'sixties', 'red'], resize: { stretchY: 440 } },
+  reel: { keywords: ['reel', 'tape machine', 'light', 'minimal', 'landscape', 'sixties'], resize: { stretchY: 364 } },
+  recorder: { keywords: ['recorder', 'pocket', 'dark', 'display', 'red'], resize: { stretchY: 500 } },
+  deck: { keywords: ['cassette', 'deck', 'metal', 'dark', 'orange', 'skeuomorphic'], resize: { stretchY: 490 } },
+  walk: { keywords: ['cassette', 'portable', 'orange', 'eighties', 'dark'], resize: { stretchY: 480 } },
+  meter: { keywords: ['cassette', 'meter', 'steel', 'dark', 'red', 'skeuomorphic'], resize: { stretchY: 550 } },
+  ferro: { keywords: ['cassette', 'black', 'dark', 'blue', 'skeuomorphic'], resize: { stretchY: 480 } },
+  mixtape: { keywords: ['cassette', 'mixtape', 'light', 'blue', 'handwritten', 'pop'], resize: { stretchY: 490 } },
+  system: { keywords: ['minimal', 'black', 'white', 'dots', 'reel', 'graphic'], resize: { stretchY: 500 } },
+  console: { keywords: ['console', 'grey', 'light', 'soft', 'neumorphic', 'keys'], resize: { stretchY: 470 } },
+  dial: { keywords: ['dial', 'knob', 'aluminium', 'light', 'minimal', 'green'], resize: { stretchY: 590 } },
+};
+
+const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial];
 
 // ---------------------------------------------------------------- rendering
 
@@ -1282,9 +1802,11 @@ function build(design, mockDir) {
       const { name, html: _, ...placed } = n;
       return { type: kind, ...placed, states: { normal: file } };
     });
+  const packs = loose('pack')(design.packs);
   const spinners = loose('spinner')(design.spinners);
   const needles = loose('needle')(design.needles);
   const turned =
+    (design.packs ?? []).map((n) => `<div style="clip-path:circle(${(n.from + n.to) / 4}px at ${n.x + n.width / 2}px ${n.y + n.height / 2}px)">${needleHtml(n, 0)}</div>`).join('') +
     (design.spinners ?? []).map((n) => needleHtml(n, 25)).join('') +
     (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');
 
@@ -1307,13 +1829,14 @@ function build(design, mockDir) {
         width: design.width,
         height: design.height,
         background: 'assets/background.png',
-        components: [...spinners, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
+        ...(MORE[design.folder].resize ? { resize: MORE[design.folder].resize } : {}),
+        components: [...packs, ...spinners, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
       },
     },
   };
   // id, name and description first: the order a reader expects
   const { id, name, description, theme } = design.manifest;
-  const ordered = { formatVersion: 1, id, name, version: '1.0.0', author: 'FLAC Commander', description, preview: 'preview.png', theme, windows: manifest.windows };
+  const ordered = { formatVersion: 1, id, name, version: '1.0.0', author: 'FLAC Commander', description, keywords: MORE[design.folder].keywords, preview: 'preview.png', theme, windows: manifest.windows };
   writeFileSync(join(out, 'skin.json'), `${JSON.stringify(ordered, null, 2)}\n`);
   rmSync(work, { recursive: true, force: true });
   console.log(`skins/${design.folder}: ${buttons.length} buttons, ${design.width} × ${design.height}`);

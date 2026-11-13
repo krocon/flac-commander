@@ -15,6 +15,8 @@ pub const MAX_FILES: usize = 200;
 /// Largest image a skin may bring, per side.
 pub const MAX_IMAGE_SIDE: u32 = 4096;
 const MAX_COMPONENTS: usize = 200;
+/// Most keywords a skin may have.
+const MAX_KEYWORDS: usize = 12;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -31,6 +33,9 @@ pub struct Manifest {
     pub min_app_version: Option<String>,
     #[serde(default)]
     pub preview: Option<String>,
+    /// Words to find the skin by in the chooser.
+    #[serde(default)]
+    pub keywords: Vec<String>,
     #[serde(default)]
     pub theme: Theme,
     #[serde(default)]
@@ -108,8 +113,55 @@ pub struct PlayerWindow {
     /// Scale images without smoothing (pixel art).
     #[serde(default)]
     pub pixelated: bool,
+    /// How the window may be resized (`absolute` layout only). Without it the size is fixed.
+    #[serde(default)]
+    pub resize: Option<Resize>,
     #[serde(default)]
     pub components: Vec<Component>,
+}
+
+/// The rules by which the window of a skin grows beyond its size. Along each axis one line of
+/// the background is drawn out: components that span it grow, components beyond it move.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Resize {
+    /// The column that is drawn out when the window gets wider. Without it the width is fixed.
+    #[serde(default)]
+    pub stretch_x: Option<u32>,
+    /// The row that is drawn out when the window gets taller. Without it the height is fixed.
+    #[serde(default)]
+    pub stretch_y: Option<u32>,
+    /// Largest width and height; without them up to [`MAX_WINDOW_SIDE`].
+    #[serde(default)]
+    pub max_width: Option<u32>,
+    #[serde(default)]
+    pub max_height: Option<u32>,
+}
+
+/// Largest side of a window that a skin lets grow.
+pub const MAX_WINDOW_SIDE: u32 = 4000;
+
+impl PlayerWindow {
+    /// Smallest and largest size of the window content, if the layout is `absolute`:
+    /// `((width, height), (max_width, max_height))`. A fixed side has the same value twice.
+    pub fn size_range(&self) -> Option<((u32, u32), (u32, u32))> {
+        if self.layout != Layout::Absolute {
+            return None;
+        }
+        let (width, height) = (self.width?, self.height?);
+        let resize = self.resize.unwrap_or_default();
+        let most = |stretch: Option<u32>, max: Option<u32>, least: u32| match stretch {
+            Some(_) => max.unwrap_or(MAX_WINDOW_SIDE).max(least),
+            None => least,
+        };
+        Some((
+            (width, height),
+            (
+                most(resize.stretch_x, resize.max_width, width),
+                most(resize.stretch_y, resize.max_height, height),
+            ),
+        ))
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -129,6 +181,9 @@ pub enum ComponentType {
     Needle,
     /// A picture that turns round and round while music plays: a reel, the label of a record.
     Spinner,
+    /// A round picture of which a circle is shown whose diameter follows the position of the
+    /// track: the tape wound on a reel.
+    Pack,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -268,6 +323,12 @@ pub fn validate(
     check_text(r, "name", Some(&manifest.name), 1, 100);
     check_text(r, "author", manifest.author.as_ref(), 0, 100);
     check_text(r, "description", manifest.description.as_ref(), 0, 500);
+    if manifest.keywords.len() > MAX_KEYWORDS {
+        r.add("keywords", format!("more than {MAX_KEYWORDS} keywords"));
+    }
+    for (index, keyword) in manifest.keywords.iter().take(MAX_KEYWORDS).enumerate() {
+        check_text(r, &format!("keywords[{index}]"), Some(keyword), 1, 30);
+    }
     if parse_version(&manifest.version).is_none() {
         r.add("version", "must be three numbers like 1.0.0");
     }
@@ -320,8 +381,8 @@ pub fn validate(
 fn check_player(r: &mut Report, player: &PlayerWindow, file: &dyn Fn(&str) -> Option<Vec<u8>>) {
     let at = "windows.player";
     if player.layout == Layout::Flow {
-        if !player.components.is_empty() || player.background.is_some() {
-            r.add(at, "components and background need \"layout\": \"absolute\"");
+        if !player.components.is_empty() || player.background.is_some() || player.resize.is_some() {
+            r.add(at, "components, background and resize need \"layout\": \"absolute\"");
         }
         return;
     }
@@ -334,6 +395,26 @@ fn check_player(r: &mut Report, player: &PlayerWindow, file: &dyn Fn(&str) -> Op
     }
     if let Some(background) = &player.background {
         check_image(r, &format!("{at}.background"), background, file);
+    }
+    if let Some(resize) = &player.resize {
+        let axes = [
+            ("stretchX", "maxWidth", resize.stretch_x, resize.max_width, width),
+            ("stretchY", "maxHeight", resize.stretch_y, resize.max_height, height),
+        ];
+        for (stretch_name, max_name, stretch, max, size) in axes {
+            if stretch.is_some_and(|line| line == 0 || line >= size) {
+                r.add(format!("{at}.resize.{stretch_name}"), "must lie inside the window");
+            }
+            if max.is_some_and(|max| stretch.is_none() || max < size || max > MAX_WINDOW_SIDE) {
+                r.add(
+                    format!("{at}.resize.{max_name}"),
+                    format!("needs {stretch_name} and must be {size}–{MAX_WINDOW_SIDE}"),
+                );
+            }
+        }
+        if resize.stretch_x.is_none() && resize.stretch_y.is_none() {
+            r.add(format!("{at}.resize"), "needs stretchX or stretchY");
+        }
     }
     if player.components.len() > MAX_COMPONENTS {
         r.add(format!("{at}.components"), format!("more than {MAX_COMPONENTS} components"));
@@ -428,6 +509,20 @@ fn check_component(
                 r.add(format!("{at}.rest"), "must be between -360 and 360");
             }
         }
+        ComponentType::Pack => {
+            if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
+                r.add(format!("{at}.states.normal"), "a pack needs its picture here");
+            }
+            let fits = |d: Option<i32>| {
+                d.is_some_and(|d| d >= 1 && i64::from(d) <= i64::from(c.width.min(c.height)))
+            };
+            if !fits(c.from) || !fits(c.to) || c.from == c.to {
+                r.add(at, "a pack needs two different diameters from and to that fit its box");
+            }
+            if c.rest.is_some() && !fits(c.rest) {
+                r.add(format!("{at}.rest"), "must be a diameter that fits the box");
+            }
+        }
         ComponentType::Spinner => {
             if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
                 r.add(format!("{at}.states.normal"), "a spinner needs its picture here");
@@ -447,12 +542,12 @@ fn check_component(
     if c.kind != ComponentType::Button && c.action.is_some() {
         r.add(format!("{at}.action"), "only buttons have an action");
     }
-    let turning = [c.pivot_x.map(i64::from), c.pivot_y.map(i64::from)]
-        .into_iter()
-        .chain([c.from, c.to, c.rest].map(|a| a.map(i64::from)))
-        .any(|field| field.is_some());
-    if c.kind != ComponentType::Needle && turning {
-        r.add(at, "only a needle has pivotX, pivotY, from, to and rest");
+    let follows = c.from.is_some() || c.to.is_some() || c.rest.is_some();
+    if !matches!(c.kind, ComponentType::Needle | ComponentType::Pack) && follows {
+        r.add(at, "only a needle and a pack have from, to and rest");
+    }
+    if c.kind != ComponentType::Needle && (c.pivot_x.is_some() || c.pivot_y.is_some()) {
+        r.add(at, "only a needle has pivotX and pivotY");
     }
     if c.kind != ComponentType::Spinner && c.period.is_some() {
         r.add(format!("{at}.period"), "only a spinner has a period");
@@ -464,8 +559,9 @@ fn check_component(
                 | ComponentType::Image
                 | ComponentType::Needle
                 | ComponentType::Spinner
+                | ComponentType::Pack
         ) {
-            r.add(format!("{at}.states"), "only buttons, images, needles and spinners have images");
+            r.add(format!("{at}.states"), "only buttons, images and moving parts have images");
         }
         for (state, path) in states.all() {
             if let Some(path) = path {

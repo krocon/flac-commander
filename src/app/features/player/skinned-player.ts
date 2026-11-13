@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { ActionService } from '../../core/actions/action.service';
 import { describeError } from '../../core/errors/app-error';
-import { SkinComponent, SkinPlayerWindow } from '../../core/skins/skin.models';
+import { sizeRange, SkinComponent, SkinPlayerWindow } from '../../core/skins/skin.models';
 import { Playlist } from '../playlist/playlist';
 import { SkinStore } from '../skins/skin.store';
 import { Visualizer } from '../visualizer/visualizer';
@@ -12,6 +12,11 @@ import { PlayerStore } from './player.store';
 /** A component of the skin with what the template needs worked out. */
 interface Placed {
   readonly component: SkinComponent;
+  /** Where it lies now: a window that has grown moves and stretches components. */
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
   /** CSS `url(…)` per button state, `null` where the skin has no picture. */
   readonly normal: string | null;
   readonly hover: string | null;
@@ -30,6 +35,7 @@ interface Placed {
   imports: [Playlist, Visualizer],
   templateUrl: './skinned-player.html',
   styleUrl: './skinned-player.css',
+  host: { '(window:resize)': 'measure()' },
 })
 export class SkinnedPlayer {
   readonly layout = input.required<SkinPlayerWindow>();
@@ -45,20 +51,99 @@ export class SkinnedPlayer {
     return path ? this.url(path) : null;
   });
 
-  protected readonly placed = computed<readonly Placed[]>(() =>
-    this.layout().components.map((component) => {
+  /** Size of the browser window: a skin with rules for resizing fills it. */
+  private readonly viewport = signal(this.viewportNow());
+
+  protected measure(): void {
+    this.viewport.set(this.viewportNow());
+  }
+
+  private viewportNow(): readonly [number, number] {
+    return typeof window === 'undefined' ? [0, 0] : [window.innerWidth, window.innerHeight];
+  }
+
+  /** The size of the player: the skin's own, or larger as far as its rules allow. */
+  protected readonly size = computed(() => {
+    const { min, max } = sizeRange(this.layout());
+    const [width, height] = this.viewport();
+    return {
+      width: Math.min(Math.max(width, min[0]), max[0]),
+      height: Math.min(Math.max(height, min[1]), max[1]),
+    };
+  });
+
+  /** By how much the window is larger than the skin, and the lines that are drawn out. */
+  private readonly growth = computed(() => {
+    const layout = this.layout();
+    const size = this.size();
+    return {
+      x: { line: layout.resize?.stretchX ?? null, extra: size.width - (layout.width ?? 0) },
+      y: { line: layout.resize?.stretchY ?? null, extra: size.height - (layout.height ?? 0) },
+    };
+  });
+
+  /**
+   * The background of a resizable skin in up to nine pieces: along each axis the part before
+   * the stretch line, the line itself drawn out, and the part after it.
+   */
+  protected readonly slices = computed(() => {
+    const layout = this.layout();
+    if (!layout.resize || !layout.background) {
+      return null;
+    }
+    const pieces = (line: number | null, full: number, extra: number) =>
+      line === null
+        ? [{ at: 0, out: full, start: 0, scale: 1 }]
+        : [
+            { at: 0, out: line, start: 0, scale: 1 },
+            { at: line, out: extra + 1, start: line, scale: extra + 1 },
+            { at: line + extra + 1, out: full - line - 1, start: line + 1, scale: 1 },
+          ];
+    const width = layout.width ?? 0;
+    const height = layout.height ?? 0;
+    const { x, y } = this.growth();
+    return pieces(y.line, height, y.extra).flatMap((row) =>
+      pieces(x.line, width, x.extra).map((column) => ({
+        left: column.at,
+        top: row.at,
+        width: column.out,
+        height: row.out,
+        backgroundSize: `${width * column.scale}px ${height * row.scale}px`,
+        backgroundPosition: `${-column.start * column.scale}px ${-row.start * row.scale}px`,
+      })),
+    );
+  });
+
+  protected readonly placed = computed<readonly Placed[]>(() => {
+    const { x, y } = this.growth();
+    // beyond the stretch line: moved; across it: longer
+    const along = (start: number, length: number, axis: { line: number | null; extra: number }) =>
+      axis.line === null || axis.extra === 0
+        ? [start, length]
+        : start > axis.line
+          ? [start + axis.extra, length]
+          : start + length > axis.line
+            ? [start, length + axis.extra]
+            : [start, length];
+    return this.layout().components.map((component) => {
       const states = component.states;
       const of = (path: string | null | undefined) => (path ? this.url(path) : null);
+      const [left, width] = along(component.x, component.width, x);
+      const [top, height] = along(component.y, component.height, y);
       return {
         component,
+        left,
+        top,
+        width,
+        height,
         normal: of(states?.normal),
         hover: of(states?.hover),
         pressed: of(states?.pressed),
         active: of(states?.active),
         disabled: of(states?.disabled),
       };
-    }),
-  );
+    });
+  });
 
   protected readonly errorText = computed(() => {
     const error = this.store.error();
@@ -106,6 +191,15 @@ export class SkinnedPlayer {
   });
 
   protected needleAngle(c: SkinComponent): number {
+    const from = c.from ?? 0;
+    if (!this.view.seekable()) {
+      return c.rest ?? from;
+    }
+    return from + ((c.to ?? from) - from) * this.fraction();
+  }
+
+  /** Diameter of the circle a `pack` shows: from `from` to `to` as the track goes on. */
+  protected packDiameter(c: SkinComponent): number {
     const from = c.from ?? 0;
     if (!this.view.seekable()) {
       return c.rest ?? from;
@@ -162,9 +256,11 @@ export class SkinnedPlayer {
 
   /** Direction from the pivot to the pointer in degrees. */
   private pointerAngle(event: PointerEvent, c: SkinComponent): number {
-    const window = (event.currentTarget as HTMLElement).parentElement?.getBoundingClientRect();
-    const pivotX = (window?.left ?? 0) + c.x + (c.pivotX ?? 0);
-    const pivotY = (window?.top ?? 0) + c.y + (c.pivotY ?? 0);
+    // where the needle lies in the window, whatever the window has grown by
+    const needle = event.currentTarget as HTMLElement;
+    const window = needle.parentElement?.getBoundingClientRect();
+    const pivotX = (window?.left ?? 0) + needle.offsetLeft + (c.pivotX ?? 0);
+    const pivotY = (window?.top ?? 0) + needle.offsetTop + (c.pivotY ?? 0);
     return (Math.atan2(event.clientY - pivotY, event.clientX - pivotX) * 180) / Math.PI;
   }
 

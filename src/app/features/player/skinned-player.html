@@ -1,10 +1,24 @@
 <div
   class="window"
   [class.pixelated]="layout().pixelated"
-  [style.width.px]="layout().width"
-  [style.height.px]="layout().height"
-  [style.background-image]="background()"
+  [style.width.px]="size().width"
+  [style.height.px]="size().height"
+  [style.background-image]="slices() ? null : background()"
 >
+  <!-- a window that has grown: the background in pieces, the line in the middle drawn out -->
+  @for (slice of slices() ?? []; track $index) {
+    <div
+      class="slice"
+      aria-hidden="true"
+      [style.left.px]="slice.left"
+      [style.top.px]="slice.top"
+      [style.width.px]="slice.width"
+      [style.height.px]="slice.height"
+      [style.background-image]="background()"
+      [style.background-size]="slice.backgroundSize"
+      [style.background-position]="slice.backgroundPosition"
+    ></div>
+  }
   @for (item of placed(); track $index) {
     @let c = item.component;
     @switch (c.type) {
@@ -14,10 +28,10 @@
           class="placed"
           [class.pictured]="item.normal !== null"
           [class.active]="actions.isActive(c.action ?? '')"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
           [style.--normal]="item.normal"
           [style.--hover]="item.hover"
           [style.--pressed]="item.pressed"
@@ -38,11 +52,11 @@
         <p
           class="placed text"
           [attr.role]="c.source === 'player.status' ? 'status' : null"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
-          [style.line-height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
+          [style.line-height.px]="item.height"
           [style.font-size.px]="c.fontSize"
           [style.color]="c.color"
           [style.text-align]="c.align"
@@ -55,11 +69,11 @@
         <p
           class="placed text time"
           aria-hidden="true"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
-          [style.line-height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
+          [style.line-height.px]="item.height"
           [style.font-size.px]="c.fontSize"
           [style.color]="c.color"
           [style.text-align]="c.align"
@@ -74,10 +88,10 @@
           type="range"
           min="0"
           step="1000"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
           [max]="store.durationMs() ?? 0"
           [value]="store.positionMs()"
           [disabled]="!view.seekable()"
@@ -95,10 +109,10 @@
           min="0"
           max="100"
           step="1"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
           [value]="view.volumePercent()"
           [attr.aria-label]="t.volume"
           [attr.aria-valuetext]="t.percent(view.volumePercent())"
@@ -110,20 +124,20 @@
         <app-playlist
           class="placed compact"
           [compact]="true"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
         />
       }
       @case ('spectrum') {
         <app-visualizer
           class="placed"
           [color]="c.color"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
         />
       }
       @case ('spinner') {
@@ -131,12 +145,24 @@
           class="placed spinner"
           aria-hidden="true"
           [class.turning]="store.isPlaying()"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
           [style.background-image]="item.normal"
           [style.animation-duration.ms]="c.period ?? 2000"
+        ></div>
+      }
+      @case ('pack') {
+        <div
+          class="placed pack"
+          aria-hidden="true"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
+          [style.background-image]="item.normal"
+          [style.clip-path]="'circle(' + packDiameter(c) / 2 + 'px at 50% 50%)'"
         ></div>
       }
       @case ('needle') {
@@ -146,10 +172,10 @@
           tabindex="0"
           [class.dragging]="dragging()"
           [class.disabled]="!view.seekable()"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
           [style.background-image]="item.normal"
           [style.transform-origin]="(c.pivotX ?? 0) + 'px ' + (c.pivotY ?? 0) + 'px'"
           [style.transform]="'rotate(' + needleAngle(c) + 'deg)'"
@@ -170,10 +196,10 @@
         <div
           class="placed image"
           aria-hidden="true"
-          [style.left.px]="c.x"
-          [style.top.px]="c.y"
-          [style.width.px]="c.width"
-          [style.height.px]="c.height"
+          [style.left.px]="item.left"
+          [style.top.px]="item.top"
+          [style.width.px]="item.width"
+          [style.height.px]="item.height"
           [style.background-image]="item.normal"
         ></div>
       }

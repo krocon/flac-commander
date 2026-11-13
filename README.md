@@ -5,7 +5,7 @@ unabhängige Fenster und eine native Audio-Engine in Rust. Die Bedienung greift 
 Architektur und Skin-Format sind eigenständig.
 
 **Stand: alle sieben Phasen des ersten Plans umgesetzt.** Die App spielt Playlists aus lokalen Dateien, merkt sich ihren
-Zustand und lässt sich mit Skins umgestalten – mitgeliefert sind zehn Skins vom Plattenspieler „Vinyl" (Standard) bis zum Tonbandgerät „Reel", eigene Skins lassen sich als
+Zustand und lässt sich mit Skins umgestalten – mitgeliefert sind 16 Skins vom Plattenspieler „Vinyl" (Standard) bis zum Tonbandgerät „Reel", eigene Skins lassen sich als
 ZIP importieren. Playlist und Equalizer haben eigene Fenster; Titel gehen lückenlos ineinander über. Klassische
 Winamp-Skins lassen sich importieren (erster Schritt: Hauptfenster). Was offen ist und was noch niemand gehört oder
 gesehen hat, steht in der [Roadmap](docs/ROADMAP.md) und in den [manuellen Tests](docs/MANUAL-TESTS.md).

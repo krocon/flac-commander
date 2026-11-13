@@ -3,7 +3,7 @@ import { untilDestroyed } from '../../core/backend/events';
 import { AppError, toAppError } from '../../core/errors/app-error';
 import { LogApi } from '../../core/log/log-api';
 import { SkinApi } from '../../core/skins/skin-api';
-import { ActiveSkin, SkinInfo } from '../../core/skins/skin.models';
+import { ActiveSkin, sizeRange, SkinInfo } from '../../core/skins/skin.models';
 import { SKINS_TEXTS } from './skins-texts';
 import { applyTheme } from './theme';
 
@@ -140,7 +140,10 @@ export class SkinStore {
     if (!player || player.width === null || player.height === null) {
       return;
     }
-    if (viewportWidth === player.width && viewportHeight === player.height) {
+    // any size the skin's rules for resizing allow is fine
+    const { min, max } = sizeRange(player);
+    const fits = (now: number, axis: 0 | 1) => now >= min[axis] && now <= max[axis];
+    if (fits(viewportWidth, 0) && fits(viewportHeight, 1)) {
       return;
     }
     if (this.fitAttempts >= MAX_FIT_ATTEMPTS) {

@@ -5,6 +5,14 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "A cassette deck in cream and orange: paper label, piano keys and two reels.",
+  "keywords": [
+    "cassette",
+    "tape",
+    "light",
+    "seventies",
+    "orange",
+    "skeuomorphic"
+  ],
   "preview": "preview.png",
   "theme": {
     "background": "#e7dbc0",
@@ -28,6 +36,9 @@
       "width": 400,
       "height": 540,
       "background": "assets/background.png",
+      "resize": {
+        "stretchY": 440
+      },
       "components": [
         {
           "type": "spinner",

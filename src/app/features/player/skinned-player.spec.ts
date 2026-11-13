@@ -157,4 +157,30 @@ describe('SkinnedPlayer', () => {
       ),
     );
   });
+
+  it('a skin with a stretch line fills a taller window: the playlist grows, the rest stays', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', {
+      ...RETRO_SKIN.player,
+      resize: { stretchX: null, stretchY: 300, maxWidth: null, maxHeight: null },
+    });
+    const grown = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(grown.querySelector('app-playlist')).toBeTruthy());
+    const extra = window.innerHeight - 440;
+    expect(extra).toBeGreaterThan(0);
+    expect(grown.querySelector<HTMLElement>('.window')?.style.height).toBe(
+      `${window.innerHeight}px`,
+    );
+    // as wide as the skin: only the height has a stretch line
+    expect(grown.querySelector<HTMLElement>('.window')?.style.width).toBe('320px');
+    expect(grown.querySelector<HTMLElement>('app-playlist')?.style.height).toBe(`${264 + extra}px`);
+    expect(grown.querySelector<HTMLElement>('input[type="range"]')?.style.top).toBe('100px');
+    // the background: above the line, the line drawn out, below the line
+    const slices = [...grown.querySelectorAll<HTMLElement>('.slice')];
+    expect(slices.map((slice) => `${slice.style.top} ${slice.style.height}`)).toEqual([
+      '0px 300px',
+      `300px ${extra + 1}px`,
+      `${301 + extra}px 139px`,
+    ]);
+  });
 });

@@ -5,6 +5,13 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "A pocket recorder: matt black body, a glowing display and a ring of keys around play.",
+  "keywords": [
+    "recorder",
+    "pocket",
+    "dark",
+    "display",
+    "red"
+  ],
   "preview": "preview.png",
   "theme": {
     "background": "#18191b",
@@ -28,6 +35,9 @@
       "width": 340,
       "height": 600,
       "background": "assets/background.png",
+      "resize": {
+        "stretchY": 500
+      },
       "components": [
         {
           "type": "spectrum",

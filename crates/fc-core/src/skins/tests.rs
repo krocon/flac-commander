@@ -79,7 +79,10 @@ fn the_built_in_skins_are_valid() {
     let names: Vec<String> = library.list().into_iter().map(|s| s.name).collect();
     assert_eq!(
         names,
-        ["Deck", "Hi-Fi", "Neon", "Panel", "Recorder", "Reel", "Retro", "Tape", "Vinyl", "Walk"]
+        [
+            "Console", "Deck", "Dial", "Ferro", "Hi-Fi", "Meter", "Mixtape", "Neon", "Panel",
+            "Recorder", "Reel", "Retro", "System", "Tape", "Vinyl", "Walk"
+        ]
     );
     assert!(library.get(DEFAULT_SKIN).is_some());
     let retro = library.get("io.github.krocon.retro").unwrap();
@@ -151,6 +154,67 @@ fn a_needle_needs_a_picture_a_pivot_and_two_angles() {
 }
 
 #[test]
+fn a_pack_needs_a_picture_and_two_diameters_that_fit() {
+    let pack = |edit: fn(&mut serde_json::Value)| {
+        problems_of(|j| {
+            let c = component(j, 3);
+            *c = serde_json::json!({
+                "type": "pack", "x": 10, "y": 80, "width": 100, "height": 100,
+                "states": { "normal": "play.png" }, "from": 100, "to": 40
+            });
+            edit(c);
+        })
+    };
+    let at = "windows.player.components[3]";
+    assert_eq!(pack(|_| {}), [""; 0]);
+    assert_eq!(pack(|c| c["states"] = serde_json::Value::Null), [format!("{at}.states.normal")]);
+    assert_eq!(pack(|c| c["from"] = 101.into()), [at]);
+    assert_eq!(pack(|c| c["to"] = 0.into()), [at]);
+    assert_eq!(pack(|c| c["to"] = 100.into()), [at]);
+    assert_eq!(pack(|c| c["rest"] = 300.into()), [format!("{at}.rest")]);
+    assert_eq!(pack(|c| c["pivotX"] = 3.into()), [at]);
+}
+
+#[test]
+fn keywords_and_the_stretch_line_are_checked() {
+    assert_eq!(problems_of(|j| j["keywords"] = serde_json::json!(["dark", "tape"])), [""; 0]);
+    assert_eq!(problems_of(|j| j["keywords"] = serde_json::json!(["", "tape"])), ["keywords[0]"]);
+    let many: Vec<String> = (0..13).map(|n| format!("k{n}")).collect();
+    assert_eq!(problems_of(|j| j["keywords"] = serde_json::json!(many)), ["keywords"]);
+    let skin =
+        Skin::from_files(package(|j| j["keywords"] = serde_json::json!(["dark"])), false, APP);
+    assert_eq!(skin.unwrap().info().keywords, ["dark"]);
+}
+
+#[test]
+fn the_rules_for_resizing_are_checked() {
+    let resize =
+        |rules: serde_json::Value| problems_of(move |j| j["windows"]["player"]["resize"] = rules);
+    let json = |text: &str| serde_json::from_str::<serde_json::Value>(text).unwrap();
+    let at = "windows.player.resize";
+    assert_eq!(resize(json(r#"{"stretchY":100}"#)), [""; 0]);
+    assert_eq!(
+        resize(json(r#"{"stretchX":150,"maxWidth":900,"stretchY":100,"maxHeight":200}"#)),
+        [""; 0]
+    );
+    assert_eq!(resize(json(r#"{"stretchY":0}"#)), [format!("{at}.stretchY")]);
+    assert_eq!(resize(json(r#"{"stretchY":200}"#)), [format!("{at}.stretchY")]);
+    assert_eq!(resize(json(r#"{"stretchX":300}"#)), [format!("{at}.stretchX")]);
+    // a largest size needs its stretch line and is not smaller than the window
+    assert_eq!(resize(json(r#"{"stretchY":100,"maxWidth":900}"#)), [format!("{at}.maxWidth")]);
+    assert_eq!(resize(json(r#"{"stretchY":100,"maxHeight":199}"#)), [format!("{at}.maxHeight")]);
+    assert_eq!(resize(json(r#"{"stretchY":100,"maxHeight":4001}"#)), [format!("{at}.maxHeight")]);
+    assert_eq!(resize(json("{}")), [at]);
+
+    let window = |rules: &str| {
+        let files = package(|j| j["windows"]["player"]["resize"] = json(rules));
+        Skin::from_files(files, false, APP).unwrap().manifest.windows.player.unwrap().size_range()
+    };
+    assert_eq!(window(r#"{"stretchY":100}"#), Some(((300, 200), (300, 4000))));
+    assert_eq!(window(r#"{"stretchX":150,"maxWidth":900}"#), Some(((300, 200), (900, 200))));
+}
+
+#[test]
 fn a_spinner_needs_a_picture_and_the_time_of_a_turn() {
     let spinner = |edit: fn(&mut serde_json::Value)| {
         problems_of(|j| {
@@ -183,10 +247,12 @@ fn every_file_of_the_built_in_skins_is_embedded() {
         }
     }
     let skins = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../skins");
-    for (folder, embedded) in
-        ["retro", "hifi", "neon", "panel", "tape", "vinyl", "reel", "recorder", "deck", "walk"]
-            .iter()
-            .zip(BUILT_IN)
+    for (folder, embedded) in [
+        "retro", "hifi", "neon", "panel", "tape", "vinyl", "reel", "recorder", "deck", "walk",
+        "meter", "ferro", "mixtape", "system", "console", "dial",
+    ]
+    .iter()
+    .zip(BUILT_IN)
     {
         let mut on_disk = Vec::new();
         files_of(&skins.join(folder), &skins.join(folder), &mut on_disk);
@@ -505,8 +571,8 @@ fn an_imported_skin_is_installed_listed_and_there_after_a_restart() {
     assert_eq!(
         names,
         [
-            "Deck", "Hi-Fi", "Neon", "Panel", "Recorder", "Reel", "Retro", "Tape", "Vinyl", "Walk",
-            "Test"
+            "Console", "Deck", "Dial", "Ferro", "Hi-Fi", "Meter", "Mixtape", "Neon", "Panel",
+            "Recorder", "Reel", "Retro", "System", "Tape", "Vinyl", "Walk", "Test"
         ]
     );
 

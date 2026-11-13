@@ -1,4 +1,13 @@
-import { Component, computed, effect, ElementRef, inject, input, viewChild } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { describeError } from '../../core/errors/app-error';
 import { WindowsStore } from '../windows/windows.store';
 import { SkinStore } from './skin.store';
@@ -27,6 +36,19 @@ export class SkinChooser {
   protected readonly t = SKINS_TEXTS;
 
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+
+  /** What the user typed to narrow the list down. */
+  protected readonly query = signal('');
+  /** The skins whose name, description or keywords contain every word typed. */
+  protected readonly shown = computed(() => {
+    const words = this.query().toLowerCase().split(/\s+/).filter(Boolean);
+    return this.store.list().filter((skin) => {
+      const text = [skin.name, skin.description ?? '', ...(skin.keywords ?? [])]
+        .join(' ')
+        .toLowerCase();
+      return words.every((word) => text.includes(word));
+    });
+  });
 
   protected readonly errorText = computed(() => {
     const error = this.store.error();

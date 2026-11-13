@@ -53,9 +53,20 @@ pub fn active_skin(state: &AppState) -> AppResult<Arc<Skin>> {
 /// Gives the main window the size the skin asks for.
 pub fn fit_window(window: &WebviewWindow, skin: &Skin) {
     let fixed = fixed_size(skin);
+    let no_limit = None::<LogicalSize<f64>>;
     let result = match fixed {
+        // a skin with rules for resizing: between its own size and the largest it allows
+        Some((width, height)) if largest_size(skin) != Some((width, height)) => {
+            let (max_width, max_height) = largest_size(skin).unwrap_or((width, height));
+            window
+                .set_resizable(true)
+                .and_then(|()| window.set_min_size(Some(LogicalSize::new(width, height))))
+                .and_then(|()| window.set_max_size(Some(LogicalSize::new(max_width, max_height))))
+                .and_then(|()| window.set_size(LogicalSize::new(width, height)))
+        }
         Some((width, height)) => window
-            .set_min_size(None::<LogicalSize<f64>>)
+            .set_min_size(no_limit)
+            .and_then(|()| window.set_max_size(no_limit))
             .and_then(|()| window.set_resizable(false))
             .and_then(|()| window.set_size(LogicalSize::new(width, height))),
         None => {
@@ -63,7 +74,8 @@ pub fn fit_window(window: &WebviewWindow, skin: &Skin) {
             // standard size back; a window the user has sized keeps its size
             let was_fixed = !window.is_resizable().unwrap_or(true);
             window
-                .set_resizable(true)
+                .set_max_size(no_limit)
+                .and_then(|()| window.set_resizable(true))
                 .and_then(|()| {
                     window.set_min_size(Some(LogicalSize::new(FLOW_MIN_SIZE.0, FLOW_MIN_SIZE.1)))
                 })
@@ -79,6 +91,12 @@ pub fn fit_window(window: &WebviewWindow, skin: &Skin) {
     if let Err(e) = result {
         log::warn!("window not fitted to the skin {}: {e}", skin.id());
     }
+}
+
+/// The largest size the skin lets its window grow to; its own size where a side is fixed.
+fn largest_size(skin: &Skin) -> Option<(f64, f64)> {
+    let (_, (width, height)) = skin.manifest.windows.player.as_ref()?.size_range()?;
+    Some((f64::from(width), f64::from(height)))
 }
 
 /// Largest correction `skins_fit_viewport` makes: title bars and frames are far smaller.
@@ -112,9 +130,19 @@ pub async fn skins_fit_viewport(
     viewport_height: f64,
 ) -> AppResult<()> {
     let skin = active_skin(&state)?;
-    let Some(wanted) = fixed_size(&skin) else {
+    let Some(mut wanted) = fixed_size(&skin) else {
         return Ok(());
     };
+    // a window the user has made larger, as far as the skin allows, is as it should be
+    if let Some(largest) = largest_size(&skin) {
+        let within = |least: f64, most: f64, now: f64| {
+            if now.is_finite() && most > least { now.clamp(least, most) } else { least }
+        };
+        wanted = (
+            within(wanted.0, largest.0, viewport_width),
+            within(wanted.1, largest.1, viewport_height),
+        );
+    }
     let Some((add_width, add_height)) = fit_correction(wanted, (viewport_width, viewport_height))
     else {
         return Ok(());

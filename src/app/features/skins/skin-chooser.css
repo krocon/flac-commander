@@ -104,6 +104,49 @@ img,
   overflow-wrap: anywhere;
 }
 
+.filter {
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 10px;
+  padding: 5px 10px;
+  font: inherit;
+  color: var(--player-foreground);
+  background: var(--player-background);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+
+  &::placeholder {
+    color: var(--player-muted);
+  }
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+button.keyword {
+  padding: 0 7px;
+  font-size: 11px;
+  color: var(--player-muted);
+  background: none;
+  border-radius: 9px;
+
+  &:hover {
+    color: var(--player-foreground);
+  }
+}
+
+.skins > li.none {
+  display: block;
+  color: var(--player-muted);
+  border: none;
+  background: none;
+}
+
 .buttons {
   display: flex;
   flex-direction: column;
@@ -212,6 +255,11 @@ button {
 
   header .plain {
     display: none;
+  }
+
+  .filter {
+    max-width: 360px;
+    background: var(--player-surface);
   }
 
   .skins {
