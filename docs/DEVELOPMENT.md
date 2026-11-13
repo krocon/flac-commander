@@ -4,10 +4,12 @@
 
 - Node.js 22.22+ oder 24.15+, pnpm 10 (`corepack enable`)
 - Rust stable 1.93+ mit `rustfmt` und `clippy`
+- cmake und ein C-Compiler für libopus (macOS: `brew install cmake`). Ohne: `cargo … --no-default-features` für
+  `fc-core` – dann wird Opus abgelehnt, alles andere funktioniert
 - macOS: Xcode Command Line Tools
 - Windows: WebView2 (in Windows 10/11 enthalten), MSVC-Build-Tools
 - Linux: `libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
-  libasound2-dev`
+  libasound2-dev cmake`
 - Nur zum Neuerzeugen der Testdateien: ffmpeg mit `libmp3lame` und `libopus`
 
 ## Befehle
@@ -36,11 +38,20 @@ cargo run -p fc-core --example probe -- "datei.flac" "datei.mp3"
 ```
 
 ```bash
-cargo run -p fc-core --example play -- "datei.flac" --seconds 10 --gain 0.3
+cargo run -p fc-core --example play -- "datei.flac" --seconds 10 --volume 0.3 --seek 60000
 ```
 
-`play` fragt das Gerät nach der Abtastrate der Datei. Unter macOS stellt das das Gerät systemweit um und es bleibt so
-(zurücksetzen in „Audio-MIDI-Setup"). Siehe [AUDIO-ENGINE.md](AUDIO-ENGINE.md).
+`play` nutzt dieselbe Engine wie die App und gibt jeden gemeldeten Zustand aus. Siehe
+[AUDIO-ENGINE.md](AUDIO-ENGINE.md).
+
+### Die App mit einer Datei starten
+
+```bash
+pnpm tauri dev -- -- --volume 0.3 "/pfad/zur/datei.flac"
+```
+
+Die gebündelte App nimmt dieselben Argumente (`open "FLAC Commander.app" --args --volume 0.3 /pfad/datei.flac`).
+`--volume` ist vor allem zum Testen da: Die Lautstärke wird noch nicht gespeichert und beginnt sonst bei 100 %.
 
 ## Protokoll
 
@@ -64,12 +75,16 @@ Der genaue Ordner steht im Fenster unter „Protokollordner". Zeitstempel sind U
 5. Neuer Fehlercode? In `error.rs` (`ErrorCode` und `ALL`), in `app-error.ts` (`BACKEND_ERROR_CODES`), Texte in
    `error-texts.ts` und `error-texts.de.ts`. Die Tests auf beiden Seiten schlagen an, wenn eine Stelle fehlt.
 
+Ein Tastenkürzel: eine `Action` mit `shortcut` im Feature registrieren (Vorbild `features/player/player.actions.ts`),
+nie ein eigener `keydown`-Handler.
+
 Ein Event: Name und Payload in `src-tauri/src/events.rs` (mit Test der JSON-Form), im Frontend eine `on…`-Methode der
 Fassade über `subscribe()`; der Store bindet das Abo mit `untilDestroyed()` an seine Lebensdauer.
 
 ## Tests
 
-- **Rust:** Unit-Tests neben dem Code; `crates/fc-core/tests/formats.rs` dekodiert echte Dateien. Kein Test braucht
+- **Rust:** Unit-Tests neben dem Code; `tests/formats.rs` dekodiert echte Dateien, `tests/player.rs` treibt die
+  Engine mit einem simulierten Ausgabegerät (der Test ruft den Audio-Callback selbst auf). Kein Test braucht
   Audio-Hardware – was Hardware braucht, steht in [MANUAL-TESTS.md](MANUAL-TESTS.md).
 - **Angular:** `*.spec.ts` neben dem Code. Stores gegen `FakeSystemApi`, deren Antworten der Test selbst auslöst
   (`Deferred`). **Keine festen Pausen:** Tests warten mit `vi.waitFor` auf den Zustand, den sie prüfen.

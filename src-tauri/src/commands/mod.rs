@@ -3,6 +3,7 @@
 //! Every command is `async` (a synchronous command would run on the main thread and freeze the
 //! window); blocking work goes to `spawn_blocking`.
 
+pub mod player;
 pub mod system;
 
 use fc_core::{AppError, AppResult};

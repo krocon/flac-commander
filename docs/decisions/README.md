@@ -10,3 +10,4 @@ ersetzt (Status „ersetzt durch …").
 | [0003](0003-audio-bibliotheken.md) | Symphonia, CPAL, Lofty; Ringpuffer mit rtrb | angenommen |
 | [0004](0004-frontend-zustand-und-texte.md) | Signal-Stores je Feature, Laufzeit-i18n, CSS-Variablen als Skin-Schnittstelle | angenommen |
 | [0005](0005-logging.md) | Logging mit `log` und tauri-plugin-log | angenommen |
+| [0006](0006-resampling-opus-seek.md) | Resampling mit rubato, Opus über libopus, Seek mit neu geöffnetem Strom | angenommen |

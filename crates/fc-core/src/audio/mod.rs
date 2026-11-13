@@ -1,10 +1,12 @@
 //! Audio: formats, decoding (Symphonia) and output (CPAL).
 //!
-//! Phase 0/1 holds the validated building blocks – format table, decoder, output stream and the
-//! test tone. The playback engine with its command queue (Phase 2) is built from them
-//! (`docs/AUDIO-ENGINE.md`).
+//! [`player`] is the playback engine: a thread with a command queue that decodes, resamples and
+//! feeds the real-time callback through a lock-free ring buffer (`docs/AUDIO-ENGINE.md`).
 
 pub mod decode;
+pub mod dts;
 pub mod formats;
 pub mod output;
+pub mod player;
+pub mod resample;
 pub mod tone;

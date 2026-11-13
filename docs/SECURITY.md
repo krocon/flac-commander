@@ -1,24 +1,27 @@
 # Sicherheit
 
-## Stand heute (Phase 1)
+## Stand heute (Phase 2)
 
 - **Keine Netzwerkzugriffe.** Die App verbindet sich mit nichts.
 - **Minimale Rechte der WebView** (`src-tauri/capabilities/default.json`): `core:default` (eigene Commands, Events)
   und `log:default` (Logzeilen anhängen). Kein Dateisystem-, Shell-, Dialog- oder HTTP-Plugin.
 - **Strikte CSP** (`tauri.conf.json`): `default-src 'self'`, Skripte nur aus dem Bundle, Verbindungen nur zur IPC.
   Einzige Ausnahme: `style-src 'unsafe-inline'`, weil Angular Komponenten-Styles zur Laufzeit einfügt.
-- **Jede Fähigkeit ist ein eigener, schmaler Command.** Heute: `system_info` (liest), `start_test_tone` (spielt einen
-  festen, leisen Ton; höchstens einer zur Zeit).
+- **Jede Fähigkeit ist ein eigener, schmaler Command.** `system_info` liest; `start_test_tone` spielt einen festen,
+  leisen Ton; die `player_*`-Commands steuern die Engine und nehmen nur Zahlen entgegen (Position, Lautstärke).
+- **Die WebView nennt nie einen Dateipfad.** `player_open` zeigt den System-Dialog in Rust und übergibt die Wahl
+  direkt der Engine; das Dialog-Plugin hat keine WebView-Berechtigung. Der Titel des Dialogs kommt aus dem Frontend
+  und wird gekürzt und von Steuerzeichen befreit.
 - **Kein `unsafe`** im eigenen Rust-Code (`unsafe_code = "forbid"`), kein `unwrap`/`expect`/`panic` außerhalb von
   Tests (Clippy, `-D warnings`).
 - **Protokoll:** enthält Programmereignisse und Fehlertexte mit Dateipfaden, keine Inhalte.
 
-## Dateien des Nutzers (ab Phase 2/3)
+## Dateien des Nutzers
 
-- Pfade kommen aus dem Datei-Dialog des Systems oder per Drag & Drop, nie aus Skin- oder Playlist-Inhalten ohne
-  Prüfung. Die WebView erhält kein allgemeines Leserecht; Rust öffnet die Datei.
-- Audiodateien sind fremde Daten: Decoder laufen in reinem Rust (Symphonia), Fehler werden zu `AppError`, nie zu
-  einem Absturz. Dafür gibt es Tests mit beschädigten und falsch benannten Dateien.
+- Pfade kommen aus dem Datei-Dialog des Systems, von der Kommandozeile oder (ab Phase 3) per Drag & Drop, nie aus
+  Skin- oder Playlist-Inhalten ohne Prüfung. Die WebView erhält kein allgemeines Leserecht; Rust öffnet die Datei.
+- Audiodateien sind fremde Daten: Decoder laufen in reinem Rust (Symphonia) – mit einer Ausnahme: Opus dekodiert
+  libopus (C, abschaltbares Feature). Fehler werden zu `AppError`, nie zu einem Absturz. Dafür gibt es Tests mit beschädigten und falsch benannten Dateien.
 - Metadaten (Titel, Interpret) werden als Text ausgegeben, nie als HTML.
 
 ## Skins (ab Phase 4)

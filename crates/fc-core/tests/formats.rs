@@ -105,8 +105,83 @@ fn aac_in_m4a() {
     assert_sine("sine.m4a", "aac", 44_100, 2, false);
 }
 
-/// Symphonia 0.6.1 has no Opus decoder: the file is recognised and refused with a clear code.
-/// When this test fails because Opus decodes, move the format to `Supported`.
+/// Frames from `position_ms` to the end, after a seek from the middle of the track.
+fn frames_after_seek(name: &str, position_ms: u64) -> usize {
+    let mut decoder = Decoder::open(&fixture(name)).unwrap();
+    let channels = usize::from(decoder.info().channels);
+    for _ in 0..3 {
+        decoder.next_chunk().unwrap();
+    }
+    decoder.seek(position_ms).unwrap();
+    let mut frames = 0;
+    while let Some(chunk) = decoder.next_chunk().unwrap() {
+        frames += chunk.len() / channels;
+    }
+    frames
+}
+
+#[test]
+fn seeking_is_exact_to_the_frame_in_lossless_formats() {
+    for name in ["sine.flac", "sine.wav", "sine.aiff", "sine-alac.m4a"] {
+        assert_eq!(frames_after_seek(name, 0), 44_100, "{name}: back to the start");
+        assert_eq!(frames_after_seek(name, 250), 33_075, "{name}: 250 ms");
+        assert_eq!(frames_after_seek(name, 999), 45, "{name}: 999 ms");
+    }
+}
+
+#[test]
+fn seeking_lossy_formats_lands_within_a_few_milliseconds() {
+    let mut files = vec![("sine.mp3", 44_100), ("sine.ogg", 44_100), ("sine.m4a", 44_100)];
+    if cfg!(feature = "opus") {
+        files.push(("sine.opus", 48_000));
+    }
+    for (name, rate) in files {
+        let all = frames_after_seek(name, 0);
+        assert!((rate..rate + rate / 8).contains(&all), "{name}: {all} frames from the start");
+        let rest = frames_after_seek(name, 500);
+        let expected = all - rate / 2;
+        assert!(
+            rest.abs_diff(expected) <= 2_400,
+            "{name}: {rest} frames after 500 ms, expected {expected}"
+        );
+    }
+}
+
+#[test]
+fn seeking_to_or_behind_the_end_ends_the_track() {
+    for name in ["sine.flac", "sine.mp3", "sine.ogg", "sine.m4a", "sine.wav"] {
+        let duration = probe_file(&fixture(name)).unwrap().duration_ms.unwrap();
+        assert_eq!(frames_after_seek(name, duration), 0, "{name}: at the end");
+        assert_eq!(frames_after_seek(name, 60_000), 0, "{name}: far behind the end");
+    }
+}
+
+/// The reason `Decoder::seek` reopens the stream: seeking backwards and forwards, in any order,
+/// must give the same audio as seeking from a fresh decoder.
+#[test]
+fn seeking_back_and_forth_always_lands_where_asked() {
+    for name in ["sine.flac", "sine.wav", "sine.aiff", "sine-alac.m4a"] {
+        let mut decoder = Decoder::open(&fixture(name)).unwrap();
+        for position_ms in [900u64, 100, 500, 0, 990, 10] {
+            decoder.seek(position_ms).unwrap();
+            let mut frames = 0;
+            while let Some(chunk) = decoder.next_chunk().unwrap() {
+                frames += chunk.len() / 2;
+            }
+            let expected = 44_100 - (position_ms * 441 / 10) as usize;
+            assert_eq!(frames, expected, "{name}: after seeking to {position_ms} ms");
+        }
+    }
+}
+
+#[cfg(feature = "opus")]
+#[test]
+fn opus() {
+    assert_sine("sine.opus", "opus", 48_000, 2, false);
+}
+
+/// Built without libopus, an Opus file is recognised and refused with a clear code.
+#[cfg(not(feature = "opus"))]
 #[test]
 fn opus_is_refused_as_unsupported() {
     let err = probe_file(&fixture("sine.opus")).unwrap_err();
@@ -122,6 +197,7 @@ fn every_supported_format_has_a_fixture_that_opens() {
             "alac" => "sine-alac.m4a".to_owned(),
             "vorbis" => "sine.ogg".to_owned(),
             "aac" => "sine.m4a".to_owned(),
+            "opus" => "sine.opus".to_owned(),
             id => format!("sine.{id}"),
         };
         probe_file(&fixture(&name)).unwrap_or_else(|e| panic!("{}: {e:?}", format.id));

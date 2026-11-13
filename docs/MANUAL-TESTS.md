@@ -22,18 +22,35 @@ Vorbereitung: `pnpm tauri build --debug --bundles app` (macOS) bzw. `pnpm dev`, 
 | M11 | Nur Tastatur: Tab bis „Testton abspielen", Leertaste | sichtbarer Fokus, Ton startet |
 | M12 | Spike: `cargo run -p fc-core --example play -- <FLAC> --seconds 10` | Musik ohne Aussetzer; Ausgabe meldet `underrun callbacks: 0` |
 
+## Phase 2
+
+Vorbereitung: App mit leiser Startlautstärke und einer Datei starten, z. B.
+`open "target/debug/bundle/macos/FLAC Commander.app" --args --volume 0.2 /pfad/datei.flac`.
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| P1 | Start mit Datei | Dateiname, Format (`FLAC · 44,1 kHz · 16 Bit · Stereo`), Dauer; Musik läuft, Zeit zählt hoch, „Wiedergabe läuft" |
+| P2 | Pause, einige Sekunden warten, Wiedergabe | Zeit steht in der Pause; es geht an derselben Stelle weiter, ohne Knacken |
+| P3 | Auf die Seekleiste klicken; Regler ziehen | Zeit springt, Musik geht dort weiter; beim Ziehen folgt die Zeitanzeige, gesprungen wird beim Loslassen |
+| P4 | Zurück an den Anfang springen (FLAC!) | Musik beginnt wirklich von vorn (Symphonia-Fehler R15) |
+| P5 | Lautstärkeregler ziehen | Lautstärke folgt sofort und stufenlos |
+| P6 | Stopp, Wiedergabe | Zeit auf 0:00, Wiedergabe von vorn |
+| P7 | Tastatur: Leertaste, ←/→, ↑/↓, V, ⌘O bzw. Strg+O | Pause/Wiedergabe, ±5 s, Lautstärke ±5 %, Stopp, Dialog |
+| P8 | „Datei öffnen": je eine Datei jedes Formats; eine Textdatei mit `.mp3`; die DTS-WAV | Musik bzw. verständliche Fehlermeldung, kein Rauschen, kein Absturz |
+| P9 | Während der Wiedergabe die WebView neu laden (Debug-Build: Rechtsklick → Neu laden) | Musik läuft ohne Unterbrechung weiter; das Fenster zeigt nach dem Laden Titel und laufende Zeit |
+| P10 | Titel bis zum Ende laufen lassen | Stopp bei 0:00, „Gestoppt", kein Fehler |
+| P11 | Während der Wiedergabe das Ausgabegerät abziehen bzw. deaktivieren, dann Wiedergabe | Pause mit Fehlermeldung, Position bleibt; Wiedergabe setzt auf dem neuen Standardgerät fort |
+| P12 | 10 Minuten spielen, dabei andere Programme benutzen | keine Aussetzer; die Zeile „Aussetzer" erscheint nicht |
+| P13 | Datei mit 44,1 kHz auf einem 48-kHz-Gerät; danach Systemeinstellung des Geräts prüfen | klingt richtig (Tonhöhe, Tempo); das Gerät steht weiter auf 48 kHz |
+| P14 | Datei von einem Netzlaufwerk; Laufwerk während der Wiedergabe trennen | Wiedergabe, Seek ohne lange Hänger; nach dem Trennen Fehlermeldung statt Absturz |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
 | --- | --- | --- | --- |
-| 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher | M1–M4, M6 in der gebündelten App (Debug-Bundle); M12 mit FLAC 16/44,1, MP3 und FLAC 24/96, je 1–2 s | bestanden. Der Ton wurde nicht mit dem Ohr geprüft: belegt sind Start und Ende laut Backend, 0 Unterläufe, keine Gerätefehler. |
+| 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher | Phase 1: M1–M4, M6 in der gebündelten App (Debug-Bundle) | bestanden. Der Ton wurde nicht mit dem Ohr geprüft: belegt sind Start und Ende laut Backend und keine Gerätefehler. |
+| 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher, 48 kHz | Phase 2 in der gebündelten App: P1 (FLAC 16/44,1), P3 (Klick auf die Leiste), P2 (nur Pause: Zeit steht), P7 (nur →). Engine ohne App: FLAC ab Minute 1, MP3, DTS-WAV abgelehnt | bestanden, 0 Unterläufe. Nicht mit dem Ohr geprüft (4 % Lautstärke, niemand hat zugehört): belegt sind laufende Position, Zustände und fehlende Unterläufe. |
 | – | Windows 10/11, WASAPI | – | **offen** |
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 
-Offen auch unter macOS: M5, M7–M11.
-
-## Ab Phase 2 (Vorschau)
-
-Wiedergabe über längere Zeit ohne Aussetzer, Seek, Pause/Fortsetzen, Lautstärke, Gerät abziehen während der
-Wiedergabe, Ruhezustand und Aufwachen, Wiedergabe läuft weiter beim Neuladen der WebView, Dateien mit 44,1/48/96/192
-kHz auf einem 48-kHz-Gerät.
+Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7.

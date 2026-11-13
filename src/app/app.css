@@ -25,7 +25,19 @@ h1 {
   font-size: 12px;
 }
 
-.stage {
-  margin: 4px 0 14px;
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+summary {
+  cursor: pointer;
   color: var(--player-muted);
+  padding: 4px 0;
+}
+
+details[open] > summary {
+  margin-bottom: 8px;
 }

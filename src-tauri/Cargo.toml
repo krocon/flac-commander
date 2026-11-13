@@ -21,6 +21,8 @@ log.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tauri = { version = "2.12.5", features = [] }
+# Native "open file" dialog – used from Rust only, the webview gets no dialog or fs rights.
+tauri-plugin-dialog = "2"
 # Log file in the app's log folder, also for the frontend (`core/log/log-api.ts`).
 tauri-plugin-log = "2.10.2"
 

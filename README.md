@@ -4,28 +4,41 @@ Plattformübergreifender Musikplayer für lokale Musikbibliotheken: vollständig
 unabhängige Fenster und eine native Audio-Engine in Rust. Die Bedienung greift die Winamp-Tradition auf, Code,
 Architektur und Skin-Format sind eigenständig.
 
-**Stand: Phase 0 und 1 abgeschlossen (Grundgerüst).** Die App startet, spricht über eine typisierte IPC-Schicht mit dem
-Rust-Kern, schreibt ein Protokoll und kann die Audio-Ausgabe mit einem Testton prüfen. Einen Player gibt es noch
-nicht; er entsteht ab Phase 2 ([Roadmap](docs/ROADMAP.md)).
+**Stand: Phase 2 abgeschlossen (Audio-MVP).** Die App spielt eine Audiodatei über die Rust-Engine: Öffnen, Play,
+Pause, Stop, Seek, Lautstärke, auch per Tastatur. Playlist, Skins und mehrere Fenster folgen
+([Roadmap](docs/ROADMAP.md)).
 
 ## Was heute funktioniert
 
 | Bereich | Stand |
 | --- | --- |
 | Desktop-App (Tauri 2 + Angular 22) | startet auf macOS (geprüft); Linux und Windows baut und testet die CI |
-| Dekodieren | FLAC, MP3, WAV, Ogg Vorbis, AAC/M4A, ALAC, AIFF – jeweils durch einen Test an einer echten Datei belegt |
-| Opus | **nicht unterstützt** (Symphonia 0.6.1 hat keinen Decoder), wird sauber abgelehnt |
-| Audio-Ausgabe | Geräteliste, Standardformat, Testton über CPAL |
-| Wiedergabe von Dateien | nur als Kommandozeilen-Spike (`examples/play.rs`), noch nicht in der App |
-| Fehler | einheitlich als `AppError { code, message, details? }`, im Fenster in Deutsch oder Englisch |
-| Protokoll | Datei im Log-Ordner des Systems, inklusive Frontend-Fehlern und Panics |
+| Wiedergabe | eine Datei: Öffnen per Dialog oder Kommandozeile, Play, Pause, Stop, Seek, Lautstärke |
+| Formate | FLAC, MP3, WAV, Ogg Vorbis, Opus, AAC/M4A, ALAC, AIFF – jeweils durch Tests an echten Dateien belegt |
+| Engine | eigener Thread, lock-freier Ringpuffer, Resampling auf die Geräterate, framegenaues Seek |
+| Robustheit | beschädigte, abgeschnittene, falsch benannte Dateien und DTS-in-WAV werden mit Fehlermeldung abgelehnt; Geräteverlust pausiert |
+| Tastatur | Leertaste, Pfeiltasten, V, ⌘O/Strg+O über ein zentrales Aktionssystem |
+| Fehler und Protokoll | einheitliche Fehlercodes, Texte in Deutsch und Englisch, Logdatei |
 
-Noch nicht vorhanden: Playlist, Seek, Lautstärke, Skins, Mehrfenster, Bibliothek, Equalizer, Persistenz.
+Noch nicht vorhanden: Playlist und Titelwechsel, Metadaten (angezeigt wird der Dateiname), Drag & Drop, Speichern von
+Einstellungen, Skins, Mehrfenster, Bibliothek, Equalizer. Die Audio-Ausgabe unter Windows und Linux ist an echter
+Hardware noch ungeprüft.
+
+### Tastatur
+
+| Taste | Aktion |
+| --- | --- |
+| Leertaste | Wiedergabe / Pause (ohne Titel: Datei öffnen) |
+| V | Stopp |
+| ← / → | 5 Sekunden zurück / vor |
+| ↑ / ↓ | lauter / leiser |
+| ⌘O bzw. Strg+O | Datei öffnen |
 
 ## Voraussetzungen
 
 - Node.js 22.22+ oder 24.15+, pnpm 10
 - Rust 1.93+ (stable)
+- cmake und ein C-Compiler (für libopus; ohne: `--no-default-features`, dann kein Opus)
 - Linux zusätzlich: `libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
   libssl-dev libasound2-dev`
 
@@ -45,10 +58,14 @@ Alles prüfen (Format, Lint, Tests, Build – Frontend und Rust):
 pnpm check
 ```
 
-Eine Datei über den Rust-Kern abspielen, ohne die App (Spike aus Phase 0):
+Eine Datei direkt mit der App öffnen bzw. über die Engine ohne App abspielen:
 
 ```bash
-cargo run -p fc-core --example play -- "pfad/zur/datei.flac" --seconds 10
+pnpm tauri dev -- -- --volume 0.3 "pfad/zur/datei.flac"
+```
+
+```bash
+cargo run -p fc-core --example play -- "pfad/zur/datei.flac" --seconds 10 --volume 0.3
 ```
 
 Mehr dazu in [DEVELOPMENT.md](docs/DEVELOPMENT.md).

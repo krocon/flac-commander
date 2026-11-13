@@ -1,5 +1,6 @@
 import '../../app-texts';
 import '../../features/diagnostics/diagnostics-texts';
+import '../../features/player/player-texts';
 import '../errors/error-texts';
 import { CATALOGS, LANGUAGES } from './i18n';
 
@@ -8,7 +9,12 @@ describe('text catalogs', () => {
   const catalogs = [...CATALOGS].filter(([name]) => !name.startsWith('spec-'));
 
   it('are registered', () => {
-    expect(catalogs.map(([name]) => name).sort()).toEqual(['app', 'diagnostics', 'errors']);
+    expect(catalogs.map(([name]) => name).sort()).toEqual([
+      'app',
+      'diagnostics',
+      'errors',
+      'player',
+    ]);
   });
 
   it.each(catalogs)('%s has every key in every language, with the same kind of value', (_, c) => {
