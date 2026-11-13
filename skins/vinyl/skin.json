@@ -48,8 +48,19 @@
           "width": 96,
           "height": 96,
           "period": 1800,
+          "source": "track.cover",
           "states": {
             "normal": "assets/label.png"
+          }
+        },
+        {
+          "type": "image",
+          "x": 153,
+          "y": 175,
+          "width": 14,
+          "height": 14,
+          "states": {
+            "normal": "assets/spindle.png"
           }
         },
         {

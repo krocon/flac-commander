@@ -440,11 +440,16 @@ const vinyl = {
       box-shadow: inset 5px 5px 10px rgba(0,0,0,.6), inset -4px -4px 9px rgba(255,255,255,.05); }
     .record { position: absolute; left: 20px; top: 42px; width: 280px; height: 280px; border-radius: 50%;
       background:
-        radial-gradient(circle, #0d0e10 0 60px, transparent 60px),
-        conic-gradient(from 35deg, rgba(255,255,255,.13), transparent 11%, transparent 39%, rgba(255,255,255,.13) 50%, transparent 61%, transparent 89%, rgba(255,255,255,.13)),
-        repeating-radial-gradient(circle, #0b0c0d 0 1.2px, #18191c 1.2px 2.7px);
-      box-shadow: 0 5px 12px rgba(0,0,0,.6), 0 0 0 1px #050506; }
-    .record::after { content: ''; position: absolute; inset: 22px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 0 0 34px rgba(255,255,255,.012); }
+        /* the smooth middle around the label, and the lead-in at the rim */
+        radial-gradient(circle, #0b0b0d 0 54px, #17181b 54px 55px, #0a0a0c 55px 62px, transparent 62px 134px, #0c0c0e 134px 137px, #1d1e21 137px 138.5px, #060607 138.5px),
+        /* the gaps between the songs */
+        radial-gradient(circle, transparent 0 79px, rgba(0,0,0,.7) 79px 80.2px, rgba(255,255,255,.06) 80.2px 80.8px, transparent 80.8px 96px, rgba(0,0,0,.7) 96px 97.2px, rgba(255,255,255,.06) 97.2px 97.8px, transparent 97.8px 111px, rgba(0,0,0,.7) 111px 112.4px, rgba(255,255,255,.06) 112.4px 113px, transparent 113px 124px, rgba(0,0,0,.7) 124px 125.2px, transparent 125.2px),
+        /* light from the upper left, and its fainter twin opposite */
+        conic-gradient(from 285deg, transparent 0deg, rgba(255,255,255,.04) 8deg, rgba(255,255,255,.30) 24deg, rgba(255,255,255,.34) 30deg, rgba(255,255,255,.08) 46deg, transparent 58deg, transparent 176deg, rgba(255,255,255,.03) 186deg, rgba(255,255,255,.17) 204deg, rgba(255,255,255,.05) 222deg, transparent 236deg),
+        /* the grooves: fine, and not quite even */
+        repeating-radial-gradient(circle, rgba(255,255,255,.045) 0 .5px, transparent .5px 3.7px),
+        repeating-radial-gradient(circle, #030304 0 .55px, #1a1b1e .55px 1.15px);
+      box-shadow: 0 5px 12px rgba(0,0,0,.6), 0 0 0 1px #050506, inset 0 0 0 1px rgba(255,255,255,.07); }
     .pivot { position: absolute; left: 270px; top: 36px; width: 52px; height: 52px; border-radius: 50%;
       background: linear-gradient(145deg, #30343b, #1e2125);
       box-shadow: 4px 4px 8px rgba(0,0,0,.55), -3px -3px 7px rgba(255,255,255,.06); }
@@ -466,6 +471,7 @@ const vinyl = {
       box-shadow: 0 0 0 1px #050506; }
     .disc-label::after { content: 'FLAC · 33'; position: absolute; left: 0; right: 0; top: 9px; text-align: center;
       font: 700 7px "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; color: #0a2540; }
+    .spindle { position: absolute; left: 0; top: 0; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle, #0b0c0d 0 3px, #e3e7ea 3px 5px, #7d848b 5px); box-shadow: 0 1px 2px rgba(0,0,0,.6); }
     .well { position: absolute; border-radius: 12px; background: #1c1f23;
       box-shadow: inset 3px 3px 7px rgba(0,0,0,.6), inset -2px -2px 6px rgba(255,255,255,.05); }
     .face { color: #a9cdee; }
@@ -514,7 +520,9 @@ const vinyl = {
     { type: 'spectrum', x: 60, y: 350, width: 200, height: 30, color: '#66b5f5' },
     { type: 'playlist', x: 346, y: 264, width: 276, height: 118 },
   ],
-  spinners: [{ name: 'label', x: 112, y: 134, width: 96, height: 96, period: 1800, html: '<div class="disc-label"></div>' }],
+  spinners: [{ name: 'label', x: 112, y: 134, width: 96, height: 96, period: 1800, source: 'track.cover', html: '<div class="disc-label"></div>' }],
+  // the spindle stays on top of the cover
+  overlays: [{ name: 'spindle', x: 153, y: 175, width: 14, height: 14, html: '<div class="spindle"></div>' }],
   // the tonearm: turns from the first groove to the last with the track, and is dragged to seek
   needles: [
     {
@@ -1804,10 +1812,13 @@ function build(design, mockDir) {
     });
   const packs = loose('pack')(design.packs);
   const spinners = loose('spinner')(design.spinners);
+  // pictures that lie on top of what turns
+  const overlays = loose('image')(design.overlays);
   const needles = loose('needle')(design.needles);
   const turned =
     (design.packs ?? []).map((n) => `<div style="clip-path:circle(${(n.from + n.to) / 4}px at ${n.x + n.width / 2}px ${n.y + n.height / 2}px)">${needleHtml(n, 0)}</div>`).join('') +
     (design.spinners ?? []).map((n) => needleHtml(n, 25)).join('') +
+    (design.overlays ?? []).map((n) => needleHtml(n, 0)).join('') +
     (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');
 
   // the preview and the mock show the skin in use; one button is "on" to show that state too
@@ -1830,7 +1841,7 @@ function build(design, mockDir) {
         height: design.height,
         background: 'assets/background.png',
         ...(MORE[design.folder].resize ? { resize: MORE[design.folder].resize } : {}),
-        components: [...packs, ...spinners, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
+        components: [...packs, ...spinners, ...overlays, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
       },
     },
   };

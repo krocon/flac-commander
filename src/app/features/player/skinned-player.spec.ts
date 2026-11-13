@@ -183,4 +183,40 @@ describe('SkinnedPlayer', () => {
       `${301 + extra}px 139px`,
     ]);
   });
+
+  it('a spinner that asks for the cover shows it round, over its own picture', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', {
+      ...RETRO_SKIN.player,
+      components: [
+        {
+          type: 'spinner',
+          x: 10,
+          y: 10,
+          width: 96,
+          height: 96,
+          action: null,
+          source: 'track.cover',
+          states: {
+            normal: 'assets/label.png',
+            hover: null,
+            pressed: null,
+            active: null,
+            disabled: null,
+          },
+          align: null,
+          fontSize: null,
+          color: null,
+          period: 1800,
+        },
+      ],
+    });
+    const page = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(page.querySelector('.spinner.turning')).toBeTruthy());
+    const label = page.querySelector<HTMLElement>('.spinner');
+    expect(label?.classList.contains('round')).toBe(true);
+    expect(label?.style.backgroundImage).toContain('url("cover://');
+    expect(label?.style.backgroundImage).toContain('assets/label.png');
+    expect(label?.style.animationDuration).toBe('1800ms');
+  });
 });

@@ -178,6 +178,13 @@ input[type='range'] {
   &.turning {
     animation-play-state: running;
   }
+
+  /* the cover of the track as the label of a record: round, filling its box */
+  &.round {
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+  }
 }
 
 @keyframes turn {

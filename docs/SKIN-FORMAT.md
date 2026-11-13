@@ -114,14 +114,16 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `text` | `source` (Pflicht), `fontSize` (6–72), `color`, `align` | Eine Zeile Text; zu langer Text wird mit „…" gekürzt. |
 | `time` | `source` (Pflicht), `fontSize`, `color`, `align` | `position` oder `duration`. |
 | `playlist` | – | Die Playlist mit ihren Knöpfen. |
-| `image` | `states.normal` (Pflicht) | Ein Bild ohne Funktion. |
+| `image` | `states.normal` (Pflicht), `source` | Ein Bild ohne Funktion. Mit `"source": "track.cover"` zeigt es das Cover des laufenden Titels; das eigene Bild bleibt, wo ein Titel keines hat. |
 | `spectrum` | `color` | Balken, die der Musik folgen (ohne `color` in der Akzentfarbe). |
 | `needle` | `states.normal`, `pivotX`, `pivotY`, `from`, `to` (alle Pflicht), `rest` | Ein Bild, das sich um einen Drehpunkt dreht: bei Titelbeginn um `from` Grad, am Ende um `to` Grad (im Uhrzeigersinn, −360 bis 360), ohne Titel um `rest`. Ziehen spult; per Tastatur ein Regler (Pfeiltasten ±5 s). Beispiel: Tonarm. |
-| `spinner` | `states.normal`, `period` (Pflicht, 500–120000 ms je Umdrehung) | Ein Bild, das sich um seine Mitte dreht, solange Musik läuft. Beispiel: Spule, Plattenetikett. |
+| `spinner` | `states.normal`, `period` (Pflicht, 500–120000 ms je Umdrehung) | Ein Bild, das sich um seine Mitte dreht, solange Musik läuft. Beispiel: Spule, Plattenetikett. Mit `"source": "track.cover"` zeigt es das Cover des Titels, rund beschnitten (Vinyl). |
 | `pack` | `states.normal`, `from`, `to` (Pflicht), `rest` | Ein rundes Bild, von dem ein Kreis um die Mitte gezeigt wird. Sein Durchmesser (CSS-Pixel, höchstens die Kastengröße) geht mit dem Fortschritt des Titels von `from` nach `to`; ohne Titel `rest`. Beispiel: das Band auf einer Spule – links `from` groß und `to` klein, rechts umgekehrt. |
 
 **Aktionen** (`action`): `player.togglePlay`, `player.play`, `player.pause`, `player.stop`, `player.next`, `player.previous`, `player.open`,
 `player.repeat`, `player.shuffle`, `app.skins`, `window.playlist`, `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
+
+**Cover:** Das Cover ist das Bild in den Tags der Datei (bevorzugt „Front Cover"), sonst eine Datei `cover`, `folder`, `front` oder `album` (`.jpg`, `.png`, `.webp`) im selben Ordner. Die App liefert nur das Cover des gerade geladenen Titels aus; ein Skin kann keine anderen Dateien ansprechen.
 
 **Textquellen** (`source` bei `text`): `track.title`, `track.artist`, `track.details`, `player.status` (zeigt auch
 Fehlermeldungen).

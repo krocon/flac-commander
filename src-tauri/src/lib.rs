@@ -112,6 +112,28 @@ pub fn run() {
                     .unwrap_or_default(),
             }
         })
+        // the cover of the track that is loaded right now, and of nothing else
+        .register_uri_scheme_protocol("cover", |context, _request| {
+            use tauri::http::{Response, StatusCode};
+            let cover = context
+                .app_handle()
+                .try_state::<AppState>()
+                .and_then(|state| state.session.player().state().track)
+                .and_then(|track| fc_core::metadata::read_cover(&track.path));
+            match cover {
+                Some((bytes, kind)) => Response::builder()
+                    .status(StatusCode::OK)
+                    .header("Content-Type", kind)
+                    .header("X-Content-Type-Options", "nosniff")
+                    .header("Cache-Control", "no-store")
+                    .body(bytes)
+                    .unwrap_or_default(),
+                None => Response::builder()
+                    .status(StatusCode::NOT_FOUND)
+                    .body(Vec::new())
+                    .unwrap_or_default(),
+            }
+        })
         .setup(|app| {
             log_panics();
             let player_events = app.handle().clone();

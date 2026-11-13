@@ -231,6 +231,9 @@ fn a_spinner_needs_a_picture_and_the_time_of_a_turn() {
     assert_eq!(spinner(|c| c["states"] = serde_json::Value::Null), [format!("{at}.states.normal")]);
     assert_eq!(spinner(|c| c["period"] = 10.into()), [format!("{at}.period")]);
     assert_eq!(spinner(|c| c["period"] = serde_json::Value::Null), [format!("{at}.period")]);
+    // it may show the cover of the track; nothing else from outside the skin
+    assert_eq!(spinner(|c| c["source"] = "track.cover".into()), [""; 0]);
+    assert_eq!(spinner(|c| c["source"] = "file:///etc/passwd".into()), [format!("{at}.source")]);
     assert_eq!(problems_of(|j| component(j, 3)["period"] = 2000.into()), [format!("{at}.period")]);
 }
 

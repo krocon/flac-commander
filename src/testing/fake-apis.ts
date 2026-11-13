@@ -140,6 +140,10 @@ export class FakePlayerApi extends PlayerApi {
     return this.snapshot instanceof Deferred ? this.snapshot.promise : this.snapshot;
   }
 
+  override coverUrl(key: string): string {
+    return `cover://${key}`;
+  }
+
   override async play(): Promise<void> {
     this.command('play');
   }

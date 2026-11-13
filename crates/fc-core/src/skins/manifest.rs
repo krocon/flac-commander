@@ -491,6 +491,7 @@ fn check_component(
             if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
                 r.add(format!("{at}.states.normal"), "an image needs its file here");
             }
+            check_picture_source(r, at, c);
         }
         ComponentType::Needle => {
             if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
@@ -533,6 +534,7 @@ fn check_component(
                     "a spinner needs the time of one turn, 500 to 120000 ms",
                 );
             }
+            check_picture_source(r, at, c);
         }
         ComponentType::Seekbar
         | ComponentType::Volume
@@ -568,6 +570,15 @@ fn check_component(
                 check_image(r, &format!("{at}.states.{state}"), path, file);
             }
         }
+    }
+}
+
+/// What an `image` or a `spinner` may show instead of its own picture.
+pub const PICTURE_SOURCES: &[&str] = &["track.cover"];
+
+fn check_picture_source(r: &mut Report, at: &str, c: &Component) {
+    if c.source.as_deref().is_some_and(|source| !PICTURE_SOURCES.contains(&source)) {
+        r.add(format!("{at}.source"), format!("must be one of: {}", PICTURE_SOURCES.join(", ")));
     }
 }
 

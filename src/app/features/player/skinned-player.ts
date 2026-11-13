@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { ActionService } from '../../core/actions/action.service';
 import { describeError } from '../../core/errors/app-error';
+import { PlayerApi } from '../../core/player/player-api';
 import { sizeRange, SkinComponent, SkinPlayerWindow } from '../../core/skins/skin.models';
 import { Playlist } from '../playlist/playlist';
 import { SkinStore } from '../skins/skin.store';
@@ -41,6 +42,7 @@ export class SkinnedPlayer {
   readonly layout = input.required<SkinPlayerWindow>();
 
   protected readonly store = inject(PlayerStore);
+  private readonly playerApi = inject(PlayerApi);
   protected readonly view = inject(PlayerView);
   protected readonly actions = inject(ActionService);
   protected readonly skins = inject(SkinStore);
@@ -262,6 +264,21 @@ export class SkinnedPlayer {
     const pivotX = (window?.left ?? 0) + needle.offsetLeft + (c.pivotX ?? 0);
     const pivotY = (window?.top ?? 0) + needle.offsetTop + (c.pivotY ?? 0);
     return (Math.atan2(event.clientY - pivotY, event.clientX - pivotX) * 180) / Math.PI;
+  }
+
+  /** The cover of the loaded track; `null` while nothing is loaded. */
+  protected readonly cover = computed(() => {
+    const path = this.store.track()?.path;
+    return path ? `url("${this.playerApi.coverUrl(path)}")` : null;
+  });
+
+  /**
+   * What an `image` or `spinner` shows: its own picture – under the cover of the track if it
+   * asks for that, so that it still shows where a track has no cover.
+   */
+  protected picture(item: Placed): string | null {
+    const cover = item.component.source === 'track.cover' ? this.cover() : null;
+    return cover && item.normal ? `${cover}, ${item.normal}` : (cover ?? item.normal);
   }
 
   private url(path: string): string {
