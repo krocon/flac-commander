@@ -12,3 +12,4 @@ ersetzt (Status „ersetzt durch …").
 | [0005](0005-logging.md) | Logging mit `log` und tauri-plugin-log | angenommen |
 | [0006](0006-resampling-opus-seek.md) | Resampling mit rubato, Opus über libopus, Seek mit neu geöffnetem Strom | angenommen |
 | [0007](0007-skin-format.md) | Skins sind geprüfte Daten: deklaratives Format, zwei Layout-Arten | angenommen |
+| [0008](0008-mehrere-fenster.md) | Mehrere Fenster: je Fenster eine WebView, Synchronität über Rust-Events | angenommen |

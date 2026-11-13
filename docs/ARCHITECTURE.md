@@ -1,6 +1,6 @@
 # Architektur
 
-Stand: Phase 4. Was hier als „geplant" markiert ist, existiert noch nicht.
+Stand: Phase 5. Was hier als „geplant" markiert ist, existiert noch nicht.
 
 ## Schichten
 
@@ -144,12 +144,21 @@ Details: [AUDIO-ENGINE.md](AUDIO-ENGINE.md).
 - **Event-Abos** enden mit ihrem Besitzer: `untilDestroyed(subscribe(...), destroyRef)` – auch wenn der Besitzer
   zerstört wird, bevor das Abo steht.
 
-## Mehrere Fenster (geplant, Phase 5)
+## Mehrere Fenster
 
-Jedes Tauri-Fenster ist eine eigene WebView mit eigenem JavaScript-Kontext; Angular-Zustand wird nicht geteilt. Die
-Synchronisation läuft deshalb über Rust: Fenster abonnieren dieselben Events und holen beim Start einen Schnappschuss.
-Kein Fenster startet eine eigene Engine. Offene Punkte (Speicherbedarf je WebView, rahmenlose und transparente Fenster
-je Plattform, Andocken/Snapping) stehen in [RISKS.md](RISKS.md).
+Jedes Fenster ist eine eigene WebView mit eigenem JavaScript-Kontext und zeigt dasselbe Frontend; das Fenster-Label
+(`main`, `playlist`) entscheidet, welcher Teil erscheint. Fenster teilen nichts in der WebView: Sie bleiben synchron,
+weil alle dieselben Events aus Rust hören und beim Start einen Schnappschuss holen. Kein Fenster startet eine Engine.
+
+```text
+Knopf / ⌘L → WindowsStore → call('windows_toggle', 'playlist') → windows.rs
+  erzeugt, zeigt oder versteckt das Fenster → Event windows://state { open } an alle Fenster
+  → Hauptfenster blendet seine eingebettete Playlist aus bzw. ein
+Verschieben / Größe ändern → windows.rs merkt sich den Platz → state.json
+```
+
+Die Fensterliste ist fest (`windows.rs`), Nebenfenster werden beim Schließen nur versteckt. Messung und Begründung:
+[ADR 0008](decisions/0008-mehrere-fenster.md).
 
 ## Projektstruktur
 
@@ -164,8 +173,8 @@ crates/fc-core/          Rust-Kern (kein Tauri)
   tests/session.rs       Titelwechsel, defekte Dateien, Speichern/Wiederherstellen
   tests/fixtures/        selbst erzeugte Sinus-Dateien (scripts/make-fixtures.sh)
   examples/              play (Engine ohne App), probe (Symphonia + Lofty)
-src-tauri/               Tauri-Schale: commands/, events.rs, lib.rs, capabilities/
-src/app/core/            actions, backend, errors, i18n, log, player, playlist, skins, system
+src-tauri/               Tauri-Schale: commands/, events.rs, windows.rs, lib.rs, capabilities/
+src/app/core/            actions, backend, errors, i18n, log, player, playlist, skins, system, windows
 src/app/features/        player (auch SkinnedPlayer), playlist, skins, diagnostics
 skins/                   mitgelieferte Skins (ins Programm eingebettet)
 src/testing/             Fake-Fassaden für Tests

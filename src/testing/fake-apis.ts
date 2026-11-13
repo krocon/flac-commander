@@ -12,6 +12,12 @@ import { SkinApi } from '../app/core/skins/skin-api';
 import { ActiveSkin, SkinInfo, SkinTheme } from '../app/core/skins/skin.models';
 import { SystemApi } from '../app/core/system/system-api';
 import { SystemInfo, TestToneFinished } from '../app/core/system/system.models';
+import {
+  SecondaryWindow,
+  WindowApi,
+  WindowLabel,
+  WindowsState,
+} from '../app/core/windows/window-api';
 
 export const SYSTEM_INFO: SystemInfo = {
   app: {
@@ -467,6 +473,46 @@ export class FakeSkinApi extends SkinApi {
       throw this.failure;
     }
     this.commands.push(text);
+  }
+}
+
+/** The app's windows: the test decides which window this is and which are open. */
+export class FakeWindowApi extends WindowApi {
+  readonly commands: string[] = [];
+  readonly handlers = new Set<(state: WindowsState) => void>();
+  current: WindowLabel = 'main';
+  open: string[] = [];
+  failure: unknown = null;
+
+  override label(): WindowLabel {
+    return this.current;
+  }
+
+  override async state(): Promise<WindowsState> {
+    return { open: this.open };
+  }
+
+  /** Like the backend: toggles and tells every window. */
+  override async toggle(label: SecondaryWindow): Promise<boolean> {
+    if (this.failure) {
+      throw this.failure;
+    }
+    this.commands.push(`toggle ${label}`);
+    const opens = !this.open.includes(label);
+    this.open = opens ? [...this.open, label] : this.open.filter((l) => l !== label);
+    this.emit();
+    return opens;
+  }
+
+  override async onState(handler: (state: WindowsState) => void): Promise<Unsubscribe> {
+    this.handlers.add(handler);
+    return () => this.handlers.delete(handler);
+  }
+
+  emit(): void {
+    for (const handler of this.handlers) {
+      handler({ open: this.open });
+    }
   }
 }
 

@@ -1,7 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Least privilege: core defaults (events, invoke of the app's own commands) and writing log lines. No fs, shell, dialog or http access from the webview.",
-  "windows": ["main"],
-  "permissions": ["core:default", "log:default"]
+  "description": "Least privilege for every window of the app: core defaults (events, invoke of the app's own commands) and writing log lines. No fs, shell, dialog or http access from a webview.",
+  "windows": [
+    "main",
+    "playlist"
+  ],
+  "permissions": [
+    "core:default",
+    "log:default"
+  ]
 }

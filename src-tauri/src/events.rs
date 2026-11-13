@@ -18,6 +18,9 @@ pub const PLAYLIST_STATE: &str = "playlist://state";
 /// `core/skins/skin.models.ts`.
 pub const SKIN_ACTIVE: &str = "skins://active";
 
+/// A secondary window was opened or closed. Payload: `windows::WindowsState`.
+pub const WINDOWS_STATE: &str = "windows://state";
+
 /// The test tone ended. Mirrored by `TestToneFinished` in `core/system/system.models.ts`.
 pub const TEST_TONE_FINISHED: &str = "audio://test-tone-finished";
 

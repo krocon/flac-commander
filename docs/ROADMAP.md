@@ -72,11 +72,18 @@ vorige fertig ist.
 - [ ] Kontrastwarnung für importierte Skins
 - [ ] Rahmenlose Fenster, Bilder für Regler, Bitmap-Schriften, Hochskalieren
 
-## Phase 5 – Mehrfenster
+## Phase 5 – Mehrfenster ✅
 
-- [ ] Messung: Kosten mehrerer WebViews (R6), dann Entscheidung zum Fensterkonzept
-- [ ] Player-, Playlist-, Equalizer-Fenster; Position und Größe speichern und wiederherstellen
-- [ ] Synchronisation über Rust-Events
+- [x] Messung: ein weiteres Fenster kostet rund 50–60 MB ([ADR 0008](decisions/0008-mehrere-fenster.md))
+- [x] Playlist als eigenes Fenster, auf- und zuklappbar (Knopf, ⌘L / Strg+L); das Hauptfenster zeigt sie dann nicht
+- [x] Feste Fensterliste in Rust, Nebenfenster werden versteckt statt zerstört
+- [x] Platz, Größe und Sichtbarkeit aller Fenster gespeichert und wiederhergestellt (nur auf vorhandene Bildschirme)
+- [x] Synchronität über Rust-Events; Skin und Tastenkürzel gelten in jedem Fenster
+- [x] macOS: Neustart öffnet beide Fenster an ihrem Platz, beide Frontends melden sich im Protokoll
+- [ ] Bedienung des zweiten Fensters von Hand prüfen ([MANUAL-TESTS.md](MANUAL-TESTS.md) W1–W6) – beim Bau war der
+      Bildschirm gesperrt
+- [ ] Equalizer-Fenster (kommt mit dem Equalizer in Phase 6)
+- [ ] Rahmenlose Fenster, Andocken
 
 ## Phase 6 – Advanced Audio
 

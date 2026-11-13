@@ -10,7 +10,8 @@ use crate::audio::player::{OutputBackend, PlaybackStatus, Player, PlayerState};
 use crate::error::{AppResult, ErrorCode};
 use crate::metadata::read_meta;
 use crate::playlist::{Advance, Playlist, PlaylistState, RepeatMode};
-use crate::storage::{self, Loaded, SavedState, Saver};
+use crate::storage::{self, Loaded, SavedState, Saver, WindowPlace};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread;
@@ -58,6 +59,8 @@ struct Inner {
     position_ms: u64,
     /// Id of the active skin: kept here only to be saved with the rest.
     skin: Option<String>,
+    /// Places of the windows: kept here only to be saved with the rest.
+    windows: BTreeMap<String, WindowPlace>,
 }
 
 /// Cheap to clone: every clone is the same session.
@@ -102,6 +105,7 @@ impl Inner {
             current,
             position_ms: if current.is_some() { self.position_ms } else { 0 },
             skin: self.skin.clone(),
+            windows: self.windows.clone(),
             ..SavedState::default()
         }
     }
@@ -238,6 +242,7 @@ impl Session {
             volume: saved.volume,
             position_ms: saved.position_ms,
             skin: saved.skin.clone(),
+            windows: saved.windows.clone(),
         }));
 
         let hook = inner.clone();
@@ -279,6 +284,20 @@ impl Session {
         let mut inner = lock(&self.inner);
         inner.skin = id;
         inner.save();
+    }
+
+    /// Where the window `label` was when the state was saved.
+    pub fn window_place(&self, label: &str) -> Option<WindowPlace> {
+        lock(&self.inner).windows.get(label).copied()
+    }
+
+    /// Remembers where a window is.
+    pub fn set_window_place(&self, label: &str, place: WindowPlace) {
+        let mut inner = lock(&self.inner);
+        if inner.windows.get(label) != Some(&place) {
+            inner.windows.insert(label.to_owned(), place);
+            inner.save();
+        }
     }
 
     pub fn playlist_state(&self) -> PlaylistState {

@@ -1,6 +1,6 @@
 # Technische Risiken und offene Entscheidungen
 
-Stand: Ende Phase 4.
+Stand: Ende Phase 5.
 
 ## Risiken
 
@@ -11,7 +11,7 @@ Stand: Ende Phase 4.
 | R3 | **DTS in WAV** | Wird als PCM erkannt und würde als lautes Rauschen abgespielt (Datei in `samples/`). | **Gelöst:** Erkennung am Syncwort, Ablehnung mit `unsupported_format` (Test und echte Datei). | erledigt |
 | R4 | **Audio-Ausgabe unter Windows und Linux ungeprüft** | Die CI kompiliert und testet, hat aber keine Audio-Hardware. | Manuelle Tests je Plattform ([MANUAL-TESTS.md](MANUAL-TESTS.md)). **Weiter offen** – dafür braucht es einen Windows- und einen Linux-Rechner. | offen |
 | R5 | **Gerätewechsel** | CPAL meldet einen Wechsel des Standardgeräts nicht überall; abgezogene Geräte kommen als Stromfehler. | Stromfehler sind behandelt (Pause, Fortsetzen auf neuem Gerät). **Offen:** ein Wechsel des Standardgeräts ohne Fehler wird nicht bemerkt. | 3 |
-| R6 | **Mehrere WebViews** | Jedes Fenster ist ein eigener WebView-Prozess mit eigenem Angular-Zustand; sechs Fenster kosten Speicher und Startzeit. | Messen, bevor das Fensterkonzept festgelegt wird; Alternative: mehrere „Fenster" als Bereiche einer WebView, nur abgelöste Fenster als eigene WebView. | 5 |
+| R6 | **Mehrere WebViews** | Jedes Fenster ist ein eigener WebView-Prozess mit eigenem Angular-Zustand; sechs Fenster kosten Speicher und Startzeit. | **Gemessen:** rund 50–60 MB je weiterem Fenster (macOS, Debug). Entschieden: ein Fenster als Standard, weitere nur auf Wunsch ([ADR 0008](decisions/0008-mehrere-fenster.md)). | erledigt |
 | R7 | **Rahmenlose/transparente Fenster** | Pixelgenaue Skins brauchen Fenster ohne Systemrahmen; Verhalten (Schatten, Ziehen, Größenänderung, Transparenz) unterscheidet sich je Plattform, unter Linux je Compositor. | Früh ein Prototyp-Fenster je Plattform; Skin-Format erlaubt einen Rückfall auf den Systemrahmen. | 4–5 |
 | R19 | **Fenstergröße je Plattform** | `set_size` zählt unter macOS die Titelleiste mit (32 px fehlten dem Retro-Skin). | Umgangen: Das Fenster meldet seine echte Inhaltsgröße, Rust gleicht aus (`skins_fit_viewport`). Unter Windows und Linux ungeprüft. | 4, beobachten |
 | R8 | **WebKitGTK unter Linux** | Andere Engine als unter macOS/Windows: Unterschiede bei CSS und Performance möglich. | Skins unter Linux in den manuellen Tests; keine Engine-spezifischen CSS-Funktionen ohne Fallback. | 4 |
@@ -35,5 +35,5 @@ Stand: Ende Phase 4.
 | E3 | ~~Opus~~ | entschieden: libopus-Adapter als Feature ([ADR 0006](decisions/0006-resampling-opus-seek.md)) | – |
 | E4 | ~~Persistenz~~ | umgesetzt: eine versionierte JSON-Datei (`state.json`); SQLite erst für die Bibliothek | – |
 | E5 | ~~Datei-Dialog~~ | umgesetzt: `tauri-plugin-dialog` nur aus Rust, die WebView hat keine Dialog- oder Dateirechte | – |
-| E6 | **Fensterkonzept** | siehe R6: erst messen. | Phase 5 |
+| E6 | ~~Fensterkonzept~~ | entschieden: [ADR 0008](decisions/0008-mehrere-fenster.md) | – |
 | E7 | **Bit-perfect-Modus** | als Einstellung, nicht als Standard (R2). | nach Phase 2 |

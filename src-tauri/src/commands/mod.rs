@@ -7,6 +7,7 @@ pub mod player;
 pub mod playlist;
 pub mod skins;
 pub mod system;
+pub mod windows;
 
 use fc_core::{AppError, AppResult};
 

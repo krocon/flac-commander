@@ -1,6 +1,7 @@
 import { afterRenderEffect, Component, computed, DestroyRef, inject } from '@angular/core';
 import { APP_TEXTS } from './app-texts';
 import { ActionService } from './core/actions/action.service';
+import { LogApi } from './core/log/log-api';
 import { Diagnostics } from './features/diagnostics/diagnostics';
 import { DiagnosticsStore } from './features/diagnostics/diagnostics.store';
 import { Player } from './features/player/player';
@@ -13,18 +14,33 @@ import { PlaylistStore } from './features/playlist/playlist.store';
 import { SkinChooser } from './features/skins/skin-chooser';
 import { SkinStore } from './features/skins/skin.store';
 import { SKINS_TEXTS } from './features/skins/skins-texts';
+import { WindowsStore } from './features/windows/windows.store';
 
 @Component({
   selector: 'app-root',
   imports: [Diagnostics, Player, Playlist, SkinChooser, SkinnedPlayer],
   template: `
-    @if (skins.absolutePlayer(); as layout) {
+    @if (windows.label === 'playlist') {
+      <!-- the playlist window: the list and nothing else -->
+      <div class="solo">
+        <app-playlist />
+      </div>
+    } @else if (skins.absolutePlayer(); as layout) {
       <!-- a skin that places everything itself: nothing of the app's own layout around it -->
       <app-skinned-player [layout]="layout" />
     } @else {
       <div class="flow">
         <header>
           <h1>{{ t.title }}</h1>
+          <button
+            type="button"
+            class="first"
+            [attr.aria-pressed]="windows.playlistDetached()"
+            [title]="actions.hint('window.playlist')"
+            (click)="windows.toggle('playlist')"
+          >
+            {{ p.playlist }} ⧉
+          </button>
           <button type="button" [title]="actions.hint('app.skins')" (click)="skins.openChooser()">
             {{ s.skins }}
           </button>
@@ -34,7 +50,9 @@ import { SKINS_TEXTS } from './features/skins/skins-texts';
         </header>
         <main>
           <app-player />
-          <app-playlist />
+          @if (!windows.playlistDetached()) {
+            <app-playlist />
+          }
           <details>
             <summary>{{ t.diagnostics }}</summary>
             <app-diagnostics />
@@ -59,6 +77,7 @@ export class App {
   protected readonly actions = inject(ActionService);
   protected readonly playlist = inject(PlaylistStore);
   protected readonly skins = inject(SkinStore);
+  protected readonly windows = inject(WindowsStore);
   protected readonly t = APP_TEXTS;
   protected readonly p = PLAYLIST_TEXTS;
   protected readonly s = SKINS_TEXTS;
@@ -75,6 +94,14 @@ export class App {
         run: () => void this.skins.openChooser(),
       },
       {
+        id: 'window.playlist',
+        label: () =>
+          this.windows.playlistDetached() ? this.t.playlistDocked : this.t.playlistWindow,
+        shortcut: { key: 'l', mod: true },
+        active: () => this.windows.playlistDetached(),
+        run: () => void this.windows.toggle('playlist'),
+      },
+      {
         // the way out of any skin: no skin can take this key away
         id: 'app.resetSkin',
         label: () => this.s.resetSkin,
@@ -83,15 +110,20 @@ export class App {
       },
     ]);
     inject(DestroyRef).onDestroy(unregister);
+    // one line per window in the log file: a window that never says this did not come up
+    inject(LogApi).info(`window ${this.windows.label} ready`);
     // once a fixed-size skin is on screen: does the window give it the room it asks for?
     afterRenderEffect(() => {
-      if (this.skins.absolutePlayer()) {
+      if (this.windows.isMain && this.skins.absolutePlayer()) {
         this.fitWindow();
       }
     });
   }
 
   protected fitWindow(): void {
-    this.skins.fitWindow(window.innerWidth, window.innerHeight);
+    // only the main window is sized by the skin
+    if (this.windows.isMain) {
+      this.skins.fitWindow(window.innerWidth, window.innerHeight);
+    }
   }
 }

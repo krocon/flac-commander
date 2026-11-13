@@ -6,6 +6,7 @@
 
 pub mod commands;
 pub mod events;
+pub mod windows;
 
 use fc_core::audio::player::DefaultOutput;
 use fc_core::session::{PlayAdded, Session, SessionConfig};
@@ -164,6 +165,7 @@ pub fn run() {
                 commands::skins::fit_window(&window, &skin);
             }
             app.manage(state);
+            windows::restore(app.handle());
             let package = app.package_info();
             log::info!(
                 "{} {} started on {} {}",
@@ -198,8 +200,24 @@ pub fn run() {
             commands::skins::skins_import,
             commands::skins::skins_remove,
             commands::skins::skins_fit_viewport,
+            commands::windows::windows_state,
+            commands::windows::windows_toggle,
         ])
         .on_window_event(|window, event| {
+            match event {
+                WindowEvent::CloseRequested { api, .. } => {
+                    if windows::hide_instead_of_closing(window) {
+                        api.prevent_close();
+                    } else {
+                        // the main window ends the app: remember where everything is
+                        windows::remember(window.app_handle(), window.label());
+                    }
+                }
+                WindowEvent::Moved(_) | WindowEvent::Resized(_) => {
+                    windows::remember(window.app_handle(), window.label());
+                }
+                _ => {}
+            }
             // files and folders dropped onto a window: Rust takes the paths, not the webview
             if let WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) = event {
                 let Some(state) = window.try_state::<AppState>() else {
