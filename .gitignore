@@ -45,10 +45,9 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Rust / Tauri
+# Rust / Tauri (Cargo workspace: one target folder at the root)
+/target
 /src-tauri/target
-# Prompt 022: the release sidecar (scripts/mcp-sidecar.mjs)
-/src-tauri/binaries
 /src-tauri/gen
 
 # Tool folders of other assistants
