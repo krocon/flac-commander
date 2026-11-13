@@ -1,0 +1,58 @@
+/*
+ * Design tokens: the only place for colours, fonts and radii. Components use `var(--player-…)`
+ * and never a fixed value. This block is the neutral dark base theme; from Phase 4 on a skin
+ * replaces these values at runtime (docs/SKIN-FORMAT.md).
+ */
+:root {
+  color-scheme: dark;
+  --player-background: #141414;
+  --player-surface: #1e1e1e;
+  --player-surface-raised: #2a2a2a;
+  --player-foreground: #f5f5f5;
+  --player-muted: #a8a8a8;
+  --player-accent: #ffdd00;
+  --player-accent-contrast: #141414;
+  --player-border: #3a3a3a;
+  --player-ok: #6fdc8c;
+  --player-danger: #ff8a80;
+  --player-focus: #8ab4ff;
+  --player-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --player-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --player-radius: 6px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--player-background);
+  color: var(--player-foreground);
+  font-family: var(--player-font-family);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--player-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

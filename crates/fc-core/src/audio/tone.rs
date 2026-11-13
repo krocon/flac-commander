@@ -4,7 +4,10 @@
 use crate::audio::output::{self, OutputStream};
 use crate::error::{AppError, AppResult, ErrorCode};
 use std::f32::consts::TAU;
-use std::sync::mpsc::{Receiver, RecvTimeoutError, sync_channel};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, sync_channel};
+use std::thread;
 use std::time::Duration;
 
 pub const TONE_FREQUENCY_HZ: f32 = 440.0;
@@ -117,6 +120,62 @@ impl TestTone {
     }
 }
 
+/// Plays the test tone on a thread of its own, one tone at a time (`busy` is the guard).
+///
+/// Returns once the output is open and the tone runs – or with the reason why not.
+/// `on_finished` is called on the tone's thread when it ends; `busy` is free again by then.
+pub fn spawn_test_tone<F>(busy: Arc<AtomicBool>, on_finished: F) -> AppResult<()>
+where
+    F: FnOnce(AppResult<()>) + Send + 'static,
+{
+    spawn_guarded(busy, start_test_tone, TestTone::wait, on_finished)
+}
+
+/// `start` and `wait` run on the new thread, so what `start` returns need not be `Send`
+/// (an output stream is not, on some platforms).
+fn spawn_guarded<T, S, W, F>(
+    busy: Arc<AtomicBool>,
+    start: S,
+    wait: W,
+    on_finished: F,
+) -> AppResult<()>
+where
+    S: FnOnce() -> AppResult<T> + Send + 'static,
+    W: FnOnce(T) -> AppResult<()> + Send + 'static,
+    F: FnOnce(AppResult<()>) + Send + 'static,
+{
+    if busy.swap(true, Ordering::AcqRel) {
+        return Err(AppError::new(ErrorCode::OutputBusy, "a test tone is already playing"));
+    }
+    let (started_tx, started_rx) = mpsc::channel::<AppResult<()>>();
+    let thread_busy = busy.clone();
+    let spawned = thread::Builder::new().name("test-tone".to_owned()).spawn(move || {
+        let playing = match start() {
+            Ok(playing) => playing,
+            Err(e) => {
+                thread_busy.store(false, Ordering::Release);
+                let _ = started_tx.send(Err(e));
+                return;
+            }
+        };
+        let _ = started_tx.send(Ok(()));
+        let result = wait(playing);
+        thread_busy.store(false, Ordering::Release);
+        on_finished(result);
+    });
+    if let Err(e) = spawned {
+        busy.store(false, Ordering::Release);
+        return Err(
+            AppError::internal("test tone thread could not be started").with_details(e.to_string())
+        );
+    }
+    started_rx.recv().unwrap_or_else(|_| {
+        // the thread ended without an answer: it panicked while opening the output
+        busy.store(false, Ordering::Release);
+        Err(AppError::internal("test tone thread ended while opening the output"))
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -167,8 +226,112 @@ mod tests {
 
     #[test]
     fn degenerate_parameters_do_not_panic() {
-        assert!(Tone::new(440.0, 0, 44_100, 0).render(&mut [0.0; 3]) || true);
+        // no duration, no channels: only the tail, on one channel
+        let mut empty = Tone::new(440.0, 0, 1_000, 0);
+        let mut out = [1.0; 300];
+        assert!(empty.render(&mut out));
+        assert!(out.iter().all(|s| *s == 0.0));
+        // a device that reports 0 Hz: finished at once instead of dividing by zero
         let mut zero_rate = Tone::new(440.0, 10, 0, 2);
         assert!(zero_rate.render(&mut [0.0; 8]));
+    }
+
+    fn busy_flag() -> Arc<AtomicBool> {
+        Arc::new(AtomicBool::new(false))
+    }
+
+    #[test]
+    fn a_tone_reports_its_start_and_later_its_end() {
+        let busy = busy_flag();
+        let (release, released) = mpsc::channel::<()>();
+        let (finished_tx, finished) = mpsc::channel();
+        let started = spawn_guarded(
+            busy.clone(),
+            || Ok(released),
+            |released: Receiver<()>| {
+                released.recv().map_err(|_| AppError::internal("test ended early"))
+            },
+            move |result| {
+                let _ = finished_tx.send(result);
+            },
+        );
+        assert_eq!(started, Ok(()));
+        assert!(busy.load(Ordering::Acquire), "busy while the tone plays");
+        assert!(finished.try_recv().is_err(), "not finished before the tone ends");
+
+        release.send(()).unwrap();
+        assert_eq!(finished.recv().unwrap(), Ok(()));
+        assert!(!busy.load(Ordering::Acquire), "free before the end is reported");
+    }
+
+    #[test]
+    fn a_second_tone_is_refused_while_one_plays() {
+        let busy = busy_flag();
+        let (release, released) = mpsc::channel::<()>();
+        let (finished_tx, finished) = mpsc::channel();
+        spawn_guarded(
+            busy.clone(),
+            || Ok(released),
+            |released: Receiver<()>| {
+                let _ = released.recv();
+                Ok(())
+            },
+            move |result| {
+                let _ = finished_tx.send(result);
+            },
+        )
+        .unwrap();
+
+        let second = spawn_guarded(
+            busy.clone(),
+            || Ok(()),
+            |()| Ok(()),
+            |_| panic!("a refused tone must not report an end"),
+        );
+        assert_eq!(second.unwrap_err().code, ErrorCode::OutputBusy);
+
+        release.send(()).unwrap();
+        finished.recv().unwrap().unwrap();
+        // and afterwards a new one may start
+        let (again_tx, again) = mpsc::channel();
+        spawn_guarded(
+            busy,
+            || Ok(()),
+            |()| Ok(()),
+            move |r| {
+                let _ = again_tx.send(r);
+            },
+        )
+        .unwrap();
+        assert_eq!(again.recv().unwrap(), Ok(()));
+    }
+
+    #[test]
+    fn an_output_that_does_not_open_is_reported_at_once_and_frees_the_guard() {
+        let busy = busy_flag();
+        let no_device = || AppError::new(ErrorCode::NoOutputDevice, "no audio output device");
+        let result = spawn_guarded(
+            busy.clone(),
+            move || Err::<(), _>(no_device()),
+            |()| Ok(()),
+            |_| panic!("a tone that never started must not report an end"),
+        );
+        assert_eq!(result.unwrap_err().code, ErrorCode::NoOutputDevice);
+        assert!(!busy.load(Ordering::Acquire));
+    }
+
+    #[test]
+    fn a_device_error_during_the_tone_reaches_the_end_report() {
+        let (finished_tx, finished) = mpsc::channel();
+        spawn_guarded(
+            busy_flag(),
+            || Ok(()),
+            |()| Err(AppError::new(ErrorCode::AudioDevice, "output stream failed")),
+            move |result| {
+                let _ = finished_tx.send(result);
+            },
+        )
+        .unwrap();
+        assert_eq!(finished.recv().unwrap().unwrap_err().code, ErrorCode::AudioDevice);
     }
 }

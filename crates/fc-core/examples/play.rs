@@ -5,6 +5,10 @@
 //! It proves the chain the playback engine (Phase 2) is built on: a decoder thread (here: main)
 //! fills a lock-free ring buffer, the real-time callback only copies from it. Deliberately
 //! missing: resampling, seeking, pause, a command queue (`docs/AUDIO-ENGINE.md`).
+//!
+//! Without a resampler the spike asks the device for the sample rate of the file. On macOS that
+//! changes the device's rate for the whole system and it stays changed afterwards
+//! (Audio MIDI Setup shows and resets it).
 
 use fc_core::audio::decode::Decoder;
 use fc_core::audio::output::{open_default_output, remap_channels};

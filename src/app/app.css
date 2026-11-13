@@ -1,0 +1,31 @@
+:host {
+  display: block;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.version {
+  color: var(--player-muted);
+  font-family: var(--player-font-mono);
+  font-size: 12px;
+}
+
+.stage {
+  margin: 4px 0 14px;
+  color: var(--player-muted);
+}

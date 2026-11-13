@@ -1,0 +1,13 @@
+import { ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { LogApi, TauriLogApi } from './core/log/log-api';
+import { LoggingErrorHandler } from './core/log/logging-error-handler';
+import { SystemApi, TauriSystemApi } from './core/system/system-api';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    { provide: ErrorHandler, useClass: LoggingErrorHandler },
+    { provide: LogApi, useClass: TauriLogApi },
+    { provide: SystemApi, useClass: TauriSystemApi },
+  ],
+};

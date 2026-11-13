@@ -39,8 +39,9 @@ pub struct OutputStatus {
     pub default_format: Option<OutputFormat>,
 }
 
-/// Lists the output devices. A system without any device gives an empty list, not an error.
-pub fn output_status() -> AppResult<OutputStatus> {
+/// Lists the output devices. A system without any device (or one whose devices cannot be
+/// listed) gives an empty list: that is a state to show, not a failure.
+pub fn output_status() -> OutputStatus {
     let host = cpal::default_host();
     let default = host.default_output_device();
     let default_id = default.as_ref().and_then(|d| d.id().ok()).map(|id| id.to_string());
@@ -64,7 +65,7 @@ pub fn output_status() -> AppResult<OutputStatus> {
     let default_format = default
         .and_then(|d| d.default_output_config().ok())
         .map(|c| OutputFormat { sample_rate: c.sample_rate(), channels: c.channels() });
-    Ok(OutputStatus { host: host.id().name().to_owned(), devices, default_format })
+    OutputStatus { host: host.id().name().to_owned(), devices, default_format }
 }
 
 /// A running output stream. Dropping it stops the output. Not `Send` on every platform:
@@ -85,6 +86,11 @@ impl OutputStream {
 /// `render(out, format)` fills `out` with interleaved samples (`frames × format.channels`) in
 /// `-1.0..=1.0`. `preferred_rate` is used if the device offers it, else its default rate – the
 /// caller reads the result from [`OutputStream::format`].
+///
+/// Careful with `preferred_rate`: on macOS (CoreAudio) it switches the nominal sample rate of the
+/// device for the whole system, and the device keeps it after the stream is closed (seen in
+/// Phase 0, `docs/RISKS.md`). The player therefore resamples to the device rate by default;
+/// switching the device is an explicit setting.
 pub fn open_default_output<R, E>(
     preferred_rate: Option<u32>,
     render: R,
