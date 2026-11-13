@@ -123,6 +123,12 @@ button {
   }
 }
 
+.hint {
+  color: var(--player-muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
 .notice {
   color: var(--player-ok);
   margin-bottom: 10px;

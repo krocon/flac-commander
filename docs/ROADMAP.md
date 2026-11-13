@@ -99,12 +99,30 @@ vorige fertig ist.
 - [ ] Eigene Voreinstellungen speichern
 - [ ] Visualisierungen jenseits der Balken
 
-## Phase 7 – Community und Kompatibilität
+## Phase 7 – Community und Kompatibilität ✅ (erster Schritt)
 
-- [ ] Analyse `.wsz`: Dateiaufbau, Sprites, Zustände, Mapping, Grenzen – als Dokument, vor jedem Code
-- [ ] Inkrementeller Importer
-- [ ] Skin-Browser, Skin-Export, Skin-Dokumentation
-- [ ] Plugin-API prüfen
+- [x] Analyse `.wsz`: Dateiaufbau, Sprites, Zustände, Abbildung, Grenzen ([WINAMP-SKINS.md](WINAMP-SKINS.md))
+- [x] Inkrementeller Importer, Schritt 1: Hauptfenster mit Tasten, Farben, Visualizer – als Konvertierung in das
+      eigene Format, durch dieselbe Prüfung ([ADR 0010](decisions/0010-klassische-skins-und-plugins.md))
+- [x] Skin-Browser: Auswahl mit Vorschau, Import (`.fcskin`, `.zip`, `.wsz`), Entfernen
+- [x] Skin-Export als `.fcskin`
+- [x] Skin-Dokumentation ([SKIN-FORMAT.md](SKIN-FORMAT.md))
+- [x] Plugin-API geprüft: vorerst keine (ADR 0010)
+- [ ] **Koordinaten an echten `.wsz`-Dateien nachmessen** – der Importer ist nur gegen einen im Test gezeichneten
+      Skin geprüft ([MANUAL-TESTS.md](MANUAL-TESTS.md) K1–K4)
+- [ ] Bilder für Regler, Bitmap-Schrift, Laufschrift, Farben aus `viscolor.txt`
+- [ ] Rahmenloses Fenster mit eigener Titelzeile; Playlist- und Equalizer-Fenster im Skin
+- [ ] Online-Verzeichnis für Skins
+
+## Danach
+
+Was nach den sieben Phasen offen ist, in der Reihenfolge des Nutzens:
+
+1. Alle manuellen Tests durchgehen – vor allem Hören und Sehen ab Phase 5 – und Windows/Linux an echter Hardware.
+2. Musikbibliothek (SQLite, inkrementeller Scan, Suche) samt Albumcover.
+3. Playlist: Umsortieren, Mehrfachauswahl, Änderungs-Events statt ganzer Liste (R17).
+4. Medientasten, Tray, „Now Playing" je Plattform (R9); Auswahl des Ausgabegeräts.
+5. Lizenz festlegen, Signierung und Release-Workflow (E1, R12).
 
 ## Bewusst später
 

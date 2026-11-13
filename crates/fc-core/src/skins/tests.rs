@@ -446,7 +446,7 @@ fn user_folder(test: &str) -> PathBuf {
 fn an_imported_skin_is_installed_listed_and_there_after_a_restart() {
     let folder = user_folder("import");
     let mut library = SkinLibrary::load(Some(folder.clone()), APP);
-    let info = library.import_zip(&package_zip("")).unwrap();
+    let info = library.import_zip(&package_zip(""), "test.fcskin").unwrap();
     assert_eq!(info.id, "org.example.test");
     assert!(folder.join("org.example.test/skin.json").is_file());
     let names: Vec<String> = library.list().into_iter().map(|s| s.name).collect();
@@ -465,7 +465,7 @@ fn a_refused_archive_installs_nothing_and_says_why() {
     let files = package(|j| j["theme"]["accent"] = "yellow".into());
     let entries: Vec<(&str, &[u8])> =
         files.iter().map(|(k, v)| (k.as_str(), v.as_slice())).collect();
-    let error = library.import_zip(&zip_of(&entries)).unwrap_err();
+    let error = library.import_zip(&zip_of(&entries), "test.fcskin").unwrap_err();
     assert_eq!(error.code, ErrorCode::InvalidSkin);
     assert!(error.details.unwrap().starts_with("theme.accent: "));
     assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 0);
@@ -479,7 +479,10 @@ fn a_built_in_skin_can_neither_be_replaced_nor_removed() {
     let files = package(|j| j["id"] = DEFAULT_SKIN.into());
     let entries: Vec<(&str, &[u8])> =
         files.iter().map(|(k, v)| (k.as_str(), v.as_slice())).collect();
-    assert_eq!(library.import_zip(&zip_of(&entries)).unwrap_err().code, ErrorCode::InvalidSkin);
+    assert_eq!(
+        library.import_zip(&zip_of(&entries), "test.fcskin").unwrap_err().code,
+        ErrorCode::InvalidSkin
+    );
     assert_eq!(library.remove(DEFAULT_SKIN).unwrap_err().code, ErrorCode::InvalidSkin);
     assert!(library.get(DEFAULT_SKIN).unwrap().built_in);
 }
@@ -488,11 +491,11 @@ fn a_built_in_skin_can_neither_be_replaced_nor_removed() {
 fn an_imported_skin_can_be_updated_and_removed() {
     let folder = user_folder("update");
     let mut library = SkinLibrary::load(Some(folder.clone()), APP);
-    library.import_zip(&package_zip("")).unwrap();
+    library.import_zip(&package_zip(""), "test.fcskin").unwrap();
     let files = package(|j| j["version"] = "2.0.0".into());
     let entries: Vec<(&str, &[u8])> =
         files.iter().map(|(k, v)| (k.as_str(), v.as_slice())).collect();
-    assert_eq!(library.import_zip(&zip_of(&entries)).unwrap().version, "2.0.0");
+    assert_eq!(library.import_zip(&zip_of(&entries), "test.fcskin").unwrap().version, "2.0.0");
     assert_eq!(library.list().len(), 3);
 
     library.remove("org.example.test").unwrap();
@@ -514,4 +517,55 @@ fn a_damaged_installed_skin_is_left_out_and_the_default_is_used() {
         library.get_or_default(Some("io.github.krocon.retro")).unwrap().id(),
         "io.github.krocon.retro"
     );
+}
+
+#[test]
+fn a_classic_skin_archive_is_converted_installed_and_valid_after_a_restart() {
+    let folder = user_folder("classic");
+    let mut library = SkinLibrary::load(Some(folder.clone()), APP);
+    let files = wsz::tests::classic_files();
+    let entries: Vec<(&str, &[u8])> =
+        files.iter().map(|(k, v)| (k.as_str(), v.as_slice())).collect();
+    let info = library.import_zip(&zip_of(&entries), "Green Machine.wsz").unwrap();
+    assert_eq!(info.id, "wsz.green-machine");
+    assert_eq!(info.name, "Green Machine");
+    assert!(!info.built_in);
+    assert_eq!(info.preview.as_deref(), Some("assets/background.png"));
+    // installed in our format: the bitmaps of the archive are not kept
+    assert!(folder.join("wsz.green-machine/skin.json").is_file());
+    assert!(folder.join("wsz.green-machine/assets/play.png").is_file());
+    assert!(!folder.join("wsz.green-machine/MAIN.BMP").exists());
+
+    let restarted = SkinLibrary::load(Some(folder), APP);
+    assert!(restarted.get("wsz.green-machine").is_some());
+}
+
+#[test]
+fn a_classic_skin_that_cannot_be_converted_is_refused_like_any_other() {
+    let mut library = SkinLibrary::load(Some(user_folder("classic-broken")), APP);
+    let archive = zip_of(&[("main.bmp", b"not a bitmap")]);
+    let error = library.import_zip(&archive, "broken.wsz").unwrap_err();
+    assert_eq!(error.code, ErrorCode::InvalidSkin);
+    assert!(error.details.unwrap().starts_with("main.bmp: "));
+    assert_eq!(library.list().len(), 2);
+}
+
+#[test]
+fn an_exported_skin_can_be_imported_again() {
+    let library = SkinLibrary::load(None, APP);
+    let archive = library.export_zip("io.github.krocon.retro").unwrap();
+    let files = read_zip(&archive).unwrap();
+    assert!(files.contains_key("skin.json"));
+    assert!(files.contains_key("assets/background.png"));
+    // under another id it installs like any skin from elsewhere
+    let mut renamed = files.clone();
+    let mut manifest: serde_json::Value = serde_json::from_slice(&files["skin.json"]).unwrap();
+    manifest["id"] = "org.example.my-retro".into();
+    renamed.insert("skin.json".to_owned(), serde_json::to_vec(&manifest).unwrap());
+    let entries: Vec<(&str, &[u8])> =
+        renamed.iter().map(|(k, v)| (k.as_str(), v.as_slice())).collect();
+    let mut target = SkinLibrary::load(Some(user_folder("export")), APP);
+    assert_eq!(target.import_zip(&zip_of(&entries), "my.fcskin").unwrap().name, "Retro");
+
+    assert!(library.export_zip("no.such.skin").is_err());
 }

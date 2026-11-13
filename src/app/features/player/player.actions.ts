@@ -25,6 +25,19 @@ export function playerActions(store: PlayerStore, playlist: PlaylistStore): read
       run: () => void store.togglePlay(),
     },
     {
+      // play and pause as separate buttons, as classic skins have them
+      id: 'player.play',
+      label: () => t.play,
+      enabled: () => !store.isPlaying(),
+      run: () => void store.play(),
+    },
+    {
+      id: 'player.pause',
+      label: () => t.pause,
+      enabled: () => store.isPlaying(),
+      run: () => void store.pause(),
+    },
+    {
       id: 'player.stop',
       label: () => t.stop,
       shortcut: { key: 'v' },

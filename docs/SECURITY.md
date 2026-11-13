@@ -1,6 +1,6 @@
 # Sicherheit
 
-## Stand heute (Phase 6)
+## Stand heute (Phase 7)
 
 - **Keine Netzwerkzugriffe.** Die App verbindet sich mit nichts.
 - **Minimale Rechte der WebView** (`src-tauri/capabilities/default.json`): `core:default` (eigene Commands, Events)
@@ -51,6 +51,11 @@ rein deklarativ; dazu kommen diese Regeln für den Import. Jede ist umgesetzt un
 | Unbedienbare Oberfläche | Pflicht-Bausteine (Wiedergabe, Skin wählen) und Mindestgröße für Tasten; ⌘0 / Strg+0 stellt den Standard-Skin wieder her und gehört keinem Skin. |
 | CSS einschleusen | Farben nur als `#`-Hexwerte, Schriften nur aus einem engen Zeichensatz; die Werte werden als einzelne CSS-Variablen gesetzt, nie in ein Stylesheet kopiert. |
 | Eingebaute Skins überschreiben | Ein Import mit der Id eines mitgelieferten Skins wird abgelehnt. |
+
+Klassische Winamp-Skins (`.wsz`) nehmen denselben Weg: Archiv mit denselben Grenzen entpacken, Bitmaps mit einem
+eigenen Leser lesen (alle Längen geprüft, Seitenlänge begrenzt, Tests mit abgeschnittenen und unsinnigen Dateien),
+in ein Paket des eigenen Formats umwandeln und dieses vollständig prüfen. Aus dem Archiv gelangt nichts anderes in
+den Datenordner – keine Texte, Mauszeiger oder sonstigen Dateien.
 
 Skin-Bilder liefert das Protokoll `skin://` aus dem Speicher: Es kennt nur Dateien, die die Prüfung gesehen hat,
 liest also nie vom Dateisystem, gibt `skin.json` nicht heraus und sendet `X-Content-Type-Options: nosniff`. Die CSP

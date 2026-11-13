@@ -44,6 +44,13 @@
           >
             {{ t.activate }}
           </button>
+          <button
+            type="button"
+            [attr.aria-label]="t.export + ': ' + skin.name"
+            (click)="store.export(skin)"
+          >
+            {{ t.export }}
+          </button>
           @if (!skin.builtIn) {
             <button
               type="button"
@@ -74,6 +81,7 @@
     </div>
   }
 
+  <p class="hint">{{ t.importHint }}</p>
   <footer>
     <button type="button" (click)="store.import()">{{ t.import }}</button>
     <button type="button" (click)="store.closeChooser()">{{ t.close }}</button>

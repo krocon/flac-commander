@@ -491,6 +491,11 @@ export class FakeSkinApi extends SkinApi {
     this.skins = this.skins.filter((s) => s.id !== id);
   }
 
+  override async export(id: string, dialogTitle: string): Promise<boolean> {
+    this.command(`export ${id} "${dialogTitle}"`);
+    return true;
+  }
+
   override async onActive(handler: (skin: ActiveSkin) => void): Promise<Unsubscribe> {
     this.handlers.add(handler);
     return () => this.handlers.delete(handler);

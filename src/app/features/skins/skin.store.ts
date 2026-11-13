@@ -115,6 +115,16 @@ export class SkinStore {
     });
   }
 
+  /** Saves a skin as an archive that can be passed on. */
+  async export(skin: SkinInfo): Promise<void> {
+    this.noticeState.set(null);
+    await this.send('skins_export', async () => {
+      if (await this.api.export(skin.id, SKINS_TEXTS.exportDialogTitle)) {
+        this.noticeState.set(SKINS_TEXTS.exported(skin.name));
+      }
+    });
+  }
+
   async remove(id: string): Promise<void> {
     await this.send('skins_remove', () => this.api.remove(id));
     await this.refresh();
