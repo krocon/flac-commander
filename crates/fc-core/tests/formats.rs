@@ -131,11 +131,15 @@ fn seeking_is_exact_to_the_frame_in_lossless_formats() {
 
 #[test]
 fn seeking_lossy_formats_lands_within_a_few_milliseconds() {
-    for name in ["sine.mp3", "sine.ogg", "sine.m4a"] {
+    let mut files = vec![("sine.mp3", 44_100), ("sine.ogg", 44_100), ("sine.m4a", 44_100)];
+    if cfg!(feature = "opus") {
+        files.push(("sine.opus", 48_000));
+    }
+    for (name, rate) in files {
         let all = frames_after_seek(name, 0);
-        assert!((44_100..44_100 + 5_513).contains(&all), "{name}: {all} frames from the start");
+        assert!((rate..rate + rate / 8).contains(&all), "{name}: {all} frames from the start");
         let rest = frames_after_seek(name, 500);
-        let expected = all - 22_050;
+        let expected = all - rate / 2;
         assert!(
             rest.abs_diff(expected) <= 2_400,
             "{name}: {rest} frames after 500 ms, expected {expected}"
@@ -170,8 +174,14 @@ fn seeking_back_and_forth_always_lands_where_asked() {
     }
 }
 
-/// Symphonia 0.6.1 has no Opus decoder: the file is recognised and refused with a clear code.
-/// When this test fails because Opus decodes, move the format to `Supported`.
+#[cfg(feature = "opus")]
+#[test]
+fn opus() {
+    assert_sine("sine.opus", "opus", 48_000, 2, false);
+}
+
+/// Built without libopus, an Opus file is recognised and refused with a clear code.
+#[cfg(not(feature = "opus"))]
 #[test]
 fn opus_is_refused_as_unsupported() {
     let err = probe_file(&fixture("sine.opus")).unwrap_err();
@@ -187,6 +197,7 @@ fn every_supported_format_has_a_fixture_that_opens() {
             "alac" => "sine-alac.m4a".to_owned(),
             "vorbis" => "sine.ogg".to_owned(),
             "aac" => "sine.m4a".to_owned(),
+            "opus" => "sine.opus".to_owned(),
             id => format!("sine.{id}"),
         };
         probe_file(&fixture(&name)).unwrap_or_else(|e| panic!("{}: {e:?}", format.id));

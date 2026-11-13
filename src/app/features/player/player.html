@@ -1,0 +1,97 @@
+<section class="player" [attr.aria-label]="t.player">
+  <div class="display">
+    @if (store.track(); as track) {
+      <p class="title">{{ track.fileName }}</p>
+      <p class="details">{{ details() }}</p>
+    } @else {
+      <p class="title empty">{{ t.noTrack }}</p>
+      <p class="details">{{ t.noTrackHint }}</p>
+    }
+  </div>
+
+  <div class="seek">
+    <span class="time" aria-hidden="true">{{ position() }}</span>
+    <input
+      #seek
+      type="range"
+      min="0"
+      step="1000"
+      [max]="store.durationMs() ?? 0"
+      [value]="store.positionMs()"
+      [disabled]="!seekable()"
+      [attr.aria-label]="t.position"
+      [attr.aria-valuetext]="positionText()"
+      (input)="store.previewSeek(seek.valueAsNumber)"
+      (change)="store.commitSeek(seek.valueAsNumber)"
+    />
+    <span class="time" aria-hidden="true">{{ duration() }}</span>
+  </div>
+
+  <div class="controls">
+    <button
+      type="button"
+      [attr.aria-label]="t.open"
+      [title]="actions.hint('player.open')"
+      (click)="store.open()"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M8 2 2.5 9h11zM2.5 11h11v2.5h-11z" />
+      </svg>
+    </button>
+    <button
+      type="button"
+      class="primary"
+      [attr.aria-label]="store.isPlaying() ? t.pause : t.play"
+      [title]="actions.hint('player.togglePlay')"
+      (click)="store.togglePlay()"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        @if (store.isPlaying()) {
+          <path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z" />
+        } @else {
+          <path d="M4 2.5 13 8l-9 5.5z" />
+        }
+      </svg>
+    </button>
+    <button
+      type="button"
+      [attr.aria-label]="t.stop"
+      [title]="actions.hint('player.stop')"
+      [disabled]="!store.hasTrack() || store.status() === 'stopped'"
+      (click)="store.stop()"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M3 3h10v10H3z" />
+      </svg>
+    </button>
+
+    <div class="volume">
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M2 6h3l4-3.5v11L5 10H2zM11 5.2a4 4 0 0 1 0 5.6v-1.6a2.4 2.4 0 0 0 0-2.4z" />
+      </svg>
+      <input
+        #volume
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        [value]="volumePercent()"
+        [attr.aria-label]="t.volume"
+        [attr.aria-valuetext]="t.percent(volumePercent())"
+        (input)="store.previewVolume(volume.valueAsNumber / 100)"
+        (change)="store.commitVolume()"
+      />
+      <span class="percent" aria-hidden="true">{{ t.percent(volumePercent()) }}</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p class="status" role="status">{{ statusText() }}</p>
+    @if (store.state().underruns > 0) {
+      <p class="underruns">{{ t.underruns(store.state().underruns) }}</p>
+    }
+  </div>
+  @if (errorText(); as error) {
+    <p class="error" role="alert">{{ error }}</p>
+  }
+</section>

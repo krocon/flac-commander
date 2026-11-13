@@ -246,6 +246,8 @@ fn every_format_plays_through_the_engine() {
         ("sine.mp3", 3000),
         ("sine.ogg", 3000),
         ("sine.m4a", 3000),
+        #[cfg(feature = "opus")]
+        ("sine.opus", 3000),
     ] {
         let mut device = Device::new();
         let loaded = device.load(name, true);
@@ -424,7 +426,7 @@ fn playback_starts_and_pauses_without_a_click() {
 #[test]
 fn an_unsupported_file_is_reported_and_nothing_is_loaded() {
     let mut device = Device::new();
-    let state = device.load("sine.opus", true);
+    let state = device.load("garbage.mp3", true);
     assert_eq!(state.error.unwrap().code, ErrorCode::UnsupportedFormat);
     assert_eq!(state.track, None);
     assert_eq!(state.status, PlaybackStatus::Stopped);

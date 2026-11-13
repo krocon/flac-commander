@@ -1,5 +1,7 @@
 import { Unsubscribe } from '../app/core/backend/events';
 import { LogApi } from '../app/core/log/log-api';
+import { PlayerApi } from '../app/core/player/player-api';
+import { EMPTY_PLAYER_STATE, PlayerState } from '../app/core/player/player.models';
 import { SystemApi } from '../app/core/system/system-api';
 import { SystemInfo, TestToneFinished } from '../app/core/system/system.models';
 
@@ -74,6 +76,87 @@ export class FakeSystemApi extends SystemApi {
     for (const handler of this.toneHandlers) {
       handler(result);
     }
+  }
+}
+
+export const TRACK_STATE: PlayerState = {
+  status: 'playing',
+  track: {
+    path: '/music/People/12 People.flac',
+    fileName: '12 People.flac',
+    info: {
+      container: 'flac',
+      codec: 'flac',
+      sampleRate: 44100,
+      channels: 2,
+      bitsPerSample: 16,
+      durationMs: 222_333,
+    },
+  },
+  positionMs: 61_500,
+  volume: 0.8,
+  error: null,
+  underruns: 0,
+};
+
+/** The backend's player: records the commands, the test reports states. */
+export class FakePlayerApi extends PlayerApi {
+  /** Commands in the order they were sent, e.g. `seek 5000`. */
+  readonly commands: string[] = [];
+  readonly handlers = new Set<(state: PlayerState) => void>();
+  /** Answer of `state()`; a `Deferred` lets the test decide when it arrives. */
+  snapshot: PlayerState | Deferred<PlayerState> = EMPTY_PLAYER_STATE;
+  /** Set to make every command fail. */
+  failure: unknown = null;
+  /** What the file dialog returns. */
+  picked = true;
+
+  override async state(): Promise<PlayerState> {
+    return this.snapshot instanceof Deferred ? this.snapshot.promise : this.snapshot;
+  }
+
+  override async open(dialogTitle: string): Promise<boolean> {
+    this.command(`open "${dialogTitle}"`);
+    return this.picked;
+  }
+
+  override async play(): Promise<void> {
+    this.command('play');
+  }
+
+  override async pause(): Promise<void> {
+    this.command('pause');
+  }
+
+  override async stop(): Promise<void> {
+    this.command('stop');
+  }
+
+  override async seek(positionMs: number): Promise<void> {
+    this.command(`seek ${positionMs}`);
+  }
+
+  override async setVolume(volume: number): Promise<void> {
+    this.command(`volume ${volume.toFixed(2)}`);
+  }
+
+  override async onState(handler: (state: PlayerState) => void): Promise<Unsubscribe> {
+    this.handlers.add(handler);
+    return () => this.handlers.delete(handler);
+  }
+
+  /** The backend reports a state. */
+  emit(state: PlayerState): void {
+    for (const handler of this.handlers) {
+      handler(state);
+    }
+  }
+
+  private command(text: string): void {
+    if (this.failure) {
+      throw this.failure;
+    }
+    this.commands.push(text);
   }
 }
 

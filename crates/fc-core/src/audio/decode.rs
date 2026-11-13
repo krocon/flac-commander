@@ -9,13 +9,27 @@ use serde::Serialize;
 use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use symphonia::core::codecs::audio::{AudioDecoder, AudioDecoderOptions};
+use symphonia::core::codecs::registry::CodecRegistry;
 use symphonia::core::errors::{Error as SymphoniaError, SeekErrorKind};
 use symphonia::core::formats::probe::Hint;
 use symphonia::core::formats::{FormatOptions, FormatReader, SeekMode, SeekTo, TrackType};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
 use symphonia::core::units::{Time, TimeBase};
+
+/// Symphonia's decoders plus those it lacks (Opus through libopus, if built in).
+fn codecs() -> &'static CodecRegistry {
+    static CODECS: OnceLock<CodecRegistry> = OnceLock::new();
+    CODECS.get_or_init(|| {
+        let mut registry = CodecRegistry::new();
+        symphonia::default::register_enabled_codecs(&mut registry);
+        #[cfg(feature = "opus")]
+        registry.register_audio_decoder::<symphonia_adapter_libopus::OpusDecoder>();
+        registry
+    })
+}
 
 /// Technical properties of the audio track of a file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -73,7 +87,7 @@ impl Decoder {
                 format!("{}: audio track without codec parameters", path.display()),
             )
         })?;
-        let decoder = symphonia::default::get_codecs()
+        let decoder = codecs()
             .make_audio_decoder(params, &AudioDecoderOptions::default())
             .map_err(|e| open_error(&e, path, "no decoder for the codec of this file"))?;
 

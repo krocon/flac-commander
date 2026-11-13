@@ -4,6 +4,11 @@
 use fc_core::AppError;
 use serde::Serialize;
 
+/// The state of the player changed (or, while playing, its position moved on). The payload is
+/// `fc_core::audio::player::PlayerState`, mirrored by `PlayerState` in
+/// `core/player/player.models.ts`; its JSON form is tested in `fc-core/tests/player.rs`.
+pub const PLAYER_STATE: &str = "player://state";
+
 /// The test tone ended. Mirrored by `TestToneFinished` in `core/system/system.models.ts`.
 pub const TEST_TONE_FINISHED: &str = "audio://test-tone-finished";
 

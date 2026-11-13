@@ -1,0 +1,146 @@
+:host {
+  display: block;
+}
+
+.player {
+  background: var(--player-surface);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 14px;
+}
+
+.display {
+  background: var(--player-background);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 10px 12px;
+  min-height: 62px;
+}
+
+p {
+  margin: 0;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.empty {
+    color: var(--player-muted);
+    font-weight: normal;
+  }
+}
+
+.details {
+  margin-top: 2px;
+  color: var(--player-muted);
+  font-size: 12px;
+}
+
+.seek {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.time,
+.percent {
+  font-family: var(--player-font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--player-muted);
+  min-width: 4ch;
+}
+
+.percent {
+  min-width: 5ch;
+  text-align: right;
+}
+
+input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  accent-color: var(--player-accent);
+
+  &:disabled {
+    opacity: 0.4;
+  }
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--player-foreground);
+  background: var(--player-surface-raised);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  cursor: pointer;
+
+  &.primary {
+    width: 48px;
+    background: var(--player-accent);
+    border-color: var(--player-accent);
+    color: var(--player-accent-contrast);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+}
+
+svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 160px;
+  min-width: 0;
+  margin-left: 8px;
+  color: var(--player-muted);
+
+  svg {
+    flex: none;
+  }
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  min-height: 1.45em;
+  font-size: 12px;
+  color: var(--player-muted);
+}
+
+.underruns,
+.error {
+  color: var(--player-danger);
+}
+
+.error {
+  margin-top: 6px;
+}

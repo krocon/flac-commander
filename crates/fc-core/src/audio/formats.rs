@@ -62,12 +62,17 @@ pub const AUDIO_FORMATS: &[AudioFormat] = &[
         extensions: &["aiff", "aif"],
         support: FormatSupport::Supported,
     },
-    // Symphonia 0.6.1 reads the Ogg container but has no Opus decoder (docs/decisions/0003).
+    // Symphonia 0.6.1 reads the Ogg container but has no Opus decoder: libopus does the
+    // decoding if the `opus` feature is built in (docs/decisions/0006).
     AudioFormat {
         id: "opus",
         name: "Opus",
         extensions: &["opus"],
-        support: FormatSupport::Unsupported,
+        support: if cfg!(feature = "opus") {
+            FormatSupport::Supported
+        } else {
+            FormatSupport::Unsupported
+        },
     },
 ];
 
@@ -110,10 +115,10 @@ mod tests {
     }
 
     #[test]
-    fn opus_is_not_offered_until_it_can_be_decoded() {
+    fn only_what_can_be_decoded_is_offered() {
         assert!(is_playable_extension("flac"));
         assert!(is_playable_extension("m4a"));
-        assert!(!is_playable_extension("opus"));
+        assert_eq!(is_playable_extension("opus"), cfg!(feature = "opus"));
         assert!(!is_playable_extension("txt"));
     }
 }
