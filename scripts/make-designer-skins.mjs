@@ -27,6 +27,8 @@ const CHROME =
     '/usr/bin/chromium',
   ].find(existsSync);
 
+const CWEBP = ['/opt/homebrew/bin/cwebp', '/usr/local/bin/cwebp', '/usr/bin/cwebp'].find(existsSync);
+
 // ---------------------------------------------------------------- icons (24 × 24, currentColor)
 
 const filled = (d) => `<svg viewBox="0 0 24 24"><path fill="currentColor" d="${d}"/></svg>`;
@@ -1997,6 +1999,583 @@ const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen wit
   overlays: [{ name: 'cover', x: 40, y: 58, width: 88, height: 88, source: 'track.cover', html: NOTE }],
 });
 
+// ---- two reels above the kit: shared by the small tape machines
+
+const twoReels = (html, period = 3000) => [
+  { name: 'reel-left', x: 29, y: 17, width: 150, height: 150, period, html },
+  { name: 'reel-right', x: 201, y: 17, width: 150, height: 150, period, html },
+];
+const twoPacks = [
+  { name: 'tape-left', x: 36, y: 24, width: 136, height: 136, from: 136, to: 62, html: '<div class="wound"></div>' },
+  { name: 'tape-right', x: 208, y: 24, width: 136, height: 136, from: 62, to: 136, html: '<div class="wound"></div>' },
+];
+const WOUND = `.wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #4a342a 0 1.5px, #38271f 1.5px 3px); }`;
+/** Six round holes in a disc 150 wide, as a mask. */
+const SIX_HOLES = [0, 60, 120, 180, 240, 300]
+  .map((a) => `radial-gradient(circle at ${(75 + 46 * Math.sin((a * Math.PI) / 180)).toFixed(1)}px ${(75 - 46 * Math.cos((a * Math.PI) / 180)).toFixed(1)}px, transparent 0 16px, #000 16.5px)`)
+  .join(', ');
+const belowReels = (c) => [
+  { type: 'text', source: 'track.title', x: 34, y: 186, width: 312, height: 22, fontSize: 16, align: 'center', color: c.title },
+  { type: 'text', source: 'track.artist', x: 34, y: 208, width: 312, height: 16, fontSize: 12, align: 'center', color: c.artist },
+  { type: 'time', source: 'position', x: 34, y: 232, width: 80, height: 14, fontSize: 11, color: c.muted },
+  { type: 'text', source: 'player.status', x: 120, y: 232, width: 140, height: 14, fontSize: 10, align: 'center', color: c.muted },
+  { type: 'time', source: 'duration', x: 266, y: 232, width: 80, height: 14, fontSize: 11, align: 'right', color: c.muted },
+];
+
+// ---- "Nano": a tiny steel recorder with one mint and one red reel
+
+const nanoLow = lower({ width: 380, y: 254, look: 'roller', playLook: 'roller go', toggleLook: 'roller', big: 64, mid: 52, toggle: [44, 44], list: 150 });
+const nano = skin('nano', 'Nano', 'A tiny recorder cut from steel: one mint and one red reel, rollers, and print as fine as a watch.', ['reel', 'steel', 'light', 'miniature', 'red', 'mint', 'skeuomorphic'], {
+  theme: theme({ background: '#c7cace', surface: '#eef0f1', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#474b50', accent: '#a31d16', accentContrast: '#ffffff', border: '#7c8188', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
+  width: 380,
+  height: nanoLow.height,
+  resize: nanoLow.resize,
+  css: `
+    body { background: repeating-linear-gradient(0deg, rgba(255,255,255,.22) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2.5px), linear-gradient(120deg, #dfe1e4, #b4b8bd 55%, #d2d5d8); box-shadow: inset 0 0 0 1px #8d9197, inset 0 2px 0 #fff; font-family: ${HELVETICA}; }
+    .fine { position: absolute; font-size: 6.5px; font-weight: 700; letter-spacing: .14em; color: #2b2e32; white-space: nowrap; }
+    .screw { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f1f2f3, #6f747a 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
+    .post { position: absolute; top: 160px; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #7d8288 70%); box-shadow: 0 1px 2px rgba(0,0,0,.5), 0 0 0 1px #5d6166; }
+    .plate { position: absolute; left: 30px; top: 180px; width: 320px; height: 70px; border-radius: 3px; background: #eef0f1; box-shadow: inset 0 1px 3px rgba(0,0,0,.4), 0 1px 0 #fff; }
+    ${WOUND}
+    .hole6 { position: absolute; inset: 0; border-radius: 50%; -webkit-mask-image: ${SIX_HOLES}; -webkit-mask-composite: source-in; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+    .hole6.mint { background: radial-gradient(circle, #1b1d20 0 4px, #e9ebed 4px 12px, #6fb596 12px 14px, #9bd9bd 14px 72px, #6fb596 72px); }
+    .hole6.red { background: radial-gradient(circle, #1b1d20 0 4px, #e9ebed 4px 12px, #9c1a13 12px 14px, #dd2a22 14px 72px, #9c1a13 72px); }
+    ${beds('#9aa0a6', '#eef0f1', true)}
+    .face { color: #1b1d20; } .face svg { width: 18px; height: 18px; }
+    .roller { border-radius: 50%; background: radial-gradient(circle at 38% 28%, #ffffff, #a3a8ae 65%, #7d8288); box-shadow: 0 0 0 1px #5d6166, 0 2px 3px rgba(0,0,0,.4), inset 0 0 0 5px rgba(255,255,255,.25); }
+    .roller.go { color: #fff; background: radial-gradient(circle at 38% 28%, #f0584f, #a31d16 70%); box-shadow: 0 0 0 1px #5a0d08, 0 2px 3px rgba(0,0,0,.4); }
+    .roller.go svg { width: 24px; height: 24px; }
+    ${STATES}
+    .pressed .roller { box-shadow: 0 0 0 1px #5d6166, inset 0 3px 5px rgba(0,0,0,.4); }
+    .active .roller { color: #a31d16; box-shadow: 0 0 0 1px #5d6166, 0 0 0 3px #dd2a22; }
+    .active .roller.go { color: #fff; box-shadow: 0 0 0 1px #5a0d08, 0 0 0 3px #c7cace, 0 0 0 4.5px #dd2a22; }
+  `,
+  art: `<div class="screw" style="left:8px;top:8px"></div><div class="screw" style="right:8px;top:8px"></div>
+    <div class="fine" style="left:182px;top:10px;transform:translateX(-50%)">SUPPLY</div><div class="fine" style="left:150px;top:150px">TAPE · LOSSLESS</div>
+    <div class="post" style="left:92px"></div><div class="post" style="left:183px"></div><div class="post" style="left:274px"></div>
+    <div class="plate"></div>${nanoLow.art}`,
+  buttons: nanoLow.buttons,
+  components: [...belowReels({ title: '#1b1d20', artist: '#a31d16', muted: '#474b50' }), ...nanoLow.components],
+  packs: twoPacks,
+  spinners: [
+    { name: 'reel-left', x: 29, y: 17, width: 150, height: 150, period: 3000, html: '<div class="hole6 mint"></div>' },
+    { name: 'reel-right', x: 201, y: 17, width: 150, height: 150, period: 3000, html: '<div class="hole6 red"></div>' },
+  ],
+});
+
+// ---- "Silver": a silver front, smoked reels, a badge and knurled knobs
+
+const silverReel = '<div class="smoke"><b></b><b style="transform:rotate(120deg)"></b><b style="transform:rotate(240deg)"></b><i></i></div>';
+const silverLow = lower({ width: 380, y: 254, look: 'knob', playLook: 'knob', toggleLook: 'knob', big: 68, mid: 52, toggle: [44, 44], list: 150 });
+const silver = skin('silver', 'Silver', 'A portable tape machine: a silver front, two smoked reels, a badge and knurled knobs.', ['reel', 'silver', 'light', 'portable', 'smoked', 'skeuomorphic'], {
+  theme: theme({ background: '#d3d4d1', surface: '#ecece9', surfaceRaised: '#ffffff', foreground: '#1e1f1e', muted: '#4d4f4c', accent: '#8f1f17', accentContrast: '#ffffff', border: '#858783', ok: '#0b5a2b', danger: '#8f1f17', focus: '#1f5fbf' }, '"Gill Sans", "Gill Sans MT", "Helvetica Neue", sans-serif', 2),
+  width: 380,
+  height: silverLow.height,
+  resize: silverLow.resize,
+  css: `
+    body { background: linear-gradient(150deg, #e9e9e6, #c4c5c1 60%, #dadbd8); box-shadow: inset 0 0 0 1px #9d9f9b, inset 0 2px 0 #fff; font-family: "Gill Sans", "Helvetica Neue", sans-serif; }
+    .hex { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle, #6d6f6c 0 2px, #f4f4f2 2px 3px, #a9aba7 3px); box-shadow: 0 0 0 1px rgba(0,0,0,.3); }
+    .vent { position: absolute; left: 172px; top: 60px; width: 36px; height: 60px; background: radial-gradient(circle, #1e1f1e 2.4px, transparent 2.8px) 0 0 / 12px 12px; opacity: .75; }
+    .badge { position: absolute; left: 50px; top: 178px; width: 280px; height: 72px; background: linear-gradient(#f4f4f2, #dcdcd9); clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%); }
+    .badge::after { content: ''; position: absolute; left: 30px; right: 30px; top: 50px; height: 1px; background: #1e1f1e; opacity: .5; }
+    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #5a4a40 0 1.5px, #47392f 1.5px 3px); }
+    .smoke { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, transparent 0 66px, rgba(40,42,40,.5) 66px 73px, rgba(20,21,20,.75) 73px 75px);
+      box-shadow: inset 0 0 0 75px rgba(60,62,60,.22); filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
+    .smoke b { position: absolute; left: 50%; top: 50%; width: 44px; height: 70px; margin-left: -22px; transform-origin: 50% 0; background: rgba(70,72,70,.6); border-radius: 0 0 10px 10px; }
+    .smoke i { position: absolute; left: 50%; top: 50%; width: 50px; height: 50px; margin: -25px; border-radius: 50%; background: radial-gradient(circle, #6d6f6c 0 4px, #f4f4f2 4px 12px, #b8bab6 12px 14px, #e2e3e0 14px); box-shadow: 0 0 0 1px #6d6f6c; }
+    ${beds('#a9aba7', '#ecece9', true)}
+    .face { color: #f4f4f2; } .face svg { width: 17px; height: 17px; }
+    .knob { border-radius: 50%; background: repeating-conic-gradient(#4a4c49 0 5deg, #1e1f1e 5deg 10deg); box-shadow: 0 2px 4px rgba(0,0,0,.45), 0 0 0 1px #000, inset 0 0 0 6px #2d2e2c, inset 0 0 0 7px #7f817d; }
+    ${STATES}
+    .pressed .knob { box-shadow: 0 0 0 1px #000, inset 0 0 0 6px #1c1d1b, inset 0 0 0 7px #7f817d; }
+    .active .knob { color: #ff8a80; box-shadow: 0 2px 4px rgba(0,0,0,.45), 0 0 0 1px #000, inset 0 0 0 6px #2d2e2c, inset 0 0 0 7px #d2372b; }
+  `,
+  art: `<div class="hex" style="left:9px;top:9px"></div><div class="hex" style="right:9px;top:9px"></div><div class="hex" style="left:9px;top:160px"></div><div class="hex" style="right:9px;top:160px"></div>
+    <div class="vent"></div><div class="badge"></div>${silverLow.art}`,
+  buttons: silverLow.buttons,
+  components: [...belowReels({ title: '#1e1f1e', artist: '#8f1f17', muted: '#4d4f4c' }), ...silverLow.components],
+  packs: twoPacks,
+  spinners: twoReels(silverReel),
+});
+
+// ---- "Lever": a grey front with white square keys, a scale and vents
+
+const leverLow = lower({ width: 380, y: 142, look: 'tile', playLook: 'tile dot', toggleLook: 'peg', big: 60, mid: 60, toggle: [44, 44], list: 150 });
+const lever = skin('lever', 'Lever', 'A grey front with white square keys, one marked red, a scale with a red pointer and vents.', ['grey', 'light', 'minimal', 'functional', 'keys', 'sixties'], {
+  theme: theme({ background: '#b9bbbd', surface: '#e9e9e4', surfaceRaised: '#ffffff', foreground: '#1b1c1d', muted: '#3f4245', accent: '#8c1d12', accentContrast: '#ffffff', border: '#77797c', ok: '#0b5a2b', danger: '#8c1d12', focus: '#1f5fbf' }, HELVETICA, 1),
+  width: 380,
+  height: leverLow.height,
+  resize: leverLow.resize,
+  pad: 2,
+  css: `
+    body { background: linear-gradient(#c3c5c7, #adafb1); font-family: ${HELVETICA}; }
+    .vents { position: absolute; right: 24px; top: 20px; width: 60px; height: 44px; background: repeating-linear-gradient(#55585b 0 2px, transparent 2px 6px); }
+    .perf { position: absolute; left: 0; top: 0; width: 14px; height: 100%; background: radial-gradient(circle, #6d7073 1.2px, transparent 1.6px) 0 0 / 5px 5px; opacity: .7; }
+    .scale { position: absolute; left: 24px; top: 78px; width: 332px; height: 52px; background: #e9e9e4; box-shadow: inset 0 1px 3px rgba(0,0,0,.4), 0 1px 0 rgba(255,255,255,.6); }
+    .scale::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 5px; height: 5px; background: repeating-linear-gradient(90deg, #1b1c1d 0 1px, transparent 1px 8px); opacity: .55; }
+    ${beds('#8f9194', '#e9e9e4', true)}
+    .face { color: #1b1c1d; } .face svg { width: 20px; height: 20px; }
+    .tile { border-radius: 3px; background: linear-gradient(160deg, #ffffff, #e0e0db); box-shadow: 0 0 0 1px #1b1c1d, 0 3px 3px rgba(0,0,0,.3), inset 0 0 0 4px rgba(255,255,255,.6), inset 0 -4px 6px rgba(0,0,0,.08); }
+    .tile.dot svg { margin-top: -10px; }
+    .tile.dot::after { content: ''; position: absolute; left: 50%; bottom: 9px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #c9c9c4; }
+    .peg { border-radius: 50%; background: linear-gradient(160deg, #fff, #d2d2cd); box-shadow: 0 0 0 1px #55585b, 0 2px 3px rgba(0,0,0,.3); }
+    .peg svg { width: 16px; height: 16px; }
+    ${STATES}
+    .pressed .tile { box-shadow: 0 0 0 1px #1b1c1d, inset 0 3px 5px rgba(0,0,0,.3); }
+    .active .tile.dot::after { background: #d2372b; box-shadow: 0 0 5px rgba(210,55,43,.9); }
+    .active .peg { color: #fff; background: linear-gradient(160deg, #3a3c3e, #1b1c1d); box-shadow: 0 0 0 1px #000, 0 2px 3px rgba(0,0,0,.3); }
+  `,
+  art: `<div class="perf"></div><div class="vents"></div><div class="scale"></div>${leverLow.art}`,
+  buttons: leverLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 24, y: 20, width: 260, height: 24, fontSize: 17, color: '#1b1c1d' },
+    { type: 'text', source: 'track.artist', x: 24, y: 44, width: 260, height: 18, fontSize: 12, color: '#3f4245' },
+    { type: 'time', source: 'position', x: 34, y: 84, width: 90, height: 34, fontSize: 24, color: '#1b1c1d' },
+    { type: 'spectrum', x: 130, y: 88, width: 130, height: 28, color: '#8c1d12' },
+    { type: 'text', source: 'player.status', x: 262, y: 86, width: 84, height: 14, fontSize: 10, align: 'right', color: '#8c1d12' },
+    { type: 'time', source: 'duration', x: 262, y: 102, width: 84, height: 14, fontSize: 11, align: 'right', color: '#3f4245' },
+    ...leverLow.components,
+  ],
+});
+
+// ---- "Keys": a white keypad under a black display with green figures
+
+const keysLow = lower({ width: 340, y: 150, look: 'cap', playLook: 'cap orange', toggleLook: 'cap', big: 60, mid: 60, toggle: [48, 44], list: 150 });
+const keysSkin = skin('keys', 'Keys', 'A white keypad under a black display with green figures, and one orange key.', ['calculator', 'keypad', 'white', 'black', 'green', 'orange', 'minimal'], {
+  theme: theme({ background: '#141614', surface: '#0c0e0c', surfaceRaised: '#2a2e2a', foreground: '#e9f5e4', muted: '#a3b59c', accent: '#6fe36a', accentContrast: '#031f02', border: '#3a403a', ok: '#6fe36a', danger: '#ff9d94', focus: '#ffd166' }, HELVETICA, 3, '"Menlo", "Consolas", monospace'),
+  width: 340,
+  height: keysLow.height,
+  resize: keysLow.resize,
+  pad: 3,
+  css: `
+    body { background: linear-gradient(170deg, #fbfbfa, #e6e6e3); box-shadow: inset 0 0 0 1px #c4c4c0, inset 0 2px 0 #fff; font-family: ${HELVETICA}; }
+    .glass { position: absolute; left: 22px; top: 22px; width: 296px; height: 116px; border-radius: 8px; background: linear-gradient(#101210, #171a17); box-shadow: inset 0 2px 6px #000, 0 0 0 1px #000, 0 1px 0 1px #fff; }
+    .tag { position: absolute; left: 34px; top: 30px; font-size: 7.5px; font-weight: 700; letter-spacing: .14em; color: #a3b59c; }
+    ${beds('#141614', '#0c0e0c', false)}
+    .slot { box-shadow: inset 0 1px 2px #000, 0 1px 0 #fff; } .well { border-radius: 8px; box-shadow: inset 0 2px 6px #000, 0 0 0 1px #000, 0 1px 0 1px #fff; }
+    .face { color: #2a2e2a; } .face svg { width: 20px; height: 20px; }
+    .cap { border-radius: 9px; background: linear-gradient(#ffffff, #efefec); box-shadow: 0 0 0 1px #b9b9b5, 0 2px 2px rgba(0,0,0,.14); }
+    .cap.orange { color: #fff; background: linear-gradient(#ff7a2f, #f25c0a); box-shadow: 0 0 0 1px #b84300, 0 2px 2px rgba(0,0,0,.2); }
+    ${STATES}
+    .pressed .cap { box-shadow: 0 0 0 1px #b9b9b5, inset 0 2px 4px rgba(0,0,0,.2); }
+    .active .cap { color: #0d5a0a; background: linear-gradient(#eafbe8, #cdf3ca); box-shadow: 0 0 0 1px #4fb84a, 0 2px 2px rgba(0,0,0,.14); }
+    .active .cap.orange { color: #fff; background: linear-gradient(#ff7a2f, #f25c0a); box-shadow: 0 0 0 1px #b84300, 0 0 0 3px #fff, 0 0 0 4.5px #f25c0a; }
+  `,
+  art: `<div class="glass"></div><div class="tag">FLAC–1</div>${keysLow.art}`,
+  buttons: keysLow.buttons,
+  components: [
+    { type: 'text', source: 'player.status', x: 200, y: 28, width: 106, height: 14, fontSize: 10, align: 'right', color: '#6fe36a' },
+    { type: 'text', source: 'track.title', x: 34, y: 46, width: 272, height: 20, fontSize: 13, align: 'right', color: '#6fe36a' },
+    { type: 'text', source: 'track.artist', x: 34, y: 66, width: 272, height: 16, fontSize: 11, align: 'right', color: '#a3b59c' },
+    { type: 'spectrum', x: 34, y: 92, width: 120, height: 34, color: '#6fe36a' },
+    { type: 'time', source: 'position', x: 160, y: 86, width: 146, height: 44, fontSize: 34, align: 'right', color: '#e9f5e4' },
+    ...keysLow.components,
+  ],
+});
+
+// ---- "Split": half white, half red, a thick black line around it
+
+const splitLow = lower({ width: 380, y: 196, margin: 30, look: 'blob', playLook: 'blob', toggleLook: 'chip', big: 76, mid: 52, toggle: [44, 38], list: 150 });
+const split = skin('split', 'Split', 'Half white, half red, a thick black line around it and two heavy black knobs.', ['bold', 'flat', 'red', 'white', 'black', 'graphic', 'light'], {
+  theme: theme({ background: '#fbfaf7', surface: '#ffffff', surfaceRaised: '#ffffff', foreground: '#131313', muted: '#505050', accent: '#b5301b', accentContrast: '#ffffff', border: '#131313', ok: '#0b5a2b', danger: '#b5301b', focus: '#1f5fbf' }, '"Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif', 8),
+  width: 380,
+  height: splitLow.height,
+  resize: splitLow.resize,
+  css: `
+    body { background: linear-gradient(90deg, #fbfaf7 0 50%, #e8452c 50%); font-family: "Avenir Next", "Helvetica Neue", sans-serif; }
+    .card { position: absolute; left: 12px; top: 12px; right: 12px; bottom: 4px; border-radius: 26px; box-shadow: inset 0 0 0 4px #131313; }
+    .paper { position: absolute; left: 30px; top: 30px; width: 320px; height: 152px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 2.5px #131313; }
+    .sun { position: absolute; left: 286px; top: 46px; width: 40px; height: 40px; border-radius: 50%; background: #ff3fa0; box-shadow: -14px 10px 0 #ffd91a; mix-blend-mode: multiply; }
+    ${beds('#fff', '#fff', true)}
+    .slot { box-shadow: inset 0 0 0 2px #131313; } .well { border-radius: 14px; box-shadow: inset 0 0 0 2.5px #131313; }
+    .face { color: #fff; } .face svg { width: 38%; height: 38%; }
+    .blob { border-radius: 50%; background: radial-gradient(circle at 38% 30%, #4a4a4a, #131313 70%); box-shadow: 0 5px 0 rgba(0,0,0,.25), 0 0 0 3px #fbfaf7, 0 0 0 5px #131313; }
+    .chip { border-radius: 10px; color: #131313; background: #fff; box-shadow: inset 0 0 0 2px #131313; }
+    .chip svg { width: 17px; height: 17px; }
+    .hover .blob { background: radial-gradient(circle at 38% 30%, #666, #222 70%); } .hover .chip { background: #ffe9e4; }
+    .pressed .blob { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.25), 0 0 0 3px #fbfaf7, 0 0 0 5px #131313; } .pressed .chip { color: #fff; background: #131313; }
+    .active .blob { color: #ffd91a; box-shadow: 0 5px 0 rgba(0,0,0,.25), 0 0 0 3px #ffd91a, 0 0 0 5px #131313; }
+    .active .chip { color: #fff; background: #131313; }
+  `,
+  art: `<div class="card"></div><div class="paper"></div><div class="sun"></div>${splitLow.art}`,
+  buttons: splitLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 46, y: 42, width: 230, height: 26, fontSize: 18, color: '#131313' },
+    { type: 'text', source: 'track.artist', x: 46, y: 68, width: 230, height: 18, fontSize: 12, color: '#b5301b' },
+    { type: 'time', source: 'position', x: 46, y: 104, width: 110, height: 44, fontSize: 32, color: '#131313' },
+    { type: 'spectrum', x: 164, y: 112, width: 90, height: 32, color: '#131313' },
+    { type: 'text', source: 'player.status', x: 258, y: 112, width: 78, height: 14, fontSize: 10, align: 'right', color: '#b5301b' },
+    { type: 'time', source: 'duration', x: 258, y: 130, width: 78, height: 14, fontSize: 11, align: 'right', color: '#505050' },
+    ...splitLow.components,
+  ],
+});
+
+// ---- "Patch": a white synthesiser, five keys in five colours, dotted wires
+
+const patchLow = lower({ width: 380, y: 166, look: 'sq', playLook: 'sq', toggleLook: 'pot', big: 56, mid: 56, toggle: [44, 44], list: 150 });
+const PATCH_COLOURS = ['#8b949c', '#f2b91e', '#4fc7c0', '#2f7fe0', '#e8502f'];
+patchLow.buttons.slice(0, 5).forEach((b, i) => (b.look = `sq c${i}`));
+const patch = skin('patch', 'Patch', 'A white synthesiser: five keys in five colours, small white knobs, grilles and dotted wires.', ['synthesiser', 'white', 'light', 'colourful', 'minimal', 'dots'], {
+  theme: theme({ background: '#efefeb', surface: '#ffffff', surfaceRaised: '#ffffff', foreground: '#1a1b1c', muted: '#4c4f52', accent: '#1d5fb8', accentContrast: '#ffffff', border: '#9a9c9e', ok: '#0b5a2b', danger: '#a3231b', focus: '#b83216' }, HELVETICA, 3),
+  width: 380,
+  height: patchLow.height,
+  resize: patchLow.resize,
+  pad: 5,
+  css: `
+    body { background: linear-gradient(170deg, #f7f7f4, #e6e6e2); font-family: ${HELVETICA}; }
+    .cone { position: absolute; top: 18px; width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, #2a2b2c 1.5px, transparent 1.9px) 0 0 / 7px 7px, #f7f7f4; box-shadow: inset 0 0 0 1px #c9c9c5; }
+    .wire { position: absolute; height: 0; border-top: 2px dotted #1a1b1c; opacity: .7; }
+    .drop { position: absolute; width: 0; border-left: 1.5px solid #1a1b1c; opacity: .5; }
+    .strip { position: absolute; left: 100px; top: 18px; width: 180px; height: 70px; border-radius: 4px; background: #fff; box-shadow: inset 0 1px 3px rgba(0,0,0,.3), 0 1px 0 #fff; }
+    ${beds('#cfcfcb', '#fff', true)}
+    .face { color: #fff; } .face svg { width: 20px; height: 20px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.3)); }
+    .sq { border-radius: 5px; box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 3px 3px rgba(0,0,0,.25), inset 0 0 0 3px rgba(255,255,255,.3), inset 0 -5px 6px rgba(0,0,0,.14); }
+    ${PATCH_COLOURS.map((c, i) => `.sq.c${i} { background: ${c}; }`).join(' ')}
+    .pot { border-radius: 50%; color: #1a1b1c; background: radial-gradient(circle at 40% 30%, #fff, #d6d6d2 75%); box-shadow: 0 0 0 1px #9a9c9e, 0 2px 3px rgba(0,0,0,.25); }
+    .pot svg { width: 16px; height: 16px; filter: none; }
+    ${STATES}
+    .pressed .sq { box-shadow: 0 0 0 1px rgba(0,0,0,.45), inset 0 3px 6px rgba(0,0,0,.35); }
+    .active .sq { box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 0 0 3px #efefeb, 0 0 0 5px #1a1b1c, inset 0 0 0 3px rgba(255,255,255,.3); }
+    .active .pot { color: #fff; background: radial-gradient(circle at 40% 30%, #4a8be0, #1d5fb8 75%); box-shadow: 0 0 0 1px #0f3f80, 0 2px 3px rgba(0,0,0,.25); }
+  `,
+  art: `<div class="cone" style="left:20px"></div><div class="cone" style="right:20px"></div><div class="strip"></div>
+    <div class="wire" style="left:24px;top:150px;width:332px"></div>
+    ${[78, 134, 190, 246, 302].map((x) => `<div class="drop" style="left:${x}px;top:152px;height:34px"></div>`).join('')}
+    ${patchLow.art}`,
+  buttons: patchLow.buttons,
+  components: [
+    { type: 'time', source: 'position', x: 110, y: 22, width: 80, height: 34, fontSize: 24, color: '#1a1b1c' },
+    { type: 'text', source: 'player.status', x: 190, y: 26, width: 80, height: 14, fontSize: 10, align: 'right', color: '#1d5fb8' },
+    { type: 'time', source: 'duration', x: 190, y: 40, width: 80, height: 14, fontSize: 11, align: 'right', color: '#4c4f52' },
+    { type: 'spectrum', x: 110, y: 58, width: 160, height: 24, color: '#1d5fb8' },
+    { type: 'text', source: 'track.title', x: 24, y: 98, width: 332, height: 24, fontSize: 17, align: 'center', color: '#1a1b1c' },
+    { type: 'text', source: 'track.artist', x: 24, y: 122, width: 332, height: 18, fontSize: 12, align: 'center', color: '#4c4f52' },
+    ...patchLow.components,
+  ],
+});
+
+// ---- "Chrome": a smoke-grey cassette on black, the type in teal
+
+const chromeLow = lower({ width: 400, y: 280, look: 'plate', playLook: 'plate', toggleLook: 'thin', big: 72, mid: 72, toggle: [46, 38], list: 150 });
+const chromeSkin = skin('chrome', 'Chrome', 'A smoke-grey cassette on black: the type in teal, hubs with fine teeth, two red eyes.', ['cassette', 'dark', 'grey', 'teal', 'elegant', 'skeuomorphic'], {
+  theme: theme({ background: '#161616', surface: '#0d0d0d', surfaceRaised: '#2c2c2b', foreground: '#f1f0ec', muted: '#aeada7', accent: '#49d6b6', accentContrast: '#002019', border: '#000000', ok: '#49d6b6', danger: '#ff9d94', focus: '#ffd166' }, '"Baskerville", "Georgia", "Times New Roman", serif'),
+  width: 400,
+  height: chromeLow.height,
+  resize: chromeLow.resize,
+  pad: 2,
+  css: `
+    body { background: radial-gradient(110% 60% at 50% 20%, #2a2a29, #0f0f0f 75%); font-family: Baskerville, Georgia, serif; }
+    .shell { position: absolute; left: 20px; top: 18px; width: 360px; height: 230px; border-radius: 10px; background: linear-gradient(#6a6964, #55544f); box-shadow: 0 6px 12px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.3), inset 0 0 0 1px #2a2a28; }
+    .arc { position: absolute; left: 30px; top: 22px; width: 300px; height: 300px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); -webkit-mask-image: linear-gradient(#000 0 52%, transparent 52%); }
+    .label { position: absolute; left: 112px; top: 12px; width: 136px; height: 150px; background: linear-gradient(#262624, #1b1b1a); box-shadow: inset 0 0 0 1px #000; }
+    .label::before { content: 'SUPER CHROME'; position: absolute; left: 0; right: 0; top: 8px; text-align: center; font-size: 8px; letter-spacing: .14em; color: #f1f0ec; }
+    .label::after { content: 'FLAC'; position: absolute; left: 0; right: 0; top: 18px; text-align: center; font-size: 30px; letter-spacing: .04em; color: #49d6b6; }
+    .gapw { position: absolute; left: 86px; top: 108px; width: 188px; height: 60px; border-radius: 30px; background: #161616; box-shadow: inset 0 3px 6px #000, 0 0 0 1px #3a3a38; }
+    .gapw::after { content: ''; position: absolute; left: 70px; right: 70px; top: 26px; height: 8px; background: repeating-linear-gradient(90deg, #f1f0ec 0 2px, transparent 2px 5px); }
+    .sixty { position: absolute; right: 22px; top: 118px; font-size: 26px; font-style: italic; color: #e3e2dd; }
+    .mk { position: absolute; left: 22px; top: 130px; font-size: 9px; letter-spacing: .2em; color: #e3e2dd; }
+    .base { position: absolute; left: 60px; bottom: 0; width: 240px; height: 42px; background: #4a4945; clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%); }
+    .base::after { content: ''; position: absolute; left: 60px; top: 14px; width: 120px; height: 14px; background: radial-gradient(circle, #161616 3px, #d2372b 3.4px 6px, transparent 6.4px) 0 0 / 120px 14px, radial-gradient(circle at 10% 50%, #161616 3px, #d2372b 3.4px 6px, transparent 6.4px), radial-gradient(circle at 90% 50%, #161616 3px, #d2372b 3.4px 6px, transparent 6.4px); }
+    .gear { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #161616 0 9px, transparent 9px), repeating-conic-gradient(#f1f0ec 0 10deg, #161616 10deg 20deg); box-shadow: inset 0 0 0 5px #f1f0ec, 0 0 0 2px #f1f0ec, 0 0 0 3px #161616; }
+    ${beds('#0a0a0a', '#0d0d0d', false)}
+    .face { color: #f1f0ec; } .face svg { width: 20px; height: 20px; }
+    .plate { border-radius: 2px; background: linear-gradient(#3a3a38, #1f1f1e); box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.18); }
+    .thin { border-radius: 3px; color: #aeada7; } .thin svg { width: 18px; height: 18px; }
+    ${STATES}
+    .hover .thin { color: #fff; } .pressed .plate { box-shadow: 0 0 0 1px #000, inset 0 3px 5px rgba(0,0,0,.7); }
+    .active .plate { color: #49d6b6; box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.18), inset 0 -3px 0 #49d6b6; }
+    .active .thin { color: #49d6b6; box-shadow: inset 0 -2px 0 #49d6b6; }
+  `,
+  art: `<div class="shell"><div class="arc"></div><div class="label"></div><div class="gapw"></div><div class="mk">STEREO</div><div class="sixty">60</div><div class="base"></div></div>${chromeLow.art}`,
+  buttons: chromeLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 20, y: 252, width: 250, height: 24, fontSize: 16, color: '#f1f0ec' },
+    { type: 'time', source: 'position', x: 276, y: 252, width: 50, height: 24, fontSize: 13, align: 'right', color: '#49d6b6' },
+    { type: 'time', source: 'duration', x: 330, y: 252, width: 50, height: 24, fontSize: 13, align: 'right', color: '#aeada7' },
+    { type: 'text', source: 'track.artist', x: 136, y: 84, width: 128, height: 16, fontSize: 10, align: 'center', color: '#aeada7' },
+    { type: 'text', source: 'player.status', x: 136, y: 184, width: 128, height: 14, fontSize: 10, align: 'center', color: '#49d6b6' },
+    ...chromeLow.components,
+  ],
+  spinners: [
+    { name: 'hub-left', x: 114, y: 134, width: 44, height: 44, period: 2600, html: '<div class="gear"></div>' },
+    { name: 'hub-right', x: 242, y: 134, width: 44, height: 44, period: 2600, html: '<div class="gear"></div>' },
+  ],
+});
+
+// ---- "Switch": soft white, round keys in cream, red and green, a lever and a rocker
+
+const switchLow = lower({ width: 360, y: 150, look: 'bud', playLook: 'bud red', toggleLook: 'flip', big: 64, mid: 56, toggle: [48, 44], list: 150 });
+switchLow.buttons[4].look = 'bud green';
+const switchSkin = skin('switch', 'Switch', 'Soft white with round keys in cream, red and green, a lever and a black rocker.', ['white', 'light', 'soft', 'switches', 'minimal', 'sixties'], {
+  theme: theme({ background: '#f1f0ec', surface: '#ffffff', surfaceRaised: '#ffffff', foreground: '#1d1d1b', muted: '#52524e', accent: '#a8321a', accentContrast: '#ffffff', border: '#a4a39e', ok: '#2f6a3c', danger: '#a8321a', focus: '#1f5fbf' }, HELVETICA, 3),
+  width: 360,
+  height: switchLow.height,
+  resize: switchLow.resize,
+  css: `
+    body { background: radial-gradient(120% 80% at 30% 0%, #ffffff, #e9e8e3 70%); font-family: ${HELVETICA}; }
+    .tray { position: absolute; left: 22px; top: 20px; width: 232px; height: 118px; border-radius: 6px; background: #fff; box-shadow: inset 0 1px 3px rgba(0,0,0,.3), 0 1px 0 #fff; }
+    .leverarm { position: absolute; left: 274px; top: 28px; width: 62px; height: 34px; border-radius: 60% 40% 40% 60% / 50%; background: linear-gradient(#fff, #dcdbd6); box-shadow: 0 4px 6px rgba(0,0,0,.3), inset 0 -3px 5px rgba(0,0,0,.1); transform: rotate(-24deg); }
+    .rock { position: absolute; left: 286px; top: 88px; width: 44px; height: 26px; border-radius: 13px 4px 4px 13px; background: linear-gradient(#3a3a38, #151514); box-shadow: 0 4px 5px rgba(0,0,0,.35); }
+    .steps { position: absolute; left: 338px; top: 30px; width: 12px; height: 90px; background: repeating-linear-gradient(#1d1d1b 0 1px, transparent 1px 15px); opacity: .6; }
+    ${beds('#d6d5d0', '#fff', true)}
+    .face { color: #1d1d1b; } .face svg { width: 18px; height: 18px; }
+    .bud { border-radius: 50%; background: radial-gradient(circle at 38% 28%, #ffffff, #e2e0d6 70%); box-shadow: 0 0 0 1px #b9b8b2, 0 4px 5px rgba(0,0,0,.2), inset 0 -3px 5px rgba(0,0,0,.08); }
+    .bud.red { color: #fff; background: radial-gradient(circle at 38% 28%, #ee6a4c, #c13a1d 70%); box-shadow: 0 0 0 1px #8c2710, 0 4px 5px rgba(0,0,0,.25); }
+    .bud.red svg { width: 24px; height: 24px; }
+    .bud.green { color: #fff; background: radial-gradient(circle at 38% 28%, #6f9a78, #3f6a4a 70%); box-shadow: 0 0 0 1px #2c4d35, 0 4px 5px rgba(0,0,0,.25); }
+    .flip { border-radius: 4px; background: linear-gradient(160deg, #fff, #ecebe5); box-shadow: 0 0 0 1px #8f8e89, 0 2px 3px rgba(0,0,0,.18), inset 0 0 0 3px rgba(255,255,255,.7); }
+    .flip svg { width: 16px; height: 16px; margin-top: -8px; }
+    .flip::after { content: ''; position: absolute; left: 50%; bottom: 6px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #d2d1cb; }
+    ${STATES}
+    .pressed .bud, .pressed .flip { box-shadow: 0 0 0 1px #8f8e89, inset 0 3px 5px rgba(0,0,0,.25); }
+    .active .bud.red { box-shadow: 0 0 0 1px #8c2710, 0 0 0 3px #f1f0ec, 0 0 0 4.5px #c13a1d; }
+    .active .flip::after { background: #f2581c; box-shadow: 0 0 4px rgba(242,88,28,.9); }
+  `,
+  art: `<div class="tray"></div><div class="leverarm"></div><div class="rock"></div><div class="steps"></div>${switchLow.art}`,
+  buttons: switchLow.buttons,
+  components: display(34, 28, 208, { title: '#1d1d1b', artist: '#a8321a', time: '#1d1d1b', bars: '#52524e', muted: '#52524e' }).filter((c) => c.type !== 'spectrum').concat(switchLow.components),
+});
+
+// ---- "Gauge": two round instruments lit in cyan on navy
+
+const gaugeLow = lower({ width: 380, y: 220, look: 'gloss', playLook: 'gloss hot', toggleLook: 'gloss', big: 72, mid: 54, toggle: [46, 46], list: 150 });
+const gauge = skin('gauge', 'Gauge', 'Two round instruments lit in cyan on navy, as in a dashboard at night.', ['dashboard', 'instruments', 'dark', 'navy', 'cyan', 'glow'], {
+  theme: theme({ background: '#131c2b', surface: '#0a111c', surfaceRaised: '#24324a', foreground: '#eaf3ff', muted: '#9fb2cc', accent: '#5fd8ff', accentContrast: '#001a24', border: '#05090f', ok: '#7fdca0', danger: '#ff9d94', focus: '#ffd166' }, '"Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif', 6),
+  width: 380,
+  height: gaugeLow.height,
+  resize: gaugeLow.resize,
+  css: `
+    body { background: radial-gradient(120% 70% at 50% 0%, #1f2e47, #0f1724 70%); }
+    .dialface { position: absolute; top: 18px; width: 164px; height: 164px; border-radius: 50%; background: radial-gradient(circle, #0a111c 0 62%, #101a2a 62%); box-shadow: inset 0 3px 10px #000, 0 0 0 3px #2a3a55, 0 0 0 4px #05090f, 0 0 18px rgba(95,216,255,.18); }
+    .dialface::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: repeating-conic-gradient(from 225deg, #5fd8ff 0 1.2deg, transparent 1.2deg 9deg);
+      -webkit-mask-image: radial-gradient(circle, transparent 0 62px, #000 62px 72px, transparent 72px), conic-gradient(from 224deg, #000 0 272deg, transparent 272deg); -webkit-mask-composite: source-in; }
+    .dialface::after { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: conic-gradient(from 60deg, #ff6b60 0 36deg, transparent 36deg);
+      -webkit-mask-image: radial-gradient(circle, transparent 0 66px, #000 66px 72px, transparent 72px); }
+    ${beds('#070c14', '#0a111c', false)}
+    .face { color: #eaf3ff; } .face svg { width: 18px; height: 18px; }
+    .gloss { border-radius: 50%; background: radial-gradient(circle at 50% 18%, #3d5478, #111a29 70%); box-shadow: 0 0 0 1px #05090f, 0 3px 5px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.25); }
+    .gloss.hot { color: #ff8a80; box-shadow: 0 0 0 1px #05090f, 0 3px 5px rgba(0,0,0,.6), inset 0 0 0 3px #ff6b60, inset 0 0 0 4px #05090f; }
+    .gloss.hot svg { width: 26px; height: 26px; }
+    ${STATES}
+    .pressed .gloss { box-shadow: 0 0 0 1px #05090f, inset 0 3px 6px rgba(0,0,0,.8); }
+    .active .gloss { color: #5fd8ff; box-shadow: 0 0 0 1px #05090f, 0 0 0 2.5px #5fd8ff, 0 0 10px 2px rgba(95,216,255,.5); }
+    .active .gloss.hot { color: #fff; box-shadow: 0 0 0 1px #05090f, 0 0 14px 4px rgba(255,107,96,.55), inset 0 0 0 3px #ff6b60, inset 0 0 0 4px #05090f; }
+  `,
+  art: `<div class="dialface" style="left:22px"></div><div class="dialface" style="left:194px"></div>${gaugeLow.art}`,
+  buttons: gaugeLow.buttons,
+  components: [
+    { type: 'time', source: 'position', x: 44, y: 76, width: 120, height: 44, fontSize: 30, align: 'center', color: '#eaf3ff' },
+    { type: 'time', source: 'duration', x: 44, y: 122, width: 120, height: 16, fontSize: 11, align: 'center', color: '#9fb2cc' },
+    { type: 'spectrum', x: 226, y: 74, width: 100, height: 44, color: '#5fd8ff' },
+    { type: 'text', source: 'player.status', x: 216, y: 124, width: 120, height: 14, fontSize: 10, align: 'center', color: '#9fb2cc' },
+    { type: 'text', source: 'track.title', x: 24, y: 186, width: 220, height: 24, fontSize: 16, color: '#eaf3ff' },
+    { type: 'text', source: 'track.artist', x: 248, y: 190, width: 108, height: 18, fontSize: 12, align: 'right', color: '#5fd8ff' },
+    ...gaugeLow.components,
+  ],
+});
+
+// ---- "Ember": amber on black, small red keys, lines of segments
+
+const emberLow = lower({ width: 320, y: 118, margin: 14, look: 'nub', playLook: 'nub', toggleLook: 'nub dim', big: 54, mid: 54, toggle: [40, 30], list: 160 });
+const ember = skin('ember', 'Ember', 'Amber on black: lines of glowing segments, small red keys and narrow print.', ['dark', 'amber', 'segments', 'compact', 'nineties', 'red'], {
+  theme: theme({ background: '#100d09', surface: '#060504', surfaceRaised: '#2a2117', foreground: '#f5c56b', muted: '#b88f47', accent: '#ff5a48', accentContrast: '#1c0300', border: '#3a2c18', ok: '#9fd96a', danger: '#ff8f85', focus: '#7fc4ff' }, '"Menlo", "Consolas", "Courier New", monospace', 1),
+  width: 320,
+  height: emberLow.height,
+  resize: emberLow.resize,
+  pad: 2,
+  css: `
+    body { background: linear-gradient(#17130d, #0c0a07); box-shadow: inset 0 0 0 1px #3a2c18, inset 0 0 0 2px #000; }
+    .bar { position: absolute; left: 0; top: 0; width: 100%; height: 14px; background: repeating-linear-gradient(90deg, #b88f47 0 2px, transparent 2px 4px) 30px 5px / 260px 4px no-repeat, #1d170f; box-shadow: 0 1px 0 #000; }
+    .pane { position: absolute; left: 12px; top: 22px; width: 296px; height: 86px; background: #060504; box-shadow: inset 0 0 0 1px #3a2c18, inset 0 2px 6px #000; }
+    .seg { position: absolute; left: 14px; height: 6px; background: repeating-linear-gradient(90deg, #6b5226 0 3px, transparent 3px 5px); }
+    ${beds('#060504', '#060504', false)}
+    .slot { border-radius: 1px; box-shadow: inset 0 0 0 1px #3a2c18; } .well { border-radius: 1px; box-shadow: inset 0 0 0 1px #3a2c18, inset 0 2px 6px #000; }
+    .face { color: #ff5a48; } .face svg { width: 18px; height: 18px; }
+    .nub { border-radius: 2px; background: linear-gradient(#2a1410, #170a08); box-shadow: 0 0 0 1px #5a1f17, inset 0 1px 0 rgba(255,255,255,.12); }
+    .nub.dim { color: #b88f47; background: linear-gradient(#221a10, #120e08); box-shadow: 0 0 0 1px #3a2c18; } .nub.dim svg { width: 15px; height: 15px; }
+    ${STATES}
+    .hover .nub { background: linear-gradient(#3d1c16, #20100c); }
+    .pressed .nub { box-shadow: 0 0 0 1px #5a1f17, inset 0 2px 4px #000; }
+    .active .nub { color: #1c0300; background: linear-gradient(#ff7b6c, #e23c2a); box-shadow: 0 0 0 1px #5a1f17, 0 0 8px rgba(255,90,72,.6); }
+    .active .nub.dim { color: #1c0b00; background: linear-gradient(#f5c56b, #d99a2f); box-shadow: 0 0 0 1px #3a2c18, 0 0 8px rgba(245,197,107,.5); }
+  `,
+  art: `<div class="bar"></div><div class="pane"></div>${emberLow.art}`,
+  buttons: emberLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 20, y: 26, width: 280, height: 18, fontSize: 12, color: '#f5c56b' },
+    { type: 'text', source: 'track.artist', x: 20, y: 44, width: 180, height: 14, fontSize: 10, color: '#b88f47' },
+    { type: 'text', source: 'player.status', x: 204, y: 44, width: 96, height: 14, fontSize: 10, align: 'right', color: '#ff5a48' },
+    { type: 'time', source: 'position', x: 20, y: 62, width: 90, height: 40, fontSize: 28, color: '#f5c56b' },
+    { type: 'spectrum', x: 116, y: 68, width: 130, height: 32, color: '#f5c56b' },
+    { type: 'time', source: 'duration', x: 250, y: 86, width: 50, height: 14, fontSize: 10, align: 'right', color: '#b88f47' },
+    ...emberLow.components,
+  ],
+});
+
+// ---- "Click": the grey-green display of an early pocket player, and a ring of keys
+
+const click = skin('click', 'Click', 'An early pocket player: a grey-green display with black print, a ring of keys and a button in its middle.', ['pocket player', 'light', 'monochrome', 'ring', 'display', 'two thousand'], {
+  ...wheel,
+  theme: theme({ background: '#eceded', surface: '#c7cdc0', surfaceRaised: '#e2e6dd', foreground: '#14160f', muted: '#3f4437', accent: '#14160f', accentContrast: '#c7cdc0', border: '#6f7566', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, '"Geneva", "Verdana", "Helvetica Neue", sans-serif', 2),
+  css: wheel.css
+    .replace('linear-gradient(#f4f9fc, #dcebf5)', 'linear-gradient(#c3c9bc, #cdd3c6)')
+    .replace('linear-gradient(#f7fafc, #c9dbe8); box-shadow: 0 1px 0 #9fb3c2;', 'none; box-shadow: 0 1.5px 0 #14160f;')
+    .replace('linear-gradient(#7fe07a, #2f9a2a); box-shadow: 0 0 0 1px #2a2d30;', 'linear-gradient(90deg, #14160f 0 70%, transparent 70%); box-shadow: 0 0 0 1px #14160f;')
+    .replace('linear-gradient(#b9bdc1, #a8acb0)', 'linear-gradient(#fbfbfb, #e4e5e5)')
+    .replace("${beds('#cfd3d7', '#e8f1f8', true)}", '')
+    .replace('.face { color: #fff; }', '.face { color: #8d9296; } .ringpad { box-shadow: inset 0 0 0 1px #b4b8bc, 0 1px 0 #fff !important; } .well { background: #c7cdc0 !important; }')
+    .replace('.active .hub { color: #1a62a8; box-shadow: 0 0 0 1px #1a62a8, 0 0 0 3px rgba(26,98,168,.3); }', '.active .hub { color: #14160f; box-shadow: 0 0 0 1px #6f7566, 0 0 0 3px rgba(20,22,15,.25); }')
+    .replace('.active .lite { color: #fff; background: #1a62a8; }', '.active .lite { color: #c7cdc0; background: #14160f; }'),
+  components: [
+    { type: 'text', source: 'player.status', x: 60, y: 24, width: 220, height: 18, fontSize: 12, align: 'center', color: '#14160f' },
+    { type: 'text', source: 'track.title', x: 34, y: 56, width: 272, height: 24, fontSize: 15, color: '#14160f' },
+    { type: 'text', source: 'track.artist', x: 34, y: 82, width: 272, height: 20, fontSize: 13, color: '#3f4437' },
+    { type: 'spectrum', x: 34, y: 112, width: 272, height: 44, color: '#14160f' },
+    ...wheel.components.filter((c) => ['seekbar', 'time', 'volume', 'playlist'].includes(c.type)).map((c) => (c.color ? { ...c, color: '#14160f' } : c)),
+  ],
+  overlays: undefined,
+});
+click.folder = 'click';
+click.manifest = { id: 'io.github.krocon.click', name: 'Click', description: 'An early pocket player: a grey-green display with black print, a ring of keys and a button in its middle.', theme: click.theme };
+click.keywords = ['pocket player', 'light', 'monochrome', 'ring', 'display'];
+
+// ---- "Classic": an olive-grey cassette player, a speaker with the time on it, an orange key
+
+const classicLow = lower({ width: 380, y: 296, look: 'slat', playLook: 'slat', toggleLook: 'tabk', big: 72, mid: 72, toggle: [46, 38], list: 150, seek: false });
+const classic = skin('classic', 'Classic', 'An olive-grey cassette player: the time large on its speaker, a cassette with the cover, an orange key.', ['cassette', 'player', 'olive', 'grey', 'dark', 'cover', 'orange'], {
+  theme: theme({ background: '#3c3d37', surface: '#0f0f0d', surfaceRaised: '#55564f', foreground: '#f5f5f0', muted: '#c9c9bf', accent: '#ff9a3d', accentContrast: '#221000', border: '#1a1a17', ok: '#9fd96a', danger: '#ffa39b', focus: '#7fc4ff' }, '"Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif', 4),
+  width: 380,
+  height: classicLow.height,
+  resize: classicLow.resize,
+  pad: 2,
+  css: `
+    body { background: linear-gradient(#6a6b63, #55564f); font-family: "Avenir Next", "Helvetica Neue", sans-serif; }
+    .speaker { position: absolute; left: 20px; top: 16px; width: 340px; height: 96px; border-radius: 10px; background: radial-gradient(circle, #0f0f0d 1.6px, transparent 2px) 0 0 / 8px 8px, linear-gradient(#34352f, #2a2b26); box-shadow: inset 0 2px 6px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.2); }
+    .bayc { position: absolute; left: 20px; top: 122px; width: 340px; height: 122px; border-radius: 8px; background: #1a1a17; box-shadow: inset 0 3px 8px #000, 0 1px 0 rgba(255,255,255,.2); }
+    .bayc::before, .bayc::after { content: ''; position: absolute; top: 40px; width: 5px; height: 40px; border-radius: 3px; background: #ff9a3d; }
+    .bayc::before { left: 4px; } .bayc::after { right: 4px; }
+    .shellc { position: absolute; left: 16px; top: 8px; width: 308px; height: 106px; border-radius: 6px; background: linear-gradient(#4a4b45 0 46%, #efece4 46%); box-shadow: 0 3px 6px rgba(0,0,0,.6), inset 0 0 0 1px #000; }
+    .ninety { position: absolute; right: 14px; top: 52px; font-size: 28px; font-weight: 800; color: #6a6b63; }
+    .eyec { position: absolute; left: 70px; top: 54px; width: 150px; height: 40px; border-radius: 20px; background: #1a1a17; box-shadow: inset 0 2px 4px #000; }
+    .wave { position: absolute; left: 20px; top: 254px; width: 340px; height: 34px; border-radius: 6px; background: #0f0f0d; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.2); }
+    .blank { position: absolute; inset: 0; background: linear-gradient(135deg, #8a8b82, #55564f); display: grid; place-items: center; color: #f5f5f0; }
+    .blank svg { width: 22px; height: 22px; }
+    ${COG_CSS}
+    ${beds('#1a1a17', '#0f0f0d', false)}
+    .face { color: #f5f5f0; } .face svg { width: 20px; height: 20px; margin-top: -12px; }
+    .slat { border-radius: 2px; background: repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 2px, transparent 2px 5px) 0 100% / 100% 16px no-repeat, linear-gradient(#77786f, #5a5b54); box-shadow: 0 0 0 1px #1a1a17, inset 0 1px 0 rgba(255,255,255,.25); }
+    .tabk { border-radius: 4px; color: #f5f5f0; background: linear-gradient(#55564f, #3c3d37); box-shadow: 0 0 0 1px #1a1a17, inset 0 1px 0 rgba(255,255,255,.2); }
+    .tabk svg { width: 17px; height: 17px; margin-top: 0; }
+    ${STATES}
+    .pressed .slat { transform: translateY(2px); box-shadow: 0 0 0 1px #1a1a17, inset 0 3px 5px rgba(0,0,0,.5); }
+    .active .slat { transform: translateY(2px); color: #ffb86b; box-shadow: 0 0 0 1px #1a1a17, inset 0 3px 5px rgba(0,0,0,.45), inset 0 -3px 0 #ff9a3d; }
+    .active .tabk { color: #221000; background: linear-gradient(#ffb86b, #f08a24); }
+  `,
+  art: `<div class="speaker"></div><div class="bayc"><div class="shellc"><div class="eyec"></div><div class="ninety">90</div></div></div><div class="wave"></div>${classicLow.art}`,
+  buttons: classicLow.buttons,
+  components: [
+    { type: 'text', source: 'player.status', x: 34, y: 22, width: 312, height: 16, fontSize: 11, align: 'center', color: '#c9c9bf' },
+    { type: 'time', source: 'position', x: 34, y: 36, width: 312, height: 60, fontSize: 48, align: 'center', color: '#f5f5f0' },
+    { type: 'time', source: 'duration', x: 290, y: 90, width: 56, height: 16, fontSize: 11, align: 'right', color: '#c9c9bf' },
+    { type: 'text', source: 'track.title', x: 90, y: 136, width: 240, height: 20, fontSize: 14, color: '#f5f5f0' },
+    { type: 'text', source: 'track.artist', x: 90, y: 156, width: 240, height: 16, fontSize: 11, color: '#ff9a3d' },
+    { type: 'spectrum', x: 34, y: 258, width: 312, height: 26, color: '#c3a8f5' },
+    ...classicLow.components,
+  ],
+  overlays: [{ name: 'cover', x: 44, y: 136, width: 38, height: 38, source: 'track.cover', html: NOTE }],
+  spinners: [smallHub('hub-left', 118, 190), smallHub('hub-right', 180, 190)],
+});
+
+// ---- "Radar": a silver deck with two speaker cones and a clear cassette
+
+const radarLow = lower({ width: 360, y: 300, look: 'stub', playLook: 'stub', toggleLook: 'stub tiny', big: 60, mid: 60, toggle: [44, 34], list: 150 });
+const radar = skin('radar', 'Radar', 'A silver deck with two speaker cones, a green window and a clear cassette.', ['deck', 'silver', 'light', 'speakers', 'cassette', 'skeuomorphic'], {
+  theme: theme({ background: '#c9ccd0', surface: '#d6e4c8', surfaceRaised: '#eef5e6', foreground: '#151a12', muted: '#414b3a', accent: '#8c1d12', accentContrast: '#ffffff', border: '#7b8087', ok: '#0b5a2b', danger: '#8c1d12', focus: '#1f5fbf' }, HELVETICA, 2),
+  width: 360,
+  height: radarLow.height,
+  resize: radarLow.resize,
+  pad: 2,
+  css: `
+    body { background: repeating-linear-gradient(0deg, rgba(255,255,255,.2) 0 .5px, rgba(0,0,0,.04) .5px 1px, transparent 1px 2.5px), linear-gradient(#dcdfe2, #b6babf); box-shadow: inset 0 1px 0 #fff; font-family: ${HELVETICA}; }
+    .cone { position: absolute; top: 20px; width: 96px; height: 96px; border-radius: 50%; background: radial-gradient(circle, #6d7278 0 12px, #1a1c1f 12px 14px, #3a3d41 14px 30px, #232528 30px 32px, #4a4e53 32px 44px, #1a1c1f 44px 46px, #e9ebed 46px); box-shadow: 0 0 0 1px #6d7278, inset 0 0 0 2px #fff, 0 2px 4px rgba(0,0,0,.3); }
+    .lcd { position: absolute; left: 130px; top: 20px; width: 100px; height: 96px; border-radius: 3px; background: linear-gradient(#cfdfc0, #dde9d0); box-shadow: inset 0 2px 5px rgba(0,0,0,.45), 0 0 0 2px #2a2c2f, 0 1px 0 2px #fff; }
+    .strip { position: absolute; left: 22px; top: 130px; width: 316px; height: 46px; background: #d6e4c8; box-shadow: inset 0 1px 3px rgba(0,0,0,.4), 0 1px 0 #fff; }
+    .clear { position: absolute; left: 40px; top: 188px; width: 280px; height: 100px; border-radius: 6px; background: linear-gradient(rgba(255,255,255,.55), rgba(220,224,228,.5)); box-shadow: inset 0 0 0 1.5px #6d7278, inset 0 1px 0 #fff, 0 3px 5px rgba(0,0,0,.25); }
+    .clear::before { content: ''; position: absolute; left: 14px; right: 14px; top: 10px; height: 16px; background: #fff; box-shadow: inset 0 0 0 1px #9a9fa6; background-image: repeating-linear-gradient(90deg, #8c1d12 0 1px, transparent 1px 12px); background-size: 100% 5px; background-repeat: no-repeat; background-position: 0 100%; }
+    .clear::after { content: ''; position: absolute; left: 96px; top: 46px; width: 88px; height: 34px; border-radius: 3px; background: linear-gradient(90deg, #3a2417 0 60%, #1a1c1f 60%); box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
+    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #5a4034 0 1.5px, #47322a 1.5px 3px); }
+    ${COG_CSS}
+    .cog.big i { left: 16px; top: 3px; height: 30px; background: linear-gradient(#f1ece0 0 8px, transparent 8px 22px, #f1ece0 22px); }
+    ${beds('#9aa0a6', '#d6e4c8', true)}
+    .face { color: #f1f2f3; } .face svg { width: 18px; height: 18px; }
+    .stub { border-radius: 3px; background: linear-gradient(#3a3d41, #1a1c1f); box-shadow: 0 0 0 1px #000, 0 2px 2px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25); }
+    .stub.tiny svg { width: 15px; height: 15px; }
+    ${STATES}
+    .pressed .stub { transform: translateY(1px); box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.7); }
+    .active .stub { color: #ffb0a8; box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.25), inset 0 -3px 0 #e2392b; }
+  `,
+  art: `<div class="cone" style="left:22px"></div><div class="cone" style="right:22px"></div><div class="lcd"></div><div class="strip"></div><div class="clear"></div>${radarLow.art}`,
+  buttons: radarLow.buttons,
+  components: [
+    { type: 'time', source: 'position', x: 134, y: 28, width: 92, height: 34, fontSize: 24, align: 'center', color: '#151a12' },
+    { type: 'spectrum', x: 140, y: 66, width: 80, height: 26, color: '#414b3a' },
+    { type: 'time', source: 'duration', x: 134, y: 96, width: 92, height: 14, fontSize: 10, align: 'center', color: '#414b3a' },
+    { type: 'text', source: 'track.title', x: 32, y: 134, width: 296, height: 20, fontSize: 14, color: '#151a12' },
+    { type: 'text', source: 'track.artist', x: 32, y: 154, width: 200, height: 16, fontSize: 11, color: '#414b3a' },
+    { type: 'text', source: 'player.status', x: 236, y: 154, width: 92, height: 16, fontSize: 10, align: 'right', color: '#8c1d12' },
+    ...radarLow.components,
+  ],
+  packs: [
+    { name: 'tape-left', x: 64, y: 216, width: 70, height: 70, from: 70, to: 40, html: '<div class="wound"></div>' },
+    { name: 'tape-right', x: 226, y: 216, width: 70, height: 70, from: 40, to: 70, html: '<div class="wound"></div>' },
+  ],
+  spinners: [bigHub('hub-left', 81, 233), bigHub('hub-right', 243, 233)],
+});
+
+// ---- "Needle": black leather, one wide white meter whose needle shows the position
+
+const needleLow = lower({ width: 380, y: 178, look: 'lug', playLook: 'lug lime', toggleLook: 'cornerk', big: 76, mid: 54, toggle: [48, 40], list: 150, seek: false });
+const needleSkin = skin('needle', 'Needle', 'Black leather and one wide white meter: its needle shows where the track is, and pulling it seeks.', ['meter', 'leather', 'dark', 'needle', 'lime', 'skeuomorphic'], {
+  theme: theme({ background: '#1d1e20', surface: '#0c0c0d', surfaceRaised: '#33353a', foreground: '#f4f4f1', muted: '#b4b5b1', accent: '#cfe84a', accentContrast: '#1a1f00', border: '#000000', ok: '#9fd96a', danger: '#ff9d94', focus: '#7fc4ff' }, '"Menlo", "Consolas", "Courier New", monospace', 2),
+  width: 380,
+  height: needleLow.height,
+  resize: needleLow.resize,
+  css: `
+    body { background: radial-gradient(circle, rgba(255,255,255,.045) .7px, transparent 1px) 0 0 / 4px 4px, radial-gradient(circle, rgba(0,0,0,.45) .7px, transparent 1px) 2px 2px / 4px 4px, linear-gradient(#2a2b2e, #17181a); }
+    .frame { position: absolute; left: 20px; top: 16px; width: 340px; height: 152px; border-radius: 6px; background: #0c0c0d; box-shadow: inset 0 0 0 1px #3a3c40, 0 0 0 1px #000, 0 1px 0 1px rgba(255,255,255,.1); }
+    .dialw { position: absolute; left: 10px; top: 30px; width: 320px; height: 96px; background: linear-gradient(#ffffff, #ecebe4); box-shadow: inset 0 2px 5px rgba(0,0,0,.35); overflow: hidden; }
+    .dialw::before { content: ''; position: absolute; inset: 0; background: repeating-conic-gradient(from -40.3deg at 50% 118%, #17181a 0 .6deg, transparent .6deg 5deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 118%, transparent 0 86px, #000 86px 96px, transparent 96px); }
+    .dialw::after { content: ''; position: absolute; inset: 0; background: conic-gradient(from 14deg at 50% 118%, #d2372b 0 26deg, transparent 26deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 118%, transparent 0 78px, #000 78px 83px, transparent 83px); }
+    .humph { position: absolute; left: 132px; top: 98px; width: 56px; height: 56px; border-radius: 50%; background: #17181a; }
+    .vu { position: absolute; left: 14px; top: 8px; font: 700 13px "Helvetica Neue", Arial, sans-serif; color: #17181a; }
+    .pointer { position: absolute; left: 3px; top: 0; width: 2px; height: 100%; background: #17181a; border-radius: 1px; }
+    ${beds('#0c0c0d', '#0c0c0d', false)}
+    .face { color: #f4f4f1; } .face svg { width: 18px; height: 18px; }
+    .lug { border-radius: 50%; background: radial-gradient(circle at 50% 22%, #6a6d72, #26282b 75%); box-shadow: 0 0 0 1px #000, 0 0 0 4px #1c1d1f, 0 0 0 5px #000, 0 4px 6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.3); }
+    .lug.lime { color: #cfe84a; background: conic-gradient(from 30deg, #e9ebed, #84888d, #dfe1e4, #7a7e83, #e9ebed, #84888d, #dfe1e4, #7a7e83, #e9ebed); }
+    .lug.lime svg { width: 28px; height: 28px; color: #2a2d31; }
+    .cornerk { border-radius: 6px; background: linear-gradient(#3a3c40, #1f2022); box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.2); }
+    ${STATES}
+    .pressed .lug { box-shadow: 0 0 0 1px #000, 0 0 0 4px #1c1d1f, 0 0 0 5px #000, inset 0 3px 6px rgba(0,0,0,.6); }
+    .active .lug.lime { box-shadow: 0 0 0 1px #000, 0 0 0 4px #1c1d1f, 0 0 0 6px #cfe84a, 0 0 14px 3px rgba(207,232,74,.45), inset 0 1px 0 rgba(255,255,255,.3); }
+    .active .lug.lime svg { color: #4a5a00; }
+    .active .cornerk { color: #cfe84a; box-shadow: 0 0 0 1px #000, inset 0 0 0 1.5px #cfe84a; }
+  `,
+  art: `<div class="frame"><div class="dialw"><div class="vu">VU</div><div class="humph"></div></div></div>${needleLow.art}`,
+  buttons: needleLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 32, y: 22, width: 220, height: 20, fontSize: 13, color: '#f4f4f1' },
+    { type: 'text', source: 'player.status', x: 256, y: 22, width: 92, height: 20, fontSize: 10, align: 'right', color: '#cfe84a' },
+    { type: 'time', source: 'position', x: 32, y: 146, width: 80, height: 18, fontSize: 12, color: '#f4f4f1' },
+    { type: 'text', source: 'track.artist', x: 112, y: 146, width: 156, height: 18, fontSize: 11, align: 'center', color: '#b4b5b1' },
+    { type: 'time', source: 'duration', x: 268, y: 146, width: 80, height: 18, fontSize: 12, align: 'right', color: '#f4f4f1' },
+    ...needleLow.components,
+  ],
+  needles: [{ name: 'pointer', x: 186, y: 54, width: 8, height: 106, pivotX: 4, pivotY: 106, from: -38, to: 38, rest: -38, html: '<div class="pointer"></div>' }],
+});
+
 // What every skin says about itself beyond its looks: words to find it by, and the row of
 // its background that is drawn out when the window is made taller (it runs through the playlist).
 const MORE = {
@@ -2017,7 +2596,7 @@ const MORE = {
   dial: { keywords: ['dial', 'knob', 'aluminium', 'light', 'minimal', 'green'], resize: { stretchY: 590 } },
 };
 
-const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial, pocket, beat, stripe, amp, magnet, studio, crimson, mono, wheel];
+const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial, pocket, beat, stripe, amp, magnet, studio, crimson, mono, wheel, nano, silver, lever, keysSkin, split, patch, chromeSkin, switchSkin, gauge, ember, click, classic, radar, needleSkin];
 
 // ---------------------------------------------------------------- rendering
 
@@ -2272,7 +2851,15 @@ function build(design, mockDir) {
     (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');
 
   // the preview and the mock show the skin in use; one button is "on" to show that state too
-  writeFileSync(join(out, 'preview.png'), whole(shot('normal', inUse(design) + turned)));
+  // the preview is large and shown small: WebP where `cwebp` is at hand, else PNG
+  const previewPng = join(out, 'preview.png');
+  writeFileSync(previewPng, whole(shot('normal', inUse(design) + turned)));
+  let preview = 'preview.png';
+  if (CWEBP) {
+    execFileSync(CWEBP, ['-quiet', '-q', '82', previewPng, '-o', join(out, 'preview.webp')]);
+    rmSync(previewPng);
+    preview = 'preview.webp';
+  }
   if (mockDir) {
     mkdirSync(mockDir, { recursive: true });
     writeFileSync(join(mockDir, `${design.folder}.png`), whole(shot('active', inUse(design) + turned)));
@@ -2297,7 +2884,7 @@ function build(design, mockDir) {
   };
   // id, name and description first: the order a reader expects
   const { id, name, description, theme } = design.manifest;
-  const ordered = { formatVersion: 1, id, name, version: '1.0.0', author: 'FLAC Commander', description, keywords: design.keywords ?? MORE[design.folder]?.keywords, preview: 'preview.png', theme, windows: manifest.windows };
+  const ordered = { formatVersion: 1, id, name, version: '1.0.0', author: 'FLAC Commander', description, keywords: design.keywords ?? MORE[design.folder]?.keywords, preview, theme, windows: manifest.windows };
   writeFileSync(join(out, 'skin.json'), `${JSON.stringify(ordered, null, 2)}\n`);
   rmSync(work, { recursive: true, force: true });
   console.log(`skins/${design.folder}: ${buttons.length} buttons, ${design.width} × ${design.height}`);

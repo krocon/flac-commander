@@ -80,9 +80,11 @@ fn the_built_in_skins_are_valid() {
     assert_eq!(
         names,
         [
-            "Amp", "Beat", "Console", "Crimson", "Deck", "Dial", "Ferro", "Hi-Fi", "Magnet",
-            "Meter", "Mixtape", "Mono", "Neon", "Panel", "Pocket", "Recorder", "Reel", "Retro",
-            "Stripe", "Studio", "System", "Tape", "Vinyl", "Walk", "Wheel"
+            "Amp", "Beat", "Chrome", "Classic", "Click", "Console", "Crimson", "Deck", "Dial",
+            "Ember", "Ferro", "Gauge", "Hi-Fi", "Keys", "Lever", "Magnet", "Meter", "Mixtape",
+            "Mono", "Nano", "Needle", "Neon", "Panel", "Patch", "Pocket", "Radar", "Recorder",
+            "Reel", "Retro", "Silver", "Split", "Stripe", "Studio", "Switch", "System", "Tape",
+            "Vinyl", "Walk", "Wheel"
         ]
     );
     assert!(library.get(DEFAULT_SKIN).is_some());
@@ -252,9 +254,11 @@ fn every_file_of_the_built_in_skins_is_embedded() {
     }
     let skins = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../skins");
     for (folder, embedded) in [
-        "amp", "beat", "console", "crimson", "deck", "dial", "ferro", "hifi", "magnet", "meter",
-        "mixtape", "mono", "neon", "panel", "pocket", "recorder", "reel", "retro", "stripe",
-        "studio", "system", "tape", "vinyl", "walk", "wheel",
+        "amp", "beat", "chrome", "classic", "click", "console", "crimson", "deck", "dial", "ember",
+        "ferro", "gauge", "hifi", "keys", "lever", "magnet", "meter", "mixtape", "mono", "nano",
+        "needle", "neon", "panel", "patch", "pocket", "radar", "recorder", "reel", "retro",
+        "silver", "split", "stripe", "studio", "switch", "system", "tape", "vinyl", "walk",
+        "wheel",
     ]
     .iter()
     .zip(BUILT_IN)
@@ -576,9 +580,11 @@ fn an_imported_skin_is_installed_listed_and_there_after_a_restart() {
     assert_eq!(
         names,
         [
-            "Amp", "Beat", "Console", "Crimson", "Deck", "Dial", "Ferro", "Hi-Fi", "Magnet",
-            "Meter", "Mixtape", "Mono", "Neon", "Panel", "Pocket", "Recorder", "Reel", "Retro",
-            "Stripe", "Studio", "System", "Tape", "Vinyl", "Walk", "Wheel", "Test"
+            "Amp", "Beat", "Chrome", "Classic", "Click", "Console", "Crimson", "Deck", "Dial",
+            "Ember", "Ferro", "Gauge", "Hi-Fi", "Keys", "Lever", "Magnet", "Meter", "Mixtape",
+            "Mono", "Nano", "Needle", "Neon", "Panel", "Patch", "Pocket", "Radar", "Recorder",
+            "Reel", "Retro", "Silver", "Split", "Stripe", "Studio", "Switch", "System", "Tape",
+            "Vinyl", "Walk", "Wheel", "Test"
         ]
     );
 
