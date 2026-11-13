@@ -47,11 +47,12 @@ cargo run -p fc-core --example play -- "datei.flac" --seconds 10 --volume 0.3 --
 ### Die App mit einer Datei starten
 
 ```bash
-pnpm tauri dev -- -- --volume 0.3 "/pfad/zur/datei.flac"
+pnpm tauri dev -- -- --volume 0.3 "/pfad/zu/einem/album" "/pfad/zur/datei.flac"
 ```
 
 Die gebündelte App nimmt dieselben Argumente (`open "FLAC Commander.app" --args --volume 0.3 /pfad/datei.flac`).
-`--volume` ist vor allem zum Testen da: Die Lautstärke wird noch nicht gespeichert und beginnt sonst bei 100 %.
+Dateien und Ordner von der Kommandozeile werden an die Playlist angehängt, der erste Titel spielt. `--volume`
+setzt die Lautstärke für diesen Start (sie wird danach gespeichert wie jede andere Änderung).
 
 ## Protokoll
 
@@ -63,6 +64,13 @@ Die gebündelte App nimmt dieselben Argumente (`open "FLAC Commander.app" --args
 
 Der genaue Ordner steht im Fenster unter „Protokollordner". Zeitstempel sind UTC. Debug-Builds protokollieren ab
 `DEBUG`, Release-Builds ab `INFO`; die Datei rotiert bei 2 MB, drei alte bleiben.
+
+## Gespeicherter Zustand
+
+`state.json` im Konfigurationsordner der App (macOS: `~/Library/Application Support/io.github.krocon.flac-commander/`,
+Windows: `%APPDATA%\io.github.krocon.flac-commander\`, Linux: `~/.config/io.github.krocon.flac-commander/`).
+Löschen setzt die App zurück. Eine unlesbare Datei wird als `state.json.broken` beiseitegelegt; eine Datei einer
+neueren Version wird weder gelesen noch überschrieben.
 
 ## Einen Command hinzufügen
 

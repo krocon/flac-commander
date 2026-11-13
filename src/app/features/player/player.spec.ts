@@ -4,11 +4,19 @@ import { setLanguage } from '../../core/i18n/i18n';
 import { LogApi } from '../../core/log/log-api';
 import { PlayerApi } from '../../core/player/player-api';
 import { EMPTY_PLAYER_STATE } from '../../core/player/player.models';
-import { FakeLogApi, FakePlayerApi, TRACK_STATE } from '../../../testing/fake-apis';
+import { PlaylistApi } from '../../core/playlist/playlist-api';
+import {
+  FakeLogApi,
+  FakePlayerApi,
+  FakePlaylistApi,
+  PLAYLIST,
+  TRACK_STATE,
+} from '../../../testing/fake-apis';
 import { Player } from './player';
 
 describe('Player', () => {
   let api: FakePlayerApi;
+  let playlistApi: FakePlaylistApi;
   let el: HTMLElement;
   let actions: ActionService;
 
@@ -16,6 +24,7 @@ describe('Player', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: PlayerApi, useValue: api },
+        { provide: PlaylistApi, useValue: playlistApi },
         { provide: LogApi, useValue: new FakeLogApi() },
       ],
     });
@@ -53,6 +62,7 @@ describe('Player', () => {
   beforeEach(() => {
     setLanguage('de');
     api = new FakePlayerApi();
+    playlistApi = new FakePlaylistApi();
   });
 
   afterEach(() => setLanguage('en'));
@@ -87,10 +97,9 @@ describe('Player', () => {
 
     button('Pause').click();
     button('Stopp').click();
-    button('Datei öffnen').click();
-    await vi.waitFor(() =>
-      expect(api.commands).toEqual(['pause', 'stop', 'open "Audiodatei öffnen"']),
-    );
+    button('Dateien hinzufügen').click();
+    await vi.waitFor(() => expect(api.commands).toEqual(['pause', 'stop']));
+    await vi.waitFor(() => expect(playlistApi.commands).toEqual(['open "Dateien hinzufügen"']));
 
     api.emit({ ...TRACK_STATE, status: 'paused' });
     await vi.waitFor(() => expect(button('Wiedergabe')).toBeTruthy());
@@ -155,6 +164,49 @@ describe('Player', () => {
     press('ArrowRight', slider('Lautstärke'));
     press(' ', button('Stopp'));
     expect(api.commands).toEqual([]);
+  });
+
+  it('shows title and artist from the tags of the current playlist entry', async () => {
+    api.snapshot = TRACK_STATE;
+    playlistApi.snapshot = PLAYLIST;
+    create();
+    await vi.waitFor(() => expect(text('.title')).toBe('People'));
+    expect(text('.details')).toBe('Barbra Streisand · FLAC · 44,1 kHz · 16 Bit · Stereo');
+  });
+
+  it('moves through the playlist and switches repeat and shuffle', async () => {
+    api.snapshot = TRACK_STATE;
+    playlistApi.snapshot = PLAYLIST;
+    create();
+    await vi.waitFor(() => expect(button('Nächster Titel').disabled).toBe(false));
+
+    button('Nächster Titel').click();
+    button('Vorheriger Titel').click();
+    button('Wiederholen: aus').click();
+    button('Zufällige Reihenfolge').click();
+    press('b');
+    press('z');
+    await vi.waitFor(() =>
+      expect(playlistApi.commands).toEqual([
+        'next',
+        'previous',
+        'repeat all',
+        'shuffle true',
+        'next',
+        'previous',
+      ]),
+    );
+
+    playlistApi.emit({ ...PLAYLIST, repeat: 'one', shuffle: true });
+    await vi.waitFor(() => expect(button('Wiederholen: Titel')).toBeTruthy());
+    expect(button('Zufällige Reihenfolge').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('disables next and previous while the playlist is empty', async () => {
+    create();
+    await vi.waitFor(() => expect(text('.title')).toBe('Kein Titel geladen'));
+    expect(button('Nächster Titel').disabled).toBe(true);
+    expect(button('Vorheriger Titel').disabled).toBe(true);
   });
 
   it('shows the shortcut in the tooltip of a button', async () => {

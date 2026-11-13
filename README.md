@@ -4,25 +4,26 @@ Plattformübergreifender Musikplayer für lokale Musikbibliotheken: vollständig
 unabhängige Fenster und eine native Audio-Engine in Rust. Die Bedienung greift die Winamp-Tradition auf, Code,
 Architektur und Skin-Format sind eigenständig.
 
-**Stand: Phase 2 abgeschlossen (Audio-MVP).** Die App spielt eine Audiodatei über die Rust-Engine: Öffnen, Play,
-Pause, Stop, Seek, Lautstärke, auch per Tastatur. Playlist, Skins und mehrere Fenster folgen
-([Roadmap](docs/ROADMAP.md)).
+**Stand: Phase 3 abgeschlossen (Playlist und Persistenz).** Die App spielt Playlists aus lokalen Dateien und Ordnern,
+zeigt Titel und Interpret aus den Tags und merkt sich Playlist, Position, Lautstärke und Wiedergabemodus. Skins und
+mehrere Fenster folgen ([Roadmap](docs/ROADMAP.md)).
 
 ## Was heute funktioniert
 
 | Bereich | Stand |
 | --- | --- |
 | Desktop-App (Tauri 2 + Angular 22) | startet auf macOS (geprüft); Linux und Windows baut und testet die CI |
-| Wiedergabe | eine Datei: Öffnen per Dialog oder Kommandozeile, Play, Pause, Stop, Seek, Lautstärke |
+| Wiedergabe | Play, Pause, Stop, Seek, Lautstärke, nächster/vorheriger Titel, Wiederholen (aus/Playlist/Titel), Zufall |
+| Playlist | Dateien per Dialog, Ordner und Dateien per Drag & Drop oder Kommandozeile; Titel, Interpret, Dauer aus den Tags |
 | Formate | FLAC, MP3, WAV, Ogg Vorbis, Opus, AAC/M4A, ALAC, AIFF – jeweils durch Tests an echten Dateien belegt |
 | Engine | eigener Thread, lock-freier Ringpuffer, Resampling auf die Geräterate, framegenaues Seek |
-| Robustheit | beschädigte, abgeschnittene, falsch benannte Dateien und DTS-in-WAV werden mit Fehlermeldung abgelehnt; Geräteverlust pausiert |
-| Tastatur | Leertaste, Pfeiltasten, V, ⌘O/Strg+O über ein zentrales Aktionssystem |
+| Robustheit | nicht abspielbare Dateien werden markiert und übersprungen; fehlende Dateien nach dem Neustart markiert; Geräteverlust pausiert |
+| Gemerkt wird | Playlist, aktueller Titel mit Position, Lautstärke, Wiederholen, Zufall |
+| Tastatur | zentrales Aktionssystem, Playlist als Listbox bedienbar |
 | Fehler und Protokoll | einheitliche Fehlercodes, Texte in Deutsch und Englisch, Logdatei |
 
-Noch nicht vorhanden: Playlist und Titelwechsel, Metadaten (angezeigt wird der Dateiname), Drag & Drop, Speichern von
-Einstellungen, Skins, Mehrfenster, Bibliothek, Equalizer. Die Audio-Ausgabe unter Windows und Linux ist an echter
-Hardware noch ungeprüft.
+Noch nicht vorhanden: Skins, Mehrfenster, Bibliothek, Equalizer, Albumcover, Umsortieren der Playlist, Mehrfachauswahl.
+Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft.
 
 ### Tastatur
 
@@ -32,7 +33,11 @@ Hardware noch ungeprüft.
 | V | Stopp |
 | ← / → | 5 Sekunden zurück / vor |
 | ↑ / ↓ | lauter / leiser |
-| ⌘O bzw. Strg+O | Datei öffnen |
+| Z / B | vorheriger / nächster Titel |
+| R / S | Wiederholen umschalten / Zufall |
+| ⌘O bzw. Strg+O | Dateien hinzufügen |
+| in der Playlist: ↑ ↓ Pos1 Ende | Auswahl bewegen |
+| in der Playlist: Enter / Entf | ausgewählten Titel abspielen / entfernen |
 
 ## Voraussetzungen
 
@@ -58,10 +63,10 @@ Alles prüfen (Format, Lint, Tests, Build – Frontend und Rust):
 pnpm check
 ```
 
-Eine Datei direkt mit der App öffnen bzw. über die Engine ohne App abspielen:
+Dateien oder Ordner direkt mit der App öffnen bzw. eine Datei über die Engine ohne App abspielen:
 
 ```bash
-pnpm tauri dev -- -- --volume 0.3 "pfad/zur/datei.flac"
+pnpm tauri dev -- -- --volume 0.3 "pfad/zu/einem/album"
 ```
 
 ```bash

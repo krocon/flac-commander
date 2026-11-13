@@ -1,6 +1,6 @@
 # Technische Risiken und offene Entscheidungen
 
-Stand: Ende Phase 2.
+Stand: Ende Phase 3.
 
 ## Risiken
 
@@ -20,7 +20,9 @@ Stand: Ende Phase 2.
 | R12 | **Unsignierte Builds** | Ohne Signatur/Notarisierung warnen macOS und Windows beim Start. | Zertifikate und Release-Workflow vor dem ersten öffentlichen Build. | vor Release |
 | R13 | **Winamp-Skins (`.wsz`)** | Bitmaps mit festen Sprite-Positionen, Regionen, Bitmap-Schriften; Rechte an fremden Skins liegen bei deren Autoren. | Erst Analyse und Mapping (Phase 7), kein fremder Skin im Repo, kein Code aus Webamp ohne Lizenzprüfung. | 7 |
 | R15 | **Symphonia-Fehler: FLAC-Rückwärts-Seek** | Nach einem Seek zurück liefert der FLAC-Leser ein Paket der neuen Stelle und fährt dann an der alten fort. | Umgangen: Strom je Seek neu öffnen, nur vorwärts suchen; durch Tests abgesichert. Upstream melden. | umgangen |
-| R16 | **Volle Lautstärke beim Start** | Die Lautstärke wird noch nicht gespeichert und beginnt bei 100 %. | Speichern mit den Einstellungen. | 3 |
+| R16 | ~~Volle Lautstärke beim Start~~ | **Gelöst:** Die Lautstärke wird gespeichert. | – | erledigt |
+| R17 | **Ganze Playlist je Änderung** | Jede Änderung (auch jedes 25. gelesene Tag) schickt die ganze Liste an alle Fenster. Bei einigen Tausend Titeln ist das spürbar. | Vor der Bibliothek auf Änderungs-Events oder seitenweises Holen umstellen; Liste virtualisieren. | 5 |
+| R18 | **Dateien auf getrennten Laufwerken** | Nach dem Neustart gilt eine Datei auf einem nicht eingehängten Laufwerk als fehlend und wird übersprungen, bis man sie ausdrücklich abspielt. | Beim Abspielen und beim Einhängen neu prüfen. | später |
 | R14 | **Große Bibliotheken** | Zehntausende Titel dürfen weder Start noch Fenster blockieren. | Scan im Hintergrund, inkrementell, abbrechbar; Fenster holt Seiten statt der ganzen Liste. | 3+ |
 
 ## Offene Entscheidungen
@@ -30,7 +32,7 @@ Stand: Ende Phase 2.
 | E1 | **Lizenz des Projekts** | MIT wie die Vorgängerprojekte; verträgt sich mit allen heutigen Abhängigkeiten (Symphonia MPL-2.0 bleibt MPL). Bis zur Entscheidung gibt es keine `LICENSE`-Datei und keine Lizenzangabe in den Manifesten. | Entscheidung des Eigentümers |
 | E2 | ~~Resampler~~ | entschieden: `rubato` ([ADR 0006](decisions/0006-resampling-opus-seek.md)) | – |
 | E3 | ~~Opus~~ | entschieden: libopus-Adapter als Feature ([ADR 0006](decisions/0006-resampling-opus-seek.md)) | – |
-| E4 | **Persistenz** | Einstellungen und Playlist als versionierte JSON-Dateien, SQLite (`rusqlite`, gebündelt) erst für die Bibliothek. | Phase 3 |
+| E4 | ~~Persistenz~~ | umgesetzt: eine versionierte JSON-Datei (`state.json`); SQLite erst für die Bibliothek | – |
 | E5 | ~~Datei-Dialog~~ | umgesetzt: `tauri-plugin-dialog` nur aus Rust, die WebView hat keine Dialog- oder Dateirechte | – |
 | E6 | **Fensterkonzept** | siehe R6: erst messen. | Phase 5 |
 | E7 | **Bit-perfect-Modus** | als Einstellung, nicht als Standard (R2). | nach Phase 2 |

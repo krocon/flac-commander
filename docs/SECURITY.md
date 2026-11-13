@@ -1,6 +1,6 @@
 # Sicherheit
 
-## Stand heute (Phase 2)
+## Stand heute (Phase 3)
 
 - **Keine Netzwerkzugriffe.** Die App verbindet sich mit nichts.
 - **Minimale Rechte der WebView** (`src-tauri/capabilities/default.json`): `core:default` (eigene Commands, Events)
@@ -9,8 +9,9 @@
   Einzige Ausnahme: `style-src 'unsafe-inline'`, weil Angular Komponenten-Styles zur Laufzeit einfügt.
 - **Jede Fähigkeit ist ein eigener, schmaler Command.** `system_info` liest; `start_test_tone` spielt einen festen,
   leisen Ton; die `player_*`-Commands steuern die Engine und nehmen nur Zahlen entgegen (Position, Lautstärke).
-- **Die WebView nennt nie einen Dateipfad.** `player_open` zeigt den System-Dialog in Rust und übergibt die Wahl
-  direkt der Engine; das Dialog-Plugin hat keine WebView-Berechtigung. Der Titel des Dialogs kommt aus dem Frontend
+- **Die WebView nennt nie einen Dateipfad.** `playlist_open` zeigt den System-Dialog in Rust; fallengelassene
+  Dateien nimmt Rust aus dem Fensterereignis. Die Playlist-Commands nehmen nur Ids, einen Modus und einen Schalter.
+  Die Wahl geht direkt an die Sitzung; das Dialog-Plugin hat keine WebView-Berechtigung. Der Titel des Dialogs kommt aus dem Frontend
   und wird gekürzt und von Steuerzeichen befreit.
 - **Kein `unsafe`** im eigenen Rust-Code (`unsafe_code = "forbid"`), kein `unwrap`/`expect`/`panic` außerhalb von
   Tests (Clippy, `-D warnings`).
@@ -22,7 +23,11 @@
   Skin- oder Playlist-Inhalten ohne Prüfung. Die WebView erhält kein allgemeines Leserecht; Rust öffnet die Datei.
 - Audiodateien sind fremde Daten: Decoder laufen in reinem Rust (Symphonia) – mit einer Ausnahme: Opus dekodiert
   libopus (C, abschaltbares Feature). Fehler werden zu `AppError`, nie zu einem Absturz. Dafür gibt es Tests mit beschädigten und falsch benannten Dateien.
-- Metadaten (Titel, Interpret) werden als Text ausgegeben, nie als HTML.
+- Metadaten (Titel, Interpret) sind fremde Daten: gekürzt, von Steuerzeichen befreit, als Text ausgegeben, nie als
+  HTML.
+- Ordner werden begrenzt durchsucht (Tiefe 12, 20 000 Titel); symbolischen Links auf Ordner wird nicht gefolgt.
+- `state.json` wird wie fremde Daten gelesen: Werte außerhalb ihres Bereichs werden korrigiert, höchstens 50 000
+  Einträge, Unlesbares wird beiseitegelegt statt die App am Start zu hindern.
 
 ## Skins (ab Phase 4)
 

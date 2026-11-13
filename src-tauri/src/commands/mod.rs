@@ -4,6 +4,7 @@
 //! window); blocking work goes to `spawn_blocking`.
 
 pub mod player;
+pub mod playlist;
 pub mod system;
 
 use fc_core::{AppError, AppResult};

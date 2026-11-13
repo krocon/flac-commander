@@ -3,6 +3,8 @@ import { ActionService } from '../../core/actions/action.service';
 import { describeError } from '../../core/errors/app-error';
 import { locale } from '../../core/i18n/i18n';
 import { formatTime } from './format-time';
+import { PLAYLIST_TEXTS } from '../playlist/playlist-texts';
+import { PlaylistStore } from '../playlist/playlist.store';
 import { PLAYER_TEXTS } from './player-texts';
 import { playerActions } from './player.actions';
 import { PlayerStore } from './player.store';
@@ -16,7 +18,32 @@ import { PlayerStore } from './player.store';
 export class Player {
   protected readonly store = inject(PlayerStore);
   protected readonly actions = inject(ActionService);
+  protected readonly playlist = inject(PlaylistStore);
   protected readonly t = PLAYER_TEXTS;
+  protected readonly p = PLAYLIST_TEXTS;
+
+  /** Title and artist from the tags of the current playlist entry; else the file name. */
+  protected readonly title = computed(() => {
+    const track = this.store.track();
+    const entry = this.playlist.current();
+    const tagged = entry && entry.path === track?.path ? entry.meta?.title : null;
+    return tagged ?? track?.fileName ?? '';
+  });
+  protected readonly artist = computed(() => {
+    const track = this.store.track();
+    const entry = this.playlist.current();
+    return entry && entry.path === track?.path ? (entry.meta?.artist ?? null) : null;
+  });
+  protected readonly repeatLabel = computed(() => {
+    switch (this.playlist.repeat()) {
+      case 'all':
+        return this.p.repeatAll;
+      case 'one':
+        return this.p.repeatOne;
+      default:
+        return this.p.repeatOff;
+    }
+  });
 
   protected readonly position = computed(() => formatTime(this.store.positionMs()));
   protected readonly duration = computed(() => formatTime(this.store.durationMs()));
@@ -38,6 +65,7 @@ export class Player {
       info.sampleRate / 1000,
     );
     return [
+      this.artist(),
       info.codec.toUpperCase(),
       `${kHz} kHz`,
       info.bitsPerSample ? this.t.bits(info.bitsPerSample) : null,
@@ -67,7 +95,7 @@ export class Player {
   });
 
   constructor() {
-    const unregister = this.actions.register(playerActions(this.store));
+    const unregister = this.actions.register(playerActions(this.store, this.playlist));
     inject(DestroyRef).onDestroy(unregister);
   }
 }

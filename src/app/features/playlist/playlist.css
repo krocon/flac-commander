@@ -1,0 +1,124 @@
+:host {
+  display: flex;
+  min-height: 0;
+}
+
+.playlist {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--player-surface);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 10px;
+}
+
+.entries {
+  flex: 1;
+  min-height: 80px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  background: var(--player-background);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+}
+
+li {
+  display: grid;
+  grid-template-columns: 4ch 1fr auto;
+  gap: 8px;
+  padding: 3px 8px;
+  cursor: default;
+  user-select: none;
+
+  &.current {
+    color: var(--player-accent);
+    font-weight: 600;
+  }
+
+  &.selected {
+    background: var(--player-surface-raised);
+  }
+
+  &.failed .label {
+    color: var(--player-danger);
+    text-decoration: line-through;
+  }
+}
+
+.entries:focus-visible li.selected {
+  outline: 2px solid var(--player-focus);
+  outline-offset: -2px;
+}
+
+.number,
+.duration {
+  font-family: var(--player-font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--player-muted);
+  text-align: right;
+  align-self: center;
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  flex: 1;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  min-height: 80px;
+  color: var(--player-muted);
+
+  p {
+    margin: 0;
+  }
+
+  .hint {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.summary {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--player-muted);
+}
+
+button {
+  font: inherit;
+  font-size: 12px;
+  color: var(--player-foreground);
+  background: var(--player-surface-raised);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 4px 10px;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+}
+
+.error {
+  margin: 6px 0 0;
+  color: var(--player-danger);
+}

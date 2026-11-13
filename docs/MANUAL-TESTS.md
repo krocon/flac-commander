@@ -44,13 +44,34 @@ Vorbereitung: App mit leiser Startlautstärke und einer Datei starten, z. B.
 | P13 | Datei mit 44,1 kHz auf einem 48-kHz-Gerät; danach Systemeinstellung des Geräts prüfen | klingt richtig (Tonhöhe, Tempo); das Gerät steht weiter auf 48 kHz |
 | P14 | Datei von einem Netzlaufwerk; Laufwerk während der Wiedergabe trennen | Wiedergabe, Seek ohne lange Hänger; nach dem Trennen Fehlermeldung statt Absturz |
 
+## Phase 3
+
+Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volume 0.2 /pfad/zu/einem/album`.
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| L1 | Start mit einem Album-Ordner | alle Audiodateien des Ordners in Namensreihenfolge, erster Titel spielt; nach kurzer Zeit „Interpret – Titel" und Dauer je Zeile, unten Anzahl und Gesamtdauer |
+| L2 | „Dateien hinzufügen": mehrere Dateien wählen | werden angehängt, die erste davon spielt |
+| L3 | Dateien und einen Ordner aus dem Dateimanager auf das Fenster ziehen | beim Ziehen erscheint der Hinweisrahmen; nach dem Loslassen hängen die Titel an; läuft schon Musik, läuft sie weiter |
+| L4 | Titel bis zum Ende laufen lassen (oder kurz vor das Ende springen) | der nächste Titel beginnt von selbst, die Markierung in der Liste wandert mit |
+| L5 | Nächster/Vorheriger (Tasten B/Z); „Vorheriger" nach mehr als 3 Sekunden | Titelwechsel; nach 3 Sekunden springt „Vorheriger" an den Anfang desselben Titels |
+| L6 | Wiederholen durchschalten (aus → Playlist → Titel), Zufall an/aus | Anzeige der Schalter; Verhalten am Ende des Titels bzw. der Liste passt |
+| L7 | Doppelklick auf einen Eintrag; in der Liste ↑/↓, Enter, Entf | spielt; Auswahl wandert und bleibt sichtbar; Enter spielt, Entf entfernt |
+| L8 | Den laufenden Titel entfernen; „Playlist leeren" | Wiedergabe stoppt, Anzeige „Kein Titel geladen" |
+| L9 | Eine Textdatei als `.mp3` in die Liste | beim Abspielen durchgestrichen markiert (Tooltip mit Grund), der nächste Titel spielt |
+| L10 | App beenden und neu starten | dieselbe Liste, derselbe Titel an derselben Stelle, gestoppt; Lautstärke, Wiederholen, Zufall wie zuvor |
+| L11 | Vor dem Neustart eine Datei der Liste umbenennen | Eintrag bleibt, ist als nicht abspielbar markiert und wird übersprungen |
+| L12 | Ordner mit einigen Tausend Titeln hinzufügen | Fenster bleibt bedienbar, Tags füllen sich nach und nach |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
 | --- | --- | --- | --- |
 | 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher | Phase 1: M1–M4, M6 in der gebündelten App (Debug-Bundle) | bestanden. Der Ton wurde nicht mit dem Ohr geprüft: belegt sind Start und Ende laut Backend und keine Gerätefehler. |
 | 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher, 48 kHz | Phase 2 in der gebündelten App: P1 (FLAC 16/44,1), P3 (Klick auf die Leiste), P2 (nur Pause: Zeit steht), P7 (nur →). Engine ohne App: FLAC ab Minute 1, MP3, DTS-WAV abgelehnt | bestanden, 0 Unterläufe. Nicht mit dem Ohr geprüft (4 % Lautstärke, niemand hat zugehört): belegt sind laufende Position, Zustände und fehlende Unterläufe. |
+| 2026-11-13 | macOS 27, Apple Silicon | Phase 3 in der gebündelten App: L1 (Ordner mit 12 MP3), L4 (Sprung ans Ende → nächster Titel), L5 (nur „Nächster"), L10 (Neustart) | bestanden: Tags und Dauern erscheinen, Titelwechsel, Liste, Titel, Position 0:06 und Lautstärke 4 % nach dem Neustart wiederhergestellt. |
 | – | Windows 10/11, WASAPI | – | **offen** |
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 
-Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7.
+Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7; Phase 3 L2, L3,
+L6–L9, L11, L12 und der Rest von L5.

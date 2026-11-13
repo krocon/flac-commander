@@ -40,13 +40,22 @@ vorige fertig ist.
 - [ ] Manuelle Tests unter Windows und Linux
 - [ ] Erkennen eines gewechselten Standardgeräts (R5)
 
-## Phase 3 – Playlist und Persistenz
+## Phase 3 – Playlist und Persistenz ✅
 
-- [ ] Playlist und Queue im Kern (Next/Previous, Wiederholen, Zufall), Tests für alle Operationen
-- [ ] Metadaten mit Lofty (Titel, Interpret, Album, Dauer, Cover)
-- [ ] Drag & Drop; mehrere Dateien im Dialog
-- [ ] Einstellungen (Lautstärke, letzter Titel) und Playlist speichern und wiederherstellen (versionierte Dateien)
-- [ ] Fehlende und verschobene Dateien behandeln
+- [x] Playlist im Kern (`playlist.rs`): Next/Previous, Wiederholen aus/Titel/Playlist, Zufall; Tests für alle Regeln
+- [x] Sitzung (`session.rs`): Titelwechsel am Ende, nicht abspielbare Titel markieren und überspringen
+      (Abbruch nach sechs Fehlschlägen in Folge), Tags im Hintergrund
+- [x] Metadaten mit Lofty: Titel, Interpret, Album, Dauer
+- [x] Dateien per Dialog (Mehrfachauswahl), Dateien und Ordner per Drag & Drop und Kommandozeile
+- [x] Speichern und Wiederherstellen (`storage.rs`): Playlist, aktueller Titel mit Position, Lautstärke,
+      Wiederholen, Zufall – versionierte JSON-Datei, atomar geschrieben
+- [x] Fehlende Dateien werden nach dem Neustart markiert, nicht entfernt
+- [x] Oberfläche: Playlist als Listbox, Vor/Zurück, Wiederholen, Zufall, Drop-Hinweis
+- [x] gebündelte App unter macOS geprüft: Ordner öffnen, Tags, Next, Titelwechsel am Ende, Neustart stellt alles her
+- [ ] Albumcover (Lofty liefert sie; Anzeige kommt mit den Skins)
+- [ ] Umsortieren und Mehrfachauswahl in der Playlist
+- [ ] Verschobene Dateien wiederfinden (heute: als fehlend markiert)
+- [ ] Drag & Drop in der echten App von Hand prüfen ([MANUAL-TESTS.md](MANUAL-TESTS.md) L3)
 
 ## Phase 4 – Skin-Engine
 

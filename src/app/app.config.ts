@@ -2,6 +2,7 @@ import { ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners } f
 import { LogApi, TauriLogApi } from './core/log/log-api';
 import { LoggingErrorHandler } from './core/log/logging-error-handler';
 import { PlayerApi, TauriPlayerApi } from './core/player/player-api';
+import { PlaylistApi, TauriPlaylistApi } from './core/playlist/playlist-api';
 import { SystemApi, TauriSystemApi } from './core/system/system-api';
 
 export const appConfig: ApplicationConfig = {
@@ -11,5 +12,6 @@ export const appConfig: ApplicationConfig = {
     { provide: LogApi, useClass: TauriLogApi },
     { provide: SystemApi, useClass: TauriSystemApi },
     { provide: PlayerApi, useClass: TauriPlayerApi },
+    { provide: PlaylistApi, useClass: TauriPlaylistApi },
   ],
 };

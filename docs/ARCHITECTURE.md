@@ -1,6 +1,6 @@
 # Architektur
 
-Stand: Phase 2. Was hier als „geplant" markiert ist, existiert noch nicht.
+Stand: Phase 3. Was hier als „geplant" markiert ist, existiert noch nicht.
 
 ## Schichten
 
@@ -23,8 +23,9 @@ Stand: Phase 2. Was hier als „geplant" markiert ist, existiert noch nicht.
 ┌───────────────────────────────▼──────────────────────────────────────┐
 │ Rust-Kern                                    crates/fc-core/         │
 │   audio/       player (Engine), decode, resample, output, dts, tone  │
-│   error.rs     AppError / ErrorCode                                  │
-│   geplant: playlist, metadata, library, skins, storage               │
+│   session.rs   Player + Playlist + Speichern; playlist.rs, metadata, │
+│   storage.rs   error.rs                                              │
+│   geplant: library, skins                                            │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -87,6 +88,25 @@ Engine-Thread → PlayerState bei jeder Änderung, beim Abspielen alle ≤ 200 m
 Fenster startet oder lädt neu → erst Event abonnieren, dann call('player_state') → Schnappschuss
 ```
 
+### Playlist und Sitzung
+
+```text
+PlaylistStore → PlaylistApi → call('playlist_play' | 'playlist_next' | …) → Session
+Session: Playlist (reine Daten und Regeln) wählt den Eintrag → Player.load(pfad)
+Engine meldet PlayerState → Session hört mit:
+  finished gestiegen        → Playlist.advance(Auto) → nächster Titel
+  Datei nicht abspielbar    → Eintrag markieren, nächster Titel (höchstens sechsmal in Folge)
+  Lautstärke geändert       → speichern
+Session → Event playlist://state an alle Fenster; Tags liest ein eigener Thread nach
+Session → Saver-Thread → state.json (entprellt, atomar); beim Beenden sofort, mit Position
+```
+
+Der Player kennt keine Liste, die Playlist kein Audio; nur die Sitzung kennt beide. Auswahl in der Liste ist
+Zustand des Fensters und geht nicht ans Backend.
+
+Fallengelassene Dateien nimmt Rust direkt aus dem Fensterereignis; das Fenster erfährt nur, dass gezogen wird
+(für den Hinweis), nie einen Pfad.
+
 „Datei öffnen" läuft vollständig in Rust: Der Command zeigt den System-Dialog, übergibt den Pfad der Engine und
 meldet dem Fenster nur, ob etwas gewählt wurde. Die WebView bekommt nie ein Dateirecht und schickt nie einen Pfad.
 
@@ -121,14 +141,16 @@ je Plattform, Andocken/Snapping) stehen in [RISKS.md](RISKS.md).
 ```text
 crates/fc-core/          Rust-Kern (kein Tauri)
   src/audio/             player, decode, resample, dts, formats, output, tone
-  src/error.rs
+  src/session.rs         Player + Playlist + Persistenz
+  src/playlist.rs, metadata.rs, storage.rs, error.rs
   tests/formats.rs       Dekodieren und Seek an echten Dateien
   tests/player.rs        die Engine gegen ein simuliertes Ausgabegerät
+  tests/session.rs       Titelwechsel, defekte Dateien, Speichern/Wiederherstellen
   tests/fixtures/        selbst erzeugte Sinus-Dateien (scripts/make-fixtures.sh)
   examples/              play (Engine ohne App), probe (Symphonia + Lofty)
 src-tauri/               Tauri-Schale: commands/, events.rs, lib.rs, capabilities/
-src/app/core/            actions, backend, errors, i18n, log, player, system
-src/app/features/        player, diagnostics; playlist, … folgen
+src/app/core/            actions, backend, errors, i18n, log, player, playlist, system
+src/app/features/        player, playlist, diagnostics
 src/testing/             Fake-Fassaden für Tests
 docs/                    diese Dokumentation, decisions/ (ADRs)
 ```
@@ -152,7 +174,7 @@ Neue Abhängigkeiten nur mit Begründung in dieser Tabelle. Reines Rust ohne Sys
 | `thiserror` | 2 | MIT/Apache-2.0 | `AppError` | |
 | `log` | 0.4 | MIT/Apache-2.0 | Logging-Fassade im Kern | |
 | `rtrb` | 0.4.1 | MIT/Apache-2.0 | lock-freier SPSC-Ringpuffer Engine → Callback | |
-| `lofty` (dev) | 0.25.5 | MIT/Apache-2.0 | Tags | heute nur zur Evaluierung, ab Phase 3 regulär |
+| `lofty` | 0.25.5 | MIT/Apache-2.0 | Tags: Titel, Interpret, Album, Dauer | reines Rust |
 
 ### npm
 

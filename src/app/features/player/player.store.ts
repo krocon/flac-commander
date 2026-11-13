@@ -4,7 +4,7 @@ import { AppError, toAppError } from '../../core/errors/app-error';
 import { LogApi } from '../../core/log/log-api';
 import { PlayerApi } from '../../core/player/player-api';
 import { EMPTY_PLAYER_STATE, PlayerState } from '../../core/player/player.models';
-import { PLAYER_TEXTS } from './player-texts';
+import { PlaylistStore } from '../playlist/playlist.store';
 
 const SEEK_STEP_MS = 5000;
 const VOLUME_STEP = 0.05;
@@ -17,6 +17,7 @@ const VOLUME_STEP = 0.05;
 export class PlayerStore {
   private readonly api = inject(PlayerApi);
   private readonly log = inject(LogApi);
+  private readonly playlist = inject(PlaylistStore);
 
   private readonly backend = signal<PlayerState>(EMPTY_PLAYER_STATE);
   /** A command the backend did not even accept (no backend, engine gone). */
@@ -63,14 +64,10 @@ export class PlayerStore {
     }
   }
 
-  open(): Promise<void> {
-    return this.send('player_open', () => this.api.open(PLAYER_TEXTS.openDialogTitle));
-  }
-
-  /** Play or pause; without a track: choose one. */
+  /** Play or pause; without a track: start the playlist, and if that is empty, choose files. */
   togglePlay(): Promise<void> {
-    if (!this.hasTrack()) {
-      return this.open();
+    if (!this.hasTrack() && this.playlist.isEmpty()) {
+      return this.playlist.open();
     }
     return this.isPlaying()
       ? this.send('player_pause', () => this.api.pause())

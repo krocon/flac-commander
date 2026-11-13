@@ -3,17 +3,28 @@ import { setLanguage } from '../../core/i18n/i18n';
 import { LogApi } from '../../core/log/log-api';
 import { PlayerApi } from '../../core/player/player-api';
 import { EMPTY_PLAYER_STATE, PlayerState } from '../../core/player/player.models';
-import { Deferred, FakeLogApi, FakePlayerApi, TRACK_STATE } from '../../../testing/fake-apis';
+import { PlaylistApi } from '../../core/playlist/playlist-api';
+import {
+  Deferred,
+  FakeLogApi,
+  FakePlayerApi,
+  FakePlaylistApi,
+  PLAYLIST,
+  TRACK_STATE,
+} from '../../../testing/fake-apis';
+import { PlaylistStore } from '../playlist/playlist.store';
 import { PlayerStore } from './player.store';
 
 describe('PlayerStore', () => {
   let api: FakePlayerApi;
+  let playlistApi: FakePlaylistApi;
   let log: FakeLogApi;
 
   async function createStore(): Promise<PlayerStore> {
     TestBed.configureTestingModule({
       providers: [
         { provide: PlayerApi, useValue: api },
+        { provide: PlaylistApi, useValue: playlistApi },
         { provide: LogApi, useValue: log },
       ],
     });
@@ -24,6 +35,7 @@ describe('PlayerStore', () => {
 
   beforeEach(() => {
     api = new FakePlayerApi();
+    playlistApi = new FakePlaylistApi();
     log = new FakeLogApi();
   });
 
@@ -56,6 +68,7 @@ describe('PlayerStore', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: PlayerApi, useValue: api },
+        { provide: PlaylistApi, useValue: playlistApi },
         { provide: LogApi, useValue: log },
       ],
     });
@@ -82,17 +95,21 @@ describe('PlayerStore', () => {
     expect(store.status()).toBe('playing');
   });
 
-  it('opens the file dialog when there is nothing to play', async () => {
+  it('opens the file dialog when there is nothing to play at all', async () => {
     const store = await createStore();
     await store.togglePlay();
-    expect(api.commands).toEqual(['open "Open audio file"']);
+    expect(playlistApi.commands).toEqual(['open "Add files"']);
+    expect(api.commands).toEqual([]);
   });
 
-  it('names the file dialog in the current language', async () => {
-    setLanguage('de');
+  it('starts the playlist when no track is loaded but the list has tracks', async () => {
+    playlistApi.snapshot = { ...PLAYLIST, currentId: null };
     const store = await createStore();
-    await store.open();
-    expect(api.commands).toEqual(['open "Audiodatei öffnen"']);
+    await vi.waitFor(() => expect(playlistApi.handlers.size).toBe(1));
+    await TestBed.inject(PlaylistStore).ready;
+    await store.togglePlay();
+    expect(api.commands).toEqual(['play']);
+    expect(playlistApi.commands).toEqual([]);
   });
 
   it('seeks relative to the reported position and stays inside the track', async () => {

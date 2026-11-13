@@ -1,6 +1,7 @@
 import '../../app-texts';
 import '../../features/diagnostics/diagnostics-texts';
 import '../../features/player/player-texts';
+import '../../features/playlist/playlist-texts';
 import '../errors/error-texts';
 import { CATALOGS, LANGUAGES } from './i18n';
 
@@ -14,6 +15,7 @@ describe('text catalogs', () => {
       'diagnostics',
       'errors',
       'player',
+      'playlist',
     ]);
   });
 

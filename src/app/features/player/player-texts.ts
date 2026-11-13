@@ -4,9 +4,7 @@ import { PLAYER_TEXTS_DE } from './player-texts.de';
 export const PLAYER_TEXTS_EN = {
   player: 'Player',
   noTrack: 'No track loaded',
-  noTrackHint: 'Open an audio file to play it.',
-  open: 'Open file',
-  openDialogTitle: 'Open audio file',
+  noTrackHint: 'Open audio files to play them.',
   play: 'Play',
   pause: 'Pause',
   playPause: 'Play / pause',

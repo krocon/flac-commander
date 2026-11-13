@@ -100,10 +100,28 @@ button {
     color: var(--player-accent-contrast);
   }
 
+  &.toggle {
+    position: relative;
+    color: var(--player-muted);
+
+    &.on {
+      color: var(--player-accent);
+      border-color: var(--player-accent);
+    }
+  }
+
   &:disabled {
     cursor: default;
     opacity: 0.4;
   }
+}
+
+.one {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font-size: 9px;
+  font-weight: 700;
 }
 
 svg {

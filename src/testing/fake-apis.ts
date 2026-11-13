@@ -2,6 +2,12 @@ import { Unsubscribe } from '../app/core/backend/events';
 import { LogApi } from '../app/core/log/log-api';
 import { PlayerApi } from '../app/core/player/player-api';
 import { EMPTY_PLAYER_STATE, PlayerState } from '../app/core/player/player.models';
+import { PlaylistApi } from '../app/core/playlist/playlist-api';
+import {
+  EMPTY_PLAYLIST_STATE,
+  PlaylistState,
+  RepeatMode,
+} from '../app/core/playlist/playlist.models';
 import { SystemApi } from '../app/core/system/system-api';
 import { SystemInfo, TestToneFinished } from '../app/core/system/system.models';
 
@@ -97,6 +103,7 @@ export const TRACK_STATE: PlayerState = {
   volume: 0.8,
   error: null,
   underruns: 0,
+  finished: 0,
 };
 
 /** The backend's player: records the commands, the test reports states. */
@@ -108,16 +115,9 @@ export class FakePlayerApi extends PlayerApi {
   snapshot: PlayerState | Deferred<PlayerState> = EMPTY_PLAYER_STATE;
   /** Set to make every command fail. */
   failure: unknown = null;
-  /** What the file dialog returns. */
-  picked = true;
 
   override async state(): Promise<PlayerState> {
     return this.snapshot instanceof Deferred ? this.snapshot.promise : this.snapshot;
-  }
-
-  override async open(dialogTitle: string): Promise<boolean> {
-    this.command(`open "${dialogTitle}"`);
-    return this.picked;
   }
 
   override async play(): Promise<void> {
@@ -149,6 +149,116 @@ export class FakePlayerApi extends PlayerApi {
   emit(state: PlayerState): void {
     for (const handler of this.handlers) {
       handler(state);
+    }
+  }
+
+  private command(text: string): void {
+    if (this.failure) {
+      throw this.failure;
+    }
+    this.commands.push(text);
+  }
+}
+
+export const PLAYLIST: PlaylistState = {
+  entries: [
+    {
+      id: 1,
+      path: "/music/People/11 Don't Like Goodbyes.flac",
+      fileName: "11 Don't Like Goodbyes.flac",
+      meta: {
+        title: "Don't Like Goodbyes",
+        artist: 'Barbra Streisand',
+        album: 'People',
+        durationMs: 189_000,
+      },
+      error: null,
+    },
+    {
+      id: 2,
+      path: '/music/People/12 People.flac',
+      fileName: '12 People.flac',
+      meta: { title: 'People', artist: 'Barbra Streisand', album: 'People', durationMs: 222_333 },
+      error: null,
+    },
+    { id: 3, path: '/music/untagged.mp3', fileName: 'untagged.mp3', meta: null, error: null },
+    {
+      id: 4,
+      path: '/music/gone.flac',
+      fileName: 'gone.flac',
+      meta: { title: null, artist: null, album: null, durationMs: null },
+      error: 'not_found',
+    },
+  ],
+  currentId: 2,
+  repeat: 'off',
+  shuffle: false,
+};
+
+/** The backend's playlist: records the commands, the test reports states. */
+export class FakePlaylistApi extends PlaylistApi {
+  readonly commands: string[] = [];
+  readonly handlers = new Set<(state: PlaylistState) => void>();
+  readonly dragHandlers = new Set<(over: boolean) => void>();
+  snapshot: PlaylistState = EMPTY_PLAYLIST_STATE;
+  failure: unknown = null;
+
+  override async state(): Promise<PlaylistState> {
+    return this.snapshot;
+  }
+
+  override async open(dialogTitle: string): Promise<number> {
+    this.command(`open "${dialogTitle}"`);
+    return 1;
+  }
+
+  override async play(id: number): Promise<void> {
+    this.command(`play ${id}`);
+  }
+
+  override async next(): Promise<void> {
+    this.command('next');
+  }
+
+  override async previous(): Promise<void> {
+    this.command('previous');
+  }
+
+  override async remove(ids: readonly number[]): Promise<void> {
+    this.command(`remove ${ids.join(',')}`);
+  }
+
+  override async clear(): Promise<void> {
+    this.command('clear');
+  }
+
+  override async setRepeat(repeat: RepeatMode): Promise<void> {
+    this.command(`repeat ${repeat}`);
+  }
+
+  override async setShuffle(shuffle: boolean): Promise<void> {
+    this.command(`shuffle ${shuffle}`);
+  }
+
+  override async onState(handler: (state: PlaylistState) => void): Promise<Unsubscribe> {
+    this.handlers.add(handler);
+    return () => this.handlers.delete(handler);
+  }
+
+  override async onDragOver(handler: (over: boolean) => void): Promise<Unsubscribe> {
+    this.dragHandlers.add(handler);
+    return () => this.dragHandlers.delete(handler);
+  }
+
+  emit(state: PlaylistState): void {
+    for (const handler of this.handlers) {
+      handler(state);
+    }
+  }
+
+  drag(over: boolean): void {
+    for (const handler of this.dragHandlers) {
+      handler(over);
     }
   }
 

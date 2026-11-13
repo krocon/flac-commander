@@ -48,6 +48,13 @@ export function elementHandlesKey(target: EventTarget | null, event: KeyboardEve
     return false;
   }
   const plainKey = !event.metaKey && !event.ctrlKey;
+  if (target.closest('[role=listbox]')) {
+    return (
+      plainKey &&
+      (event.key.startsWith('Arrow') ||
+        ['Home', 'End', 'PageUp', 'PageDown', 'Enter', 'Delete', 'Backspace'].includes(event.key))
+    );
+  }
   if (target.isContentEditable || target instanceof HTMLTextAreaElement) {
     return plainKey;
   }
