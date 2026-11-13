@@ -12,8 +12,7 @@ const EV_PLAYER_STATE = 'player://state';
  */
 export abstract class PlayerApi {
   abstract state(): Promise<PlayerState>;
-  /** Shows the system's file dialog and plays the choice; `false` if the user cancelled. */
-  abstract open(dialogTitle: string): Promise<boolean>;
+  /** Continues the loaded track; without one, starts the playlist. */
   abstract play(): Promise<void>;
   abstract pause(): Promise<void>;
   abstract stop(): Promise<void>;
@@ -31,10 +30,6 @@ function checked(state: PlayerState): PlayerState {
 export class TauriPlayerApi extends PlayerApi {
   override async state(): Promise<PlayerState> {
     return checked(await call<PlayerState>('player_state'));
-  }
-
-  override open(dialogTitle: string): Promise<boolean> {
-    return call<boolean>('player_open', { title: dialogTitle });
   }
 
   override play(): Promise<void> {

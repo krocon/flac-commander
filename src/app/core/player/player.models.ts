@@ -28,6 +28,8 @@ export interface PlayerState {
   readonly volume: number;
   readonly error: AppError | null;
   readonly underruns: number;
+  /** Tracks played to their end since the app started. */
+  readonly finished: number;
 }
 
 /** The player before the backend has said anything. */
@@ -38,4 +40,5 @@ export const EMPTY_PLAYER_STATE: PlayerState = {
   volume: 1,
   error: null,
   underruns: 0,
+  finished: 0,
 };

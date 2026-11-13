@@ -1,181 +1,17 @@
 //! The playback engine against a simulated output device.
 //!
-//! The test plays the role of the audio backend: it calls [`Renderer::render`] itself, block by
+//! The test plays the role of the audio backend: it calls `Renderer::render` itself, block by
 //! block, as fast as it likes. Nothing here sleeps for a fixed time – every wait is for a state.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod common;
+
+use common::{Device, STEREO_RMS, assert_frames};
 use fc_core::audio::output::OutputFormat;
-use fc_core::audio::player::{OutputBackend, PlaybackStatus, Player, PlayerState, Renderer};
-use fc_core::{AppError, AppResult, ErrorCode};
+use fc_core::audio::player::{PlaybackStatus, PlayerState};
+use fc_core::{AppError, ErrorCode};
 use std::path::PathBuf;
-use std::sync::mpsc::{self, Receiver, Sender};
-use std::time::{Duration, Instant};
-
-const FORMAT: OutputFormat = OutputFormat { sample_rate: 48_000, channels: 2 };
-const BLOCK_FRAMES: usize = 256;
-
-fn fixture(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures").join(name)
-}
-
-/// What an opened output hands to the test: the callback and the way to report a device error.
-struct Opened {
-    renderer: Renderer,
-    on_error: Box<dyn FnMut(AppError) + Send>,
-}
-
-struct FakeBackend {
-    opened: Sender<Opened>,
-    /// One entry per `open` call; `Some` makes that call fail.
-    failures: Receiver<Option<AppError>>,
-    format: OutputFormat,
-}
-
-impl OutputBackend for FakeBackend {
-    type Stream = ();
-
-    fn open(
-        &mut self,
-        renderer: Renderer,
-        on_error: Box<dyn FnMut(AppError) + Send>,
-    ) -> AppResult<((), OutputFormat)> {
-        if let Ok(Some(error)) = self.failures.try_recv() {
-            return Err(error);
-        }
-        self.opened.send(Opened { renderer, on_error }).unwrap();
-        Ok(((), self.format))
-    }
-}
-
-/// The simulated device and everything it has "played".
-struct Device {
-    player: Player,
-    opened: Receiver<Opened>,
-    failures: Sender<Option<AppError>>,
-    current: Option<Opened>,
-    /// Every frame rendered while audio came out (left channel, right channel).
-    heard: Vec<[f32; 2]>,
-    states: Receiver<PlayerState>,
-}
-
-impl Device {
-    fn new() -> Self {
-        Self::with_format(FORMAT)
-    }
-
-    fn with_format(format: OutputFormat) -> Self {
-        let (opened_tx, opened) = mpsc::channel();
-        let (failures, failures_rx) = mpsc::channel();
-        let (states_tx, states) = mpsc::channel();
-        let backend = FakeBackend { opened: opened_tx, failures: failures_rx, format };
-        let player = Player::spawn(backend, move |state| {
-            let _ = states_tx.send(state.clone());
-        })
-        .unwrap();
-        Self { player, opened, failures, current: None, heard: Vec::new(), states }
-    }
-
-    /// One callback of the device.
-    fn render_block(&mut self) {
-        if let Ok(opened) = self.opened.try_recv() {
-            self.current = Some(opened);
-        }
-        let Some(opened) = &mut self.current else {
-            std::thread::yield_now();
-            return;
-        };
-        let mut block = [0.0f32; BLOCK_FRAMES * 2];
-        if opened.renderer.would_underrun(block.len()) {
-            // this device is faster than real time: let the engine catch up
-            std::thread::yield_now();
-            return;
-        }
-        opened.renderer.render(&mut block, FORMAT);
-        self.heard
-            .extend(block.chunks(2).filter(|f| f[0] != 0.0 || f[1] != 0.0).map(|f| [f[0], f[1]]));
-    }
-
-    /// Runs the device until the player reports a state that satisfies `done`.
-    fn run_until(&mut self, what: &str, done: impl Fn(&PlayerState) -> bool) -> PlayerState {
-        let deadline = Instant::now() + Duration::from_secs(20);
-        loop {
-            let state = self.player.state();
-            if done(&state) {
-                return state;
-            }
-            assert!(Instant::now() < deadline, "timed out waiting for: {what}; state: {state:?}");
-            self.render_block();
-        }
-    }
-
-    /// The device plays until `frames` frames of audio have come out in total.
-    fn play_frames(&mut self, frames: usize) {
-        let deadline = Instant::now() + Duration::from_secs(20);
-        while self.heard.len() < frames {
-            assert!(Instant::now() < deadline, "only {} of {frames} frames", self.heard.len());
-            self.render_block();
-        }
-    }
-
-    /// Waits for the player to report a state while the device does nothing (as if its
-    /// callbacks were far apart).
-    fn wait_for(&self, what: &str, done: impl Fn(&PlayerState) -> bool) -> PlayerState {
-        let deadline = Instant::now() + Duration::from_secs(20);
-        loop {
-            let state = self.player.state();
-            if done(&state) {
-                return state;
-            }
-            assert!(Instant::now() < deadline, "timed out waiting for: {what}; state: {state:?}");
-            std::thread::yield_now();
-        }
-    }
-
-    /// Loads a fixture and waits for the engine's answer: the track, or the reason why not.
-    fn load(&mut self, name: &str, autoplay: bool) -> PlayerState {
-        self.load_path(fixture(name), autoplay)
-    }
-
-    fn load_path(&mut self, path: PathBuf, autoplay: bool) -> PlayerState {
-        // states reported before the command are not the answer to it
-        while self.states.try_recv().is_ok() {}
-        self.player.load(path.clone(), autoplay).unwrap();
-        let deadline = Instant::now() + Duration::from_secs(20);
-        loop {
-            while let Ok(state) = self.states.try_recv() {
-                let loaded = state.track.as_ref().is_some_and(|t| t.path == path);
-                if loaded || state.error.is_some() {
-                    return state;
-                }
-            }
-            assert!(Instant::now() < deadline, "timed out loading {}", path.display());
-            self.render_block();
-        }
-    }
-
-    fn run_to_the_end(&mut self) -> PlayerState {
-        self.run_until("playing", |s| s.status == PlaybackStatus::Playing);
-        self.run_until("end of track", |s| s.status == PlaybackStatus::Stopped)
-    }
-
-    fn heard_rms(&self) -> f32 {
-        let sum: f32 = self.heard.iter().map(|f| f[0] * f[0]).sum();
-        (sum / self.heard.len() as f32).sqrt()
-    }
-
-    fn fail_device(&mut self, error: AppError) {
-        let opened = self.current.as_mut().expect("no output is open");
-        (opened.on_error)(error);
-    }
-}
-
-/// The stereo fixtures are a sine with an RMS of 0.0625 (see `formats.rs`).
-const STEREO_RMS: f32 = 0.0625;
-
-fn assert_frames(heard: usize, expected: usize, tolerance: usize) {
-    assert!(heard.abs_diff(expected) <= tolerance, "heard {heard} frames, expected {expected}");
-}
 
 #[test]
 fn starts_stopped_and_empty() {
@@ -215,6 +51,7 @@ fn plays_a_track_to_its_end_resampled_to_the_device_rate() {
     assert_frames(device.heard.len(), 48_000, 64);
     assert!((device.heard_rms() - STEREO_RMS).abs() < 0.002, "rms {}", device.heard_rms());
     assert_eq!(end.position_ms, 0, "back at the start after the end");
+    assert_eq!(end.finished, 1, "the end of the track is counted");
     assert_eq!(end.error, None);
     assert_eq!(end.underruns, 0);
     assert!(end.track.is_some(), "the track stays loaded");
@@ -274,16 +111,9 @@ fn a_track_at_the_device_rate_is_not_resampled() {
     device.load("sine.flac", true);
     device.run_to_the_end();
     // bit-exact length: no filter in the way
-    assert_eq!(device.heard.len(), 44_100 - device.heard_zero_frames());
-}
-
-impl Device {
-    /// Frames of the sine that are exactly zero (its zero crossings) are not counted as heard.
-    fn heard_zero_frames(&self) -> usize {
-        // 440 Hz at 44.1 kHz hits zero exactly at the frames where 440·n/44100 is a multiple
-        // of 1/2: every 2205/22 frames – only n = 0, 2205·k: 20 frames in one second.
-        20
-    }
+    // Frames of the sine that are exactly zero are not counted as heard: 440 Hz at 44.1 kHz
+    // hits zero exactly every 2205 frames – 20 frames in one second.
+    assert_eq!(device.heard.len(), 44_100 - 20);
 }
 
 #[test]
@@ -321,6 +151,7 @@ fn stop_goes_back_to_the_start() {
     device.player.stop().unwrap();
     let stopped = device.run_until("stopped", |s| s.status == PlaybackStatus::Stopped);
     assert_eq!(stopped.position_ms, 0);
+    assert_eq!(stopped.finished, 0, "a stop is not the end of the track");
     assert!(stopped.track.is_some());
 
     device.heard.clear();
@@ -601,6 +432,7 @@ fn the_state_serialises_as_the_frontend_expects() {
     assert_eq!(json["volume"], 1.0);
     assert!(json["error"].is_null());
     assert_eq!(json["underruns"], 0);
+    assert_eq!(json["finished"], 0);
     assert_eq!(json["track"]["fileName"], "sine.flac");
     assert!(json["track"]["path"].as_str().unwrap().ends_with("sine.flac"));
     assert_eq!(

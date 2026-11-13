@@ -7,22 +7,25 @@
 pub mod commands;
 pub mod events;
 
-use fc_core::audio::player::{DefaultOutput, Player};
+use fc_core::audio::player::DefaultOutput;
+use fc_core::session::{PlayAdded, Session, SessionConfig};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-use tauri::{Emitter, Manager};
+use tauri::{DragDropEvent, Emitter, Manager, RunEvent, WindowEvent};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 
 /// State shared by the commands. It belongs to the process, not to a window: closing or
 /// reloading a window does not touch it – the player keeps playing.
 pub struct AppState {
-    /// The one playback engine of the app.
-    pub player: Player,
+    /// Player and playlist: the one playback session of the app.
+    pub session: Session,
     /// True while a test tone plays.
     pub tone_busy: Arc<AtomicBool>,
 }
 
 const LOG_FILE: &str = "flac-commander";
+/// Saved session (volume, playlist …) in the app's config folder.
+const STATE_FILE: &str = "state.json";
 const MAX_LOG_FILE_BYTES: u128 = 2_000_000;
 
 fn log_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
@@ -33,6 +36,15 @@ fn log_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
         .target(Target::new(TargetKind::Stdout))
         .target(Target::new(TargetKind::LogDir { file_name: Some(LOG_FILE.to_owned()) }))
         .level(level)
+        // the libraries report every probe and every estimated duration: only their problems
+        .level_for("symphonia_core", log::LevelFilter::Warn)
+        .level_for("symphonia_metadata", log::LevelFilter::Warn)
+        .level_for("symphonia_bundle_mp3", log::LevelFilter::Warn)
+        .level_for("symphonia_bundle_flac", log::LevelFilter::Warn)
+        .level_for("symphonia_format_isomp4", log::LevelFilter::Warn)
+        .level_for("symphonia_format_ogg", log::LevelFilter::Warn)
+        .level_for("symphonia_format_riff", log::LevelFilter::Warn)
+        .level_for("lofty", log::LevelFilter::Error)
         .max_file_size(MAX_LOG_FILE_BYTES)
         .rotation_strategy(RotationStrategy::KeepSome(3))
         .build()
@@ -47,12 +59,12 @@ fn log_panics() {
     }));
 }
 
-/// What the command line asks for. Unknown options and files that do not exist are ignored:
+/// What the command line asks for. Unknown options and paths that do not exist are ignored:
 /// the app starts anyway.
 #[derive(Debug, Default, PartialEq)]
 struct StartOptions {
-    /// The first argument that names an existing file.
-    file: Option<std::path::PathBuf>,
+    /// Existing files and folders, in the order given.
+    paths: Vec<std::path::PathBuf>,
     /// `--volume <0.0-1.0>`
     volume: Option<f32>,
 }
@@ -60,17 +72,17 @@ struct StartOptions {
 impl StartOptions {
     fn parse(args: impl Iterator<Item = std::ffi::OsString>) -> Self {
         let mut options = Self::default();
-        let mut args = args.peekable();
+        let mut args = args;
         while let Some(arg) = args.next() {
             if arg == "--volume" {
                 options.volume = args
                     .next()
                     .and_then(|v| v.to_str().and_then(|v| v.parse::<f32>().ok()))
                     .filter(|v| v.is_finite());
-            } else if options.file.is_none() {
+            } else {
                 let path = std::path::PathBuf::from(arg);
-                if path.is_file() {
-                    options.file = Some(path);
+                if path.exists() {
+                    options.paths.push(path);
                 }
             }
         }
@@ -86,23 +98,43 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             log_panics();
-            let handle = app.handle().clone();
-            // every window hears every state: that keeps several windows in step
-            let player = Player::spawn(DefaultOutput, move |state| {
-                if let Err(e) = handle.emit(events::PLAYER_STATE, state) {
-                    log::error!("event {} could not be sent: {e}", events::PLAYER_STATE);
+            let player_events = app.handle().clone();
+            let playlist_events = app.handle().clone();
+            let state_file = match app.path().app_config_dir() {
+                Ok(folder) => Some(folder.join(STATE_FILE)),
+                Err(e) => {
+                    log::warn!("no config folder, nothing will be saved: {e}");
+                    None
                 }
-            })?;
-            // `flac-commander [--volume 0.0-1.0] <file>`: how a file manager opens a file
+            };
+            let shuffle_seed = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(1, |d| d.as_nanos() as u64);
+            // every window hears every state: that keeps several windows in step
+            let session = Session::start(
+                DefaultOutput,
+                SessionConfig { state_file, shuffle_seed },
+                move |state| {
+                    if let Err(e) = player_events.emit(events::PLAYER_STATE, state) {
+                        log::error!("event {} could not be sent: {e}", events::PLAYER_STATE);
+                    }
+                },
+                move |playlist| {
+                    if let Err(e) = playlist_events.emit(events::PLAYLIST_STATE, playlist) {
+                        log::error!("event {} could not be sent: {e}", events::PLAYLIST_STATE);
+                    }
+                },
+            )?;
+            // `flac-commander [--volume 0.0-1.0] <file or folder>…`: how a file manager opens files
             let start = StartOptions::parse(std::env::args_os().skip(1));
             if let Some(volume) = start.volume {
-                player.set_volume(volume)?;
+                session.player().set_volume(volume)?;
             }
-            if let Some(path) = start.file {
-                log::info!("open {} (command line)", path.display());
-                player.load(path, true)?;
+            if !start.paths.is_empty() {
+                let added = session.add_paths(&start.paths, PlayAdded::Always);
+                log::info!("command line: {} path(s), {added} track(s) added", start.paths.len());
             }
-            app.manage(AppState { player, tone_busy: Arc::default() });
+            app.manage(AppState { session, tone_busy: Arc::default() });
             let package = app.package_info();
             log::info!(
                 "{} {} started on {} {}",
@@ -117,14 +149,51 @@ pub fn run() {
             commands::system::system_info,
             commands::system::start_test_tone,
             commands::player::player_state,
-            commands::player::player_open,
             commands::player::player_play,
             commands::player::player_pause,
             commands::player::player_stop,
             commands::player::player_seek,
             commands::player::player_set_volume,
+            commands::playlist::playlist_state,
+            commands::playlist::playlist_open,
+            commands::playlist::playlist_play,
+            commands::playlist::playlist_next,
+            commands::playlist::playlist_previous,
+            commands::playlist::playlist_remove,
+            commands::playlist::playlist_clear,
+            commands::playlist::playlist_set_repeat,
+            commands::playlist::playlist_set_shuffle,
         ])
-        .run(tauri::generate_context!());
+        .on_window_event(|window, event| {
+            // files and folders dropped onto a window: Rust takes the paths, not the webview
+            if let WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) = event {
+                let Some(state) = window.try_state::<AppState>() else {
+                    return;
+                };
+                let session = state.session.clone();
+                let paths = paths.clone();
+                // searching folders can take a while: not on the event loop
+                let spawned =
+                    std::thread::Builder::new().name("drop".to_owned()).spawn(move || {
+                        let added = session.add_paths(&paths, PlayAdded::IfIdle);
+                        log::info!("dropped {} path(s): {added} track(s) added", paths.len());
+                    });
+                if let Err(e) = spawned {
+                    log::error!("drop not handled: {e}");
+                }
+            }
+        })
+        .build(tauri::generate_context!())
+        .map(|app| {
+            app.run(|handle, event| {
+                if let RunEvent::Exit = event
+                    && let Some(state) = handle.try_state::<AppState>()
+                {
+                    state.session.save_now();
+                    log::info!("state saved, exiting");
+                }
+            });
+        });
     if let Err(e) = result {
         eprintln!("FLAC Commander could not start: {e}");
         std::process::exit(1);
@@ -141,11 +210,11 @@ mod tests {
     }
 
     #[test]
-    fn the_first_existing_file_on_the_command_line_is_opened() {
+    fn existing_files_and_folders_on_the_command_line_are_opened_in_order() {
         let this_file = concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs");
-        let options =
-            parse(&["--flag", "/no/such/file.flac", env!("CARGO_MANIFEST_DIR"), this_file]);
-        assert_eq!(options.file, Some(std::path::PathBuf::from(this_file)));
+        let folder = env!("CARGO_MANIFEST_DIR");
+        let options = parse(&["--flag", "/no/such/file.flac", folder, this_file]);
+        assert_eq!(options.paths, [std::path::PathBuf::from(folder), this_file.into()]);
         assert_eq!(options.volume, None);
         assert_eq!(parse(&[]), StartOptions::default());
         assert_eq!(parse(&["--help"]), StartOptions::default());
@@ -156,7 +225,7 @@ mod tests {
         let this_file = concat!(env!("CARGO_MANIFEST_DIR"), "/src/lib.rs");
         let options = parse(&["--volume", "0.25", this_file]);
         assert_eq!(options.volume, Some(0.25));
-        assert!(options.file.is_some());
+        assert_eq!(options.paths.len(), 1);
         assert_eq!(parse(&["--volume", "loud"]).volume, None);
         assert_eq!(parse(&["--volume", "NaN"]).volume, None);
         assert_eq!(parse(&["--volume"]).volume, None);

@@ -157,9 +157,9 @@ schneller als Echtzeit läuft, wartet es über `Renderer::would_underrun()` auf 
 
 ## Noch nicht enthalten
 
-- Titelwechsel, Playlist, Wiederholen (Phase 3) – am Ende eines Titels stoppt die Engine.
+- Die Engine spielt weiterhin genau einen Titel und zählt beendete Titel (`finished`); den Wechsel zum nächsten
+  macht die Sitzung (`session.rs`). Zwischen zwei Titeln entsteht dadurch eine kurze Lücke – Gapless ist Phase 6.
 - Gapless (Phase 6): Symphonia liefert Delay und Padding (`Track.delay`, `Track.padding`); der nächste Titel würde in
   denselben Ring gefüllt.
 - Equalizer/DSP und Analysewerte für Visualisierungen (Phase 6): gehören in den Engine-Thread vor den Ring.
 - Auswahl des Ausgabegeräts; Erkennen eines gewechselten Standardgeräts.
-- Speichern der Lautstärke (Phase 3).

@@ -55,6 +55,8 @@ pub struct PlayerState {
     pub error: Option<AppError>,
     /// Callbacks that ran out of audio in the middle of a track since the output was opened.
     pub underruns: u64,
+    /// Tracks played to their end since the start: a change tells the playlist to go on.
+    pub finished: u64,
 }
 
 impl Default for PlayerState {
@@ -66,6 +68,7 @@ impl Default for PlayerState {
             volume: 1.0,
             error: None,
             underruns: 0,
+            finished: 0,
         }
     }
 }
@@ -219,6 +222,7 @@ enum Msg {
     Play,
     Pause,
     Stop,
+    Unload,
     Seek(u64),
     SetVolume(f32),
     /// From the error callback of output number `output_id`.
@@ -280,6 +284,11 @@ impl Player {
     /// Stops and goes back to the start of the track.
     pub fn stop(&self) -> AppResult<()> {
         self.send(Msg::Stop)
+    }
+
+    /// Stops and forgets the track.
+    pub fn unload(&self) -> AppResult<()> {
+        self.send(Msg::Unload)
     }
 
     pub fn seek(&self, position_ms: u64) -> AppResult<()> {
@@ -391,6 +400,7 @@ struct Engine<B: OutputBackend> {
     status: PlaybackStatus,
     volume: f32,
     error: Option<AppError>,
+    finished: u64,
     state: Arc<Mutex<PlayerState>>,
     on_state: Box<dyn Fn(&PlayerState) + Send>,
     published: Option<(PlayerState, Instant)>,
@@ -417,6 +427,7 @@ impl<B: OutputBackend> Engine<B> {
             status: PlaybackStatus::Stopped,
             volume: 1.0,
             error: None,
+            finished: 0,
             state,
             on_state,
             published: None,
@@ -454,6 +465,12 @@ impl<B: OutputBackend> Engine<B> {
                 }
             }
             Msg::Stop => self.stop(),
+            Msg::Unload => {
+                self.set_playing(false);
+                self.status = PlaybackStatus::Stopped;
+                self.track = None;
+                self.flush();
+            }
             Msg::Seek(position_ms) => self.seek(position_ms),
             Msg::SetVolume(volume) => {
                 if volume.is_finite() {
@@ -722,6 +739,7 @@ impl<B: OutputBackend> Engine<B> {
             track.restart_at = Some(0);
             self.set_playing(false);
             self.status = PlaybackStatus::Stopped;
+            self.finished += 1;
         }
     }
 
@@ -747,6 +765,7 @@ impl<B: OutputBackend> Engine<B> {
             volume: self.volume,
             error: self.error.clone(),
             underruns: self.shared.underruns.load(Ordering::Relaxed),
+            finished: self.finished,
         };
         if let Some((last, at)) = &self.published {
             if *last == state {

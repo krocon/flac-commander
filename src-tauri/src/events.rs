@@ -9,6 +9,11 @@ use serde::Serialize;
 /// `core/player/player.models.ts`; its JSON form is tested in `fc-core/tests/player.rs`.
 pub const PLAYER_STATE: &str = "player://state";
 
+/// The playlist changed: entries, tags read in the background, current track, repeat, shuffle.
+/// The payload is `fc_core::playlist::PlaylistState`, mirrored in
+/// `core/playlist/playlist.models.ts`; its JSON form is tested in `fc-core/src/playlist.rs`.
+pub const PLAYLIST_STATE: &str = "playlist://state";
+
 /// The test tone ended. Mirrored by `TestToneFinished` in `core/system/system.models.ts`.
 pub const TEST_TONE_FINISHED: &str = "audio://test-tone-finished";
 

@@ -6,5 +6,9 @@
 
 pub mod audio;
 pub mod error;
+pub mod metadata;
+pub mod playlist;
+pub mod session;
+pub mod storage;
 
 pub use error::{AppError, AppResult, ErrorCode};

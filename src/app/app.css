@@ -1,5 +1,8 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100vh;
   max-width: 720px;
   margin: 0 auto;
   padding: 16px;
@@ -28,8 +31,33 @@ h1 {
 main {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   gap: 14px;
   margin-top: 12px;
+}
+
+app-playlist {
+  flex: 1;
+}
+
+details[open] {
+  max-height: 45%;
+  overflow-y: auto;
+}
+
+.drop {
+  position: fixed;
+  inset: 8px;
+  display: grid;
+  place-content: center;
+  border: 2px dashed var(--player-accent);
+  border-radius: var(--player-radius);
+  background: color-mix(in srgb, var(--player-background) 85%, transparent);
+  color: var(--player-accent);
+  font-size: 16px;
+  font-weight: 600;
+  pointer-events: none;
 }
 
 summary {

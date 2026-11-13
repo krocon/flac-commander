@@ -4,9 +4,7 @@ import type { PLAYER_TEXTS_EN } from './player-texts';
 export const PLAYER_TEXTS_DE: Translation<typeof PLAYER_TEXTS_EN> = {
   player: 'Player',
   noTrack: 'Kein Titel geladen',
-  noTrackHint: 'Eine Audiodatei öffnen, um sie abzuspielen.',
-  open: 'Datei öffnen',
-  openDialogTitle: 'Audiodatei öffnen',
+  noTrackHint: 'Audiodateien öffnen, um sie abzuspielen.',
   play: 'Wiedergabe',
   pause: 'Pause',
   playPause: 'Wiedergabe / Pause',

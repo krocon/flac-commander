@@ -1,7 +1,7 @@
 <section class="player" [attr.aria-label]="t.player">
   <div class="display">
     @if (store.track(); as track) {
-      <p class="title">{{ track.fileName }}</p>
+      <p class="title" [title]="track.path">{{ title() }}</p>
       <p class="details">{{ details() }}</p>
     } @else {
       <p class="title empty">{{ t.noTrack }}</p>
@@ -30,12 +30,23 @@
   <div class="controls">
     <button
       type="button"
-      [attr.aria-label]="t.open"
+      [attr.aria-label]="p.add"
       [title]="actions.hint('player.open')"
-      (click)="store.open()"
+      (click)="playlist.open()"
     >
       <svg viewBox="0 0 16 16" aria-hidden="true">
         <path d="M8 2 2.5 9h11zM2.5 11h11v2.5h-11z" />
+      </svg>
+    </button>
+    <button
+      type="button"
+      [attr.aria-label]="p.previous"
+      [title]="actions.hint('player.previous')"
+      [disabled]="playlist.isEmpty()"
+      (click)="playlist.previous()"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M3 3h2v10H3zM13 3v10L6 8z" />
       </svg>
     </button>
     <button
@@ -62,6 +73,49 @@
     >
       <svg viewBox="0 0 16 16" aria-hidden="true">
         <path d="M3 3h10v10H3z" />
+      </svg>
+    </button>
+    <button
+      type="button"
+      [attr.aria-label]="p.next"
+      [title]="actions.hint('player.next')"
+      [disabled]="playlist.isEmpty()"
+      (click)="playlist.next()"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M11 3h2v10h-2zM3 3v10l7-5z" />
+      </svg>
+    </button>
+    <button
+      type="button"
+      class="toggle"
+      [class.on]="playlist.repeat() !== 'off'"
+      [attr.aria-label]="repeatLabel()"
+      [title]="actions.hint('player.repeat')"
+      (click)="playlist.cycleRepeat()"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path
+          d="M4 4h7V2l3 3-3 3V6H5v3H3V5a1 1 0 0 1 1-1zM12 12H5v2l-3-3 3-3v2h6V7h2v4a1 1 0 0 1-1 1z"
+        />
+      </svg>
+      @if (playlist.repeat() === 'one') {
+        <span class="one" aria-hidden="true">1</span>
+      }
+    </button>
+    <button
+      type="button"
+      class="toggle"
+      [class.on]="playlist.shuffle()"
+      [attr.aria-label]="p.shuffle"
+      [attr.aria-pressed]="playlist.shuffle()"
+      [title]="actions.hint('player.shuffle')"
+      (click)="playlist.toggleShuffle()"
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path
+          d="M2 4h2.5l5 8H12v-2l3 3-3 3v-2H8.5l-5-8H2zM12 2l3 3-3 3V6H9.9L8.7 4H12zM2 12h1.5l1.3-2 1.1 1.8L4.5 14H2z"
+        />
       </svg>
     </button>
 

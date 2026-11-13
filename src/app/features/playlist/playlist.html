@@ -1,0 +1,70 @@
+<section class="playlist" [attr.aria-label]="t.playlist">
+  @if (store.isEmpty()) {
+    <div class="empty">
+      <p>{{ t.empty }}</p>
+      <p class="hint">{{ t.emptyHint }}</p>
+    </div>
+  } @else {
+    <ul
+      #list
+      class="entries"
+      role="listbox"
+      tabindex="0"
+      [attr.aria-label]="t.playlist"
+      [attr.aria-activedescendant]="activeOption()"
+      (keydown)="onKey($event)"
+    >
+      @for (entry of store.entries(); track entry.id; let index = $index) {
+        <!-- the listbox has the keyboard: options are picked through aria-activedescendant -->
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+        <li
+          role="option"
+          [id]="optionId(entry.id)"
+          [class.current]="entry.id === store.currentId()"
+          [class.selected]="entry.id === store.selectedId()"
+          [class.failed]="entry.error !== null"
+          [attr.aria-selected]="entry.id === store.selectedId()"
+          [attr.aria-current]="entry.id === store.currentId() ? 'true' : null"
+          [attr.title]="errorHint(entry) ?? entry.path"
+          (click)="store.select(entry.id)"
+          (dblclick)="store.play(entry.id)"
+        >
+          <span class="number" aria-hidden="true">{{ index + 1 }}.</span>
+          <span class="label">
+            {{ label(entry) }}
+            @if (entry.id === store.currentId()) {
+              <span class="sr-only">({{ t.nowPlaying }})</span>
+            }
+            @if (errorHint(entry); as hint) {
+              <span class="sr-only">({{ hint }})</span>
+            }
+          </span>
+          <span class="duration">{{ duration(entry) }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="footer">
+    <button type="button" [title]="actions.hint('player.open')" (click)="store.open()">
+      {{ t.add }}
+    </button>
+    <button
+      type="button"
+      [disabled]="store.selectedId() === null"
+      [title]="t.remove"
+      (click)="store.removeSelected()"
+    >
+      {{ t.remove }}
+    </button>
+    <button type="button" [disabled]="store.isEmpty()" (click)="store.clear()">
+      {{ t.clear }}
+    </button>
+    @if (!store.isEmpty()) {
+      <span class="summary">{{ summary() }}</span>
+    }
+  </div>
+  @if (errorText(); as error) {
+    <p class="error" role="alert">{{ error }}</p>
+  }
+</section>
