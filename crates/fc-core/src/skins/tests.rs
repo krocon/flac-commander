@@ -80,8 +80,9 @@ fn the_built_in_skins_are_valid() {
     assert_eq!(
         names,
         [
-            "Console", "Deck", "Dial", "Ferro", "Hi-Fi", "Meter", "Mixtape", "Neon", "Panel",
-            "Recorder", "Reel", "Retro", "System", "Tape", "Vinyl", "Walk"
+            "Amp", "Beat", "Console", "Crimson", "Deck", "Dial", "Ferro", "Hi-Fi", "Magnet",
+            "Meter", "Mixtape", "Mono", "Neon", "Panel", "Pocket", "Recorder", "Reel", "Retro",
+            "Stripe", "Studio", "System", "Tape", "Vinyl", "Walk", "Wheel"
         ]
     );
     assert!(library.get(DEFAULT_SKIN).is_some());
@@ -251,8 +252,9 @@ fn every_file_of_the_built_in_skins_is_embedded() {
     }
     let skins = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../skins");
     for (folder, embedded) in [
-        "retro", "hifi", "neon", "panel", "tape", "vinyl", "reel", "recorder", "deck", "walk",
-        "meter", "ferro", "mixtape", "system", "console", "dial",
+        "amp", "beat", "console", "crimson", "deck", "dial", "ferro", "hifi", "magnet", "meter",
+        "mixtape", "mono", "neon", "panel", "pocket", "recorder", "reel", "retro", "stripe",
+        "studio", "system", "tape", "vinyl", "walk", "wheel",
     ]
     .iter()
     .zip(BUILT_IN)
@@ -574,8 +576,9 @@ fn an_imported_skin_is_installed_listed_and_there_after_a_restart() {
     assert_eq!(
         names,
         [
-            "Console", "Deck", "Dial", "Ferro", "Hi-Fi", "Meter", "Mixtape", "Neon", "Panel",
-            "Recorder", "Reel", "Retro", "System", "Tape", "Vinyl", "Walk", "Test"
+            "Amp", "Beat", "Console", "Crimson", "Deck", "Dial", "Ferro", "Hi-Fi", "Magnet",
+            "Meter", "Mixtape", "Mono", "Neon", "Panel", "Pocket", "Recorder", "Reel", "Retro",
+            "Stripe", "Studio", "System", "Tape", "Vinyl", "Walk", "Wheel", "Test"
         ]
     );
 

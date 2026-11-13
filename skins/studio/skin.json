@@ -1,0 +1,250 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.studio",
+  "name": "Studio",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "A recorder in black leather with a cream meter panel, steel knobs and tabs that light up blue.",
+  "keywords": [
+    "recorder",
+    "leather",
+    "meter",
+    "cream",
+    "steel",
+    "skeuomorphic"
+  ],
+  "preview": "preview.png",
+  "theme": {
+    "background": "#e9dfbf",
+    "surface": "#f4ecd2",
+    "surfaceRaised": "#fffaf0",
+    "foreground": "#2a2418",
+    "muted": "#62573f",
+    "accent": "#a3261c",
+    "accentContrast": "#fff8ec",
+    "border": "#8d8262",
+    "ok": "#1f6b3a",
+    "danger": "#a3261c",
+    "focus": "#1f5fbf",
+    "fontFamily": "\"Georgia\", \"Times New Roman\", serif",
+    "fontMono": "\"Georgia\", \"Times New Roman\", serif",
+    "radius": 3
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 380,
+      "height": 466,
+      "background": "assets/background.png",
+      "resize": {
+        "stretchY": 377
+      },
+      "components": [
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 40,
+          "y": 52,
+          "width": 300,
+          "height": 22,
+          "fontSize": 16,
+          "align": "center",
+          "color": "#2a2418"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 40,
+          "y": 74,
+          "width": 300,
+          "height": 16,
+          "fontSize": 12,
+          "align": "center",
+          "color": "#62573f"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 40,
+          "y": 98,
+          "width": 90,
+          "height": 30,
+          "fontSize": 22,
+          "color": "#a3261c"
+        },
+        {
+          "type": "spectrum",
+          "x": 136,
+          "y": 102,
+          "width": 108,
+          "height": 24,
+          "color": "#62573f"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 250,
+          "y": 100,
+          "width": 90,
+          "height": 14,
+          "fontSize": 10,
+          "align": "right",
+          "color": "#a3261c"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 250,
+          "y": 114,
+          "width": 90,
+          "height": 14,
+          "fontSize": 11,
+          "align": "right",
+          "color": "#62573f"
+        },
+        {
+          "type": "seekbar",
+          "x": 24,
+          "y": 153,
+          "width": 332,
+          "height": 8
+        },
+        {
+          "type": "volume",
+          "x": 186,
+          "y": 271,
+          "width": 110,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 44,
+          "y": 185,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 98,
+          "y": 185,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 152,
+          "y": 174,
+          "width": 76,
+          "height": 76,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 228,
+          "y": 185,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 282,
+          "y": 185,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 22,
+          "y": 258,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 72,
+          "y": 258,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 122,
+          "y": 258,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 308,
+          "y": 258,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 28,
+          "y": 306,
+          "width": 324,
+          "height": 142
+        }
+      ]
+    }
+  }
+}

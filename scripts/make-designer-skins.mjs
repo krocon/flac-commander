@@ -1547,6 +1547,456 @@ const dial = {
   ],
 };
 
+// ---------------------------------------------------------------- a kit for the lower half
+//
+// Many skins differ in their face and share the order below it: seek bar, five transport keys,
+// three switches with the volume and the skin key, the track list. `lower` lays that out from
+// a height `y` down; the skin gives the looks.
+
+const STATES = `
+    .hover .face { filter: brightness(1.12); }
+    .pressed .face { filter: brightness(.84); }
+    .pressed .face svg { transform: translateY(1px); }`;
+
+/** Slots for the sliders and the bed of the track list, for a light or a dark skin. */
+const beds = (slot, well, light) => `
+    .slot { position: absolute; border-radius: 7px; background: ${slot};
+      box-shadow: inset 0 1px 2px rgba(0,0,0,${light ? 0.45 : 0.9}), 0 1px 0 rgba(255,255,255,${light ? 0.8 : 0.1}); }
+    .well { position: absolute; border-radius: 4px; background: ${well};
+      box-shadow: ${light ? 'inset 0 0 0 1px rgba(0,0,0,.28)' : 'inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.1)'}; }`;
+
+function lower({ width, y, margin = 24, look, playLook = look, toggleLook = look, big = 72, mid = 56, toggle = [46, 38], list = 150, seek = true }) {
+  const inner = width - 2 * margin;
+  const rowY = seek ? y + 24 : y;
+  const start = Math.round((width - 4 * mid - big) / 2);
+  const midY = rowY + (big - mid) / 2;
+  const [tw, th] = toggle;
+  const toggleY = rowY + big + 8;
+  const volumeX = margin + 3 * tw + 12;
+  const volumeWidth = width - margin - tw - 10 - volumeX;
+  const volumeY = toggleY + Math.round(th / 2) - 4;
+  const listY = toggleY + th + 10;
+  return {
+    height: listY + list + 14,
+    resize: { stretchY: listY + Math.round(list / 2) },
+    art: `
+      ${seek ? `<div class="slot" style="left:${margin - 2}px;top:${y}px;width:${inner + 4}px;height:14px"></div>` : ''}
+      <div class="slot" style="left:${volumeX - 2}px;top:${volumeY - 3}px;width:${volumeWidth + 4}px;height:14px"></div>
+      <div class="well" style="left:${margin}px;top:${listY}px;width:${inner}px;height:${list}px"></div>`,
+    buttons: [
+      button('player.open', 'open', start, midY, mid, mid, look),
+      button('player.previous', 'previous', start + mid, midY, mid, mid, look),
+      button('player.togglePlay', 'play', start + 2 * mid, rowY, big, big, playLook, PLAY),
+      button('player.next', 'next', start + 2 * mid + big, midY, mid, mid, look),
+      button('player.stop', 'stop', start + 3 * mid + big, midY, mid, mid, look),
+      button('player.repeat', 'repeat', margin - 2, toggleY, tw, th, toggleLook, TOGGLE),
+      button('player.shuffle', 'shuffle', margin - 2 + tw, toggleY, tw, th, toggleLook, TOGGLE),
+      button('window.equalizer', 'equalizer', margin - 2 + 2 * tw, toggleY, tw, th, toggleLook, TOGGLE),
+      button('app.skins', 'skins', width - margin - tw + 2, toggleY, tw, th, toggleLook),
+    ],
+    components: [
+      ...(seek ? [{ type: 'seekbar', x: margin, y: y + 3, width: inner, height: 8 }] : []),
+      { type: 'volume', x: volumeX, y: volumeY, width: volumeWidth, height: 8 },
+      { type: 'playlist', x: margin + 4, y: listY + 4, width: inner - 8, height: list - 8 },
+    ],
+  };
+}
+
+/** The usual lines of a display in a box `w` wide and about 100 high. */
+const display = (x, y, w, c) => [
+  { type: 'text', source: 'track.title', x, y, width: w, height: 22, fontSize: 16, color: c.title },
+  { type: 'text', source: 'track.artist', x, y: y + 23, width: w, height: 16, fontSize: 12, color: c.artist },
+  { type: 'time', source: 'position', x, y: y + 46, width: 100, height: 38, fontSize: 28, color: c.time },
+  { type: 'spectrum', x: x + 108, y: y + 52, width: w - 198, height: 28, color: c.bars },
+  { type: 'text', source: 'player.status', x: x + w - 84, y: y + 52, width: 84, height: 14, fontSize: 10, align: 'right', color: c.artist },
+  { type: 'time', source: 'duration', x: x + w - 84, y: y + 68, width: 84, height: 14, fontSize: 11, align: 'right', color: c.muted },
+];
+
+const theme = (colours, fontFamily, radius = 3, fontMono = fontFamily) => ({ ...colours, fontFamily, fontMono, radius });
+const HELVETICA = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+const skin = (folder, name, description, keywords, more) => ({
+  folder,
+  manifest: { id: `io.github.krocon.${folder}`, name, description, theme: more.theme },
+  keywords,
+  pad: 4,
+  ...more,
+});
+
+// ---- "Pocket": a pocket calculator that plays music
+
+const pocketLow = lower({ width: 340, y: 136, look: 'key', playLook: 'key red', toggleLook: 'key green', big: 64, mid: 54, toggle: [46, 46], list: 150 });
+const pocket = skin('pocket', 'Pocket', 'A white pocket calculator that plays music: a slanted display and round keys in three colours.', ['calculator', 'light', 'minimal', 'white', 'round keys'], {
+  theme: theme({ background: '#f1f1ee', surface: '#dfe5da', surfaceRaised: '#ffffff', foreground: '#1b201c', muted: '#4d564f', accent: '#9c2b1e', accentContrast: '#ffffff', border: '#9aa39b', ok: '#1f6b3a', danger: '#9c2b1e', focus: '#1f5fbf' }, HELVETICA, 3, '"Menlo", "Consolas", monospace'),
+  width: 340,
+  height: pocketLow.height,
+  resize: pocketLow.resize,
+  css: `
+    body { background: linear-gradient(170deg, #fafaf8, #e9e9e5); box-shadow: inset 0 0 0 1px #c9c9c4, inset 0 2px 0 #fff; font-family: ${HELVETICA}; }
+    .bezel { position: absolute; left: 22px; top: 22px; width: 296px; height: 104px; border-radius: 6px; background: linear-gradient(#d9d9d5, #f4f4f1); box-shadow: inset 0 1px 3px rgba(0,0,0,.35), 0 1px 0 #fff; }
+    .lcd { position: absolute; left: 10px; top: 10px; right: 10px; bottom: 10px; border-radius: 3px; background: linear-gradient(#d6ddd1, #e6ebe1); box-shadow: inset 0 2px 5px rgba(0,0,0,.4), inset 0 0 0 1px rgba(0,0,0,.35); }
+    ${beds('#cfcfca', '#dfe5da', true)}
+    .face { color: #fff; } .face svg { width: 42%; height: 42%; }
+    .key { border-radius: 50%; background: radial-gradient(circle at 40% 30%, #5c6862, #2f3a35 75%); box-shadow: 0 2px 3px rgba(0,0,0,.35), 0 0 0 1px #1d2521, inset 0 1px 0 rgba(255,255,255,.3); }
+    .key.red { background: radial-gradient(circle at 40% 30%, #e0503f, #a3261a 75%); box-shadow: 0 2px 3px rgba(0,0,0,.35), 0 0 0 1px #6d150d, inset 0 1px 0 rgba(255,255,255,.4); }
+    .key.green { background: radial-gradient(circle at 40% 30%, #6f9a84, #3d6551 75%); box-shadow: 0 2px 3px rgba(0,0,0,.35), 0 0 0 1px #24402f, inset 0 1px 0 rgba(255,255,255,.3); }
+    .key.green svg { width: 18px; height: 18px; }
+    ${STATES}
+    .pressed .key { box-shadow: 0 0 0 1px #1d2521, inset 0 2px 4px rgba(0,0,0,.6); }
+    .active .key.red { box-shadow: 0 0 0 1px #6d150d, 0 0 0 3px #f1f1ee, 0 0 0 4.5px #c0392b, inset 0 1px 0 rgba(255,255,255,.4); }
+    .active .key.green { background: radial-gradient(circle at 40% 30%, #f6f6f3, #cfd6cf 75%); color: #24402f; box-shadow: 0 0 0 1px #24402f, inset 0 2px 3px rgba(0,0,0,.25); }
+  `,
+  art: `<div class="bezel"><div class="lcd"></div></div>${pocketLow.art}`,
+  buttons: pocketLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 42, y: 38, width: 256, height: 18, fontSize: 13, color: '#1b201c' },
+    { type: 'text', source: 'track.artist', x: 42, y: 56, width: 150, height: 14, fontSize: 10, color: '#4d564f' },
+    { type: 'spectrum', x: 42, y: 76, width: 110, height: 30, color: '#4d564f' },
+    { type: 'text', source: 'player.status', x: 200, y: 56, width: 98, height: 14, fontSize: 10, align: 'right', color: '#9c2b1e' },
+    { type: 'time', source: 'position', x: 160, y: 70, width: 138, height: 40, fontSize: 32, align: 'right', color: '#1b201c' },
+    ...pocketLow.components,
+  ],
+});
+
+// ---- "Beat": a drum machine, warm dark rubber and one pad that glows
+
+const beatLow = lower({ width: 380, y: 140, look: 'rubber', playLook: 'pad', toggleLook: 'rubber', big: 84, mid: 56, toggle: [46, 40], list: 150 });
+const beat = skin('beat', 'Beat', 'A drum machine in warm dark rubber, with one pad that glows pink while the music plays.', ['drum machine', 'dark', 'pink', 'rubber', 'glow'], {
+  theme: theme({ background: '#3b3835', surface: '#221f1d', surfaceRaised: '#4a4642', foreground: '#f1ece4', muted: '#b9b1a6', accent: '#ff7ab6', accentContrast: '#2a0014', border: '#151312', ok: '#7fdca0', danger: '#ffa39b', focus: '#7fc4ff' }, HELVETICA),
+  width: 380,
+  height: beatLow.height,
+  resize: beatLow.resize,
+  css: `
+    body { background: radial-gradient(120% 70% at 50% 0%, #4a4642, #33302d 70%); font-family: ${HELVETICA}; }
+    .screen { position: absolute; left: 22px; top: 20px; width: 336px; height: 108px; border-radius: 6px; background: linear-gradient(#1d1b19, #262321); box-shadow: inset 0 3px 8px #000, 0 1px 0 rgba(255,255,255,.12); }
+    .mark { position: absolute; font-size: 7.5px; font-weight: 700; letter-spacing: .18em; color: #b9b1a6; white-space: nowrap; }
+    ${beds('#1b1917', '#221f1d', false)}
+    .face { color: #f1ece4; } .face svg { width: 20px; height: 20px; }
+    .rubber { border-radius: 50%; background: radial-gradient(circle at 50% 22%, #57524d, #24211f 78%); box-shadow: 0 0 0 1px #121110, 0 4px 5px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.2); }
+    .pad { border-radius: 50%; color: #4a1730; background: radial-gradient(circle, rgba(255,255,255,.14) 1px, transparent 1.4px) 0 0 / 6px 6px, radial-gradient(circle at 50% 35%, #7d3a57, #4a1c31 75%); box-shadow: 0 0 0 1px #121110, 0 0 0 5px #24211f, 0 0 0 6px #121110, inset 0 2px 5px rgba(0,0,0,.5); }
+    .pad svg { width: 28px; height: 28px; color: #f6d5e3; }
+    ${STATES}
+    .pressed .rubber { box-shadow: 0 0 0 1px #121110, inset 0 3px 6px rgba(0,0,0,.7); }
+    .active .rubber { color: #ff7ab6; box-shadow: 0 0 0 1px #121110, 0 4px 5px rgba(0,0,0,.5), inset 0 0 0 2px #ff7ab6; }
+    .active .pad { background: radial-gradient(circle, rgba(255,255,255,.35) 1px, transparent 1.4px) 0 0 / 6px 6px, radial-gradient(circle at 50% 35%, #ffd5e8, #ff5fa5 70%);
+      box-shadow: 0 0 0 1px #121110, 0 0 0 5px #24211f, 0 0 0 6px #121110, 0 0 18px 6px rgba(255,95,165,.55); }
+    .active .pad svg { color: #4a0c28; }
+  `,
+  art: `<div class="screen"></div>${beatLow.art}`,
+  buttons: beatLow.buttons,
+  components: [...display(36, 28, 308, { title: '#f1ece4', artist: '#ff7ab6', time: '#f1ece4', bars: '#ff7ab6', muted: '#b9b1a6' }), ...beatLow.components],
+});
+
+// ---- "Stripe": a flat drawing, black outlines and stripes in blue and pink
+
+const stripeLow = lower({ width: 380, y: 240, look: 'ring', playLook: 'ring full', toggleLook: 'ring', big: 68, mid: 54, toggle: [46, 46], list: 150 });
+const stripe = skin('stripe', 'Stripe', 'A flat drawing: black outlines on cream, a cassette and racing stripes in blue and pink.', ['flat', 'illustration', 'light', 'stripes', 'cassette', 'blue', 'pink'], {
+  theme: theme({ background: '#fbf7ef', surface: '#ffffff', surfaceRaised: '#ffffff', foreground: '#14161a', muted: '#54575e', accent: '#1f56b8', accentContrast: '#ffffff', border: '#14161a', ok: '#1f6b3a', danger: '#a3231b', focus: '#b83216' }, '"Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif', 10),
+  width: 380,
+  height: stripeLow.height,
+  resize: stripeLow.resize,
+  css: `
+    body { background: #fbf7ef; font-family: "Avenir Next", "Helvetica Neue", sans-serif; }
+    .frame { position: absolute; left: 20px; top: 18px; width: 340px; height: 210px; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 2.5px #14161a; overflow: hidden; }
+    .rays { position: absolute; left: 0; top: 82px; width: 100%; height: 30px;
+      background: linear-gradient(#1f56b8 0 30%, #fff 30% 38%, #7fb2f0 38% 64%, #fff 64% 72%, #f08bb0 72%); }
+    .tape { position: absolute; right: 18px; bottom: 18px; width: 170px; height: 100px; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 2.5px #14161a; }
+    .tape::before { content: ''; position: absolute; left: 12px; right: 12px; top: 12px; height: 16px; background: repeating-linear-gradient(#14161a 0 2.5px, transparent 2.5px 6.5px); }
+    .tape::after { content: ''; position: absolute; left: 22px; right: 22px; bottom: 16px; height: 40px; border-radius: 20px; box-shadow: inset 0 0 0 2.5px #14161a; background: linear-gradient(90deg, transparent 0 42%, #14161a 42% 58%, transparent 58%); }
+    ${beds('#fff', '#fff', true)}
+    .slot { box-shadow: inset 0 0 0 2px #14161a; } .well { border-radius: 12px; box-shadow: inset 0 0 0 2.5px #14161a; }
+    .cog { position: absolute; inset: 0; border-radius: 50%; background: #14161a; }
+    .cog i { position: absolute; left: 11px; top: 3px; width: 6px; height: 22px; background: linear-gradient(#fff 0 5px, transparent 5px 17px, #fff 17px); }
+    .cog i:nth-child(2) { transform: rotate(60deg); } .cog i:nth-child(3) { transform: rotate(120deg); }
+    .face { color: #14161a; } .face svg { width: 20px; height: 20px; }
+    .ring { border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2.5px #14161a; }
+    .ring.full { color: #fff; background: #14161a; box-shadow: 4px 4px 0 #f08bb0; }
+    .ring.full svg { width: 26px; height: 26px; }
+    .hover .ring { background: #e6f0fd; } .hover .ring.full { background: #1f56b8; }
+    .pressed .ring { background: #14161a; color: #fff; } .pressed .ring.full { transform: translate(3px, 3px); box-shadow: 1px 1px 0 #f08bb0; }
+    .active .ring { color: #fff; background: #1f56b8; } .active .ring.full { background: #1f56b8; box-shadow: 4px 4px 0 #14161a; }
+  `,
+  art: `<div class="frame"><div class="rays"></div><div class="tape"></div></div>${stripeLow.art}`,
+  buttons: stripeLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 36, y: 30, width: 308, height: 26, fontSize: 18, color: '#14161a' },
+    { type: 'text', source: 'track.artist', x: 36, y: 56, width: 200, height: 18, fontSize: 12, color: '#1f56b8' },
+    { type: 'time', source: 'position', x: 36, y: 180, width: 80, height: 30, fontSize: 22, color: '#14161a' },
+    { type: 'text', source: 'player.status', x: 36, y: 164, width: 100, height: 14, fontSize: 10, color: '#54575e' },
+    { type: 'time', source: 'duration', x: 116, y: 190, width: 46, height: 16, fontSize: 11, color: '#54575e' },
+    { type: 'spectrum', x: 36, y: 122, width: 100, height: 34, color: '#14161a' },
+    ...stripeLow.components,
+  ],
+  spinners: [
+    { name: 'hub-left', x: 202, y: 164, width: 28, height: 28, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
+    { name: 'hub-right', x: 292, y: 164, width: 28, height: 28, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
+  ],
+});
+
+// ---- "Amp": a black amplifier, white print, white keys and a green lamp
+
+const ampLow = lower({ width: 360, y: 150, look: 'oval', playLook: 'lamp', toggleLook: 'stud', big: 68, mid: 56, toggle: [46, 42], list: 150 });
+const amp = skin('amp', 'Amp', 'A matt black amplifier with white print, white oval keys and a green lamp for play.', ['amplifier', 'black', 'dark', 'minimal', 'green', 'sixties'], {
+  theme: theme({ background: '#1c1c1c', surface: '#0f0f0f', surfaceRaised: '#303030', foreground: '#f2f2f0', muted: '#adadaa', accent: '#6fe0a0', accentContrast: '#00210e', border: '#4a4a4a', ok: '#6fe0a0', danger: '#ff9d94', focus: '#7fc4ff' }, HELVETICA, 2),
+  width: 360,
+  height: ampLow.height,
+  resize: ampLow.resize,
+  css: `
+    body { background: linear-gradient(#222, #171717); font-family: ${HELVETICA}; }
+    .print { position: absolute; font-size: 9px; color: #f2f2f0; letter-spacing: .02em; white-space: nowrap; }
+    .rule { position: absolute; left: 24px; width: 312px; height: 1px; background: #f2f2f0; opacity: .35; }
+    .grid { position: absolute; right: 24px; top: 20px; width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px #f2f2f0; background: radial-gradient(circle, #f2f2f0 1.3px, transparent 1.7px) 4px 4px / 9px 9px; opacity: .8; }
+    ${beds('#0a0a0a', '#0f0f0f', false)}
+    .face { color: #1c1c1c; } .face svg { width: 18px; height: 18px; }
+    .oval { border-radius: 46% / 50%; background: linear-gradient(160deg, #fff, #d2d2ce); box-shadow: 0 3px 4px rgba(0,0,0,.7), inset 0 -3px 5px rgba(0,0,0,.12); }
+    .lamp { border-radius: 50%; color: #cfeedd; background: radial-gradient(circle at 40% 30%, #4a7d63, #1f3a2c 72%); box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 3.5px #5a5a5a, inset 0 2px 4px rgba(255,255,255,.2); }
+    .lamp svg { width: 24px; height: 24px; }
+    .stud { border-radius: 50%; color: #f2f2f0; background: radial-gradient(circle at 40% 28%, #555, #151515 72%); box-shadow: 0 0 0 1px #000, 0 2px 3px rgba(0,0,0,.6); }
+    .stud svg { width: 16px; height: 16px; }
+    ${STATES}
+    .pressed .oval { box-shadow: 0 1px 1px rgba(0,0,0,.7), inset 0 3px 5px rgba(0,0,0,.3); }
+    .active .lamp { color: #00210e; background: radial-gradient(circle at 40% 30%, #d9ffe9, #49e58f 70%); box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 3.5px #5a5a5a, 0 0 16px 4px rgba(73,229,143,.55); }
+    .active .stud { color: #6fe0a0; box-shadow: 0 0 0 1px #000, 0 0 0 2.5px #49e58f; }
+  `,
+  art: `<div class="grid"></div><div class="rule" style="top:132px"></div>
+    <div class="print" style="left:24px;top:138px">position</div>${ampLow.art}`,
+  buttons: ampLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 24, y: 20, width: 256, height: 24, fontSize: 17, color: '#f2f2f0' },
+    { type: 'text', source: 'track.artist', x: 24, y: 44, width: 256, height: 16, fontSize: 12, color: '#adadaa' },
+    { type: 'time', source: 'position', x: 24, y: 70, width: 110, height: 44, fontSize: 34, color: '#f2f2f0' },
+    { type: 'spectrum', x: 142, y: 80, width: 110, height: 30, color: '#6fe0a0' },
+    { type: 'text', source: 'player.status', x: 256, y: 80, width: 80, height: 14, fontSize: 10, align: 'right', color: '#6fe0a0' },
+    { type: 'time', source: 'duration', x: 256, y: 96, width: 80, height: 14, fontSize: 11, align: 'right', color: '#adadaa' },
+    ...ampLow.components.map((c) => (c.type === 'seekbar' ? { ...c, y: 156 } : c)),
+  ],
+});
+amp.art = amp.art.replace('top:150px;width:316px', 'top:153px;width:316px');
+
+// ---- "Magnet": a silver radio recorder with a pink cassette
+
+const magnetLow = lower({ width: 360, y: 232, look: 'chrome', playLook: 'chrome', toggleLook: 'knurl', big: 60, mid: 60, toggle: [46, 40], list: 150 });
+const magnet = skin('magnet', 'Magnet', 'A silver radio recorder: a speaker grille, chrome keys in a row and a pink cassette.', ['radio recorder', 'boombox', 'silver', 'light', 'pink', 'cassette', 'eighties'], {
+  theme: theme({ background: '#cfd2d6', surface: '#eceef0', surfaceRaised: '#ffffff', foreground: '#1a1c1f', muted: '#474b50', accent: '#a80f49', accentContrast: '#ffffff', border: '#7f858c', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA),
+  width: 360,
+  height: magnetLow.height,
+  resize: magnetLow.resize,
+  pad: 1,
+  css: `
+    body { background: repeating-linear-gradient(0deg, rgba(255,255,255,.2) 0 .5px, rgba(0,0,0,.04) .5px 1px, transparent 1px 2.5px), linear-gradient(#e1e3e6, #b9bdc2); box-shadow: inset 0 1px 0 #fff; font-family: ${HELVETICA}; }
+    .grille { position: absolute; left: 22px; top: 18px; width: 316px; height: 40px; border-radius: 4px; background: radial-gradient(circle, #1a1c1f 1.4px, transparent 1.8px) 0 0 / 6px 6px, #8d9299; box-shadow: inset 0 2px 4px rgba(0,0,0,.5), 0 1px 0 #fff; }
+    .bay { position: absolute; left: 22px; top: 68px; width: 316px; height: 152px; border-radius: 6px; background: #17181a; box-shadow: inset 0 3px 8px #000, 0 1px 0 #fff; }
+    .shell { position: absolute; left: 14px; top: 12px; width: 288px; height: 128px; border-radius: 6px; background: linear-gradient(#2c2d30, #1d1e20); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 0 0 1px #000; }
+    .paper { position: absolute; left: 10px; top: 8px; width: 268px; height: 50px; border-radius: 3px; background: #eceef0; }
+    .pink { position: absolute; left: 10px; top: 58px; width: 268px; height: 52px; background: linear-gradient(#ff5f98 0 16%, #fff 16% 22%, #ff3f84 22% 78%, #fff 78% 84%, #ff5f98 84%); }
+    .eye { position: absolute; left: 76px; top: 66px; width: 136px; height: 36px; border-radius: 18px; background: #17181a; box-shadow: inset 0 2px 4px #000; }
+    ${COG_CSS}
+    ${beds('#9da2a8', '#eceef0', true)}
+    .face { color: #1a1c1f; } .face svg { width: 20px; height: 20px; }
+    .chrome { border-radius: 2px; background: linear-gradient(#fdfdfd 0%, #c3c7cc 45%, #9ea3a9 55%, #e4e6e9 100%); box-shadow: 0 0 0 1px #4e5257, inset 0 1px 0 #fff; }
+    .knurl { border-radius: 50%; color: #fff; background: repeating-conic-gradient(#3a3d41 0 6deg, #1a1c1f 6deg 12deg); box-shadow: 0 2px 3px rgba(0,0,0,.4), inset 0 0 0 5px #2a2c2f, inset 0 0 0 6px #6c7076; }
+    .knurl svg { width: 15px; height: 15px; }
+    ${STATES}
+    .pressed .chrome { transform: translateY(2px); box-shadow: 0 0 0 1px #4e5257, inset 0 3px 5px rgba(0,0,0,.35); }
+    .active .chrome { transform: translateY(2px); color: #a80f49; box-shadow: 0 0 0 1px #4e5257, inset 0 3px 5px rgba(0,0,0,.3), inset 0 -3px 0 #ff3f84; }
+    .active .knurl { color: #ff8fb8; box-shadow: 0 2px 3px rgba(0,0,0,.4), inset 0 0 0 5px #2a2c2f, inset 0 0 0 6px #ff3f84; }
+  `,
+  art: `<div class="grille"></div><div class="bay"><div class="shell"><div class="paper"></div><div class="pink"></div><div class="eye"></div></div></div>${magnetLow.art}`,
+  buttons: magnetLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 54, y: 90, width: 252, height: 22, fontSize: 15, color: '#1a1c1f' },
+    { type: 'text', source: 'track.artist', x: 54, y: 112, width: 150, height: 18, fontSize: 12, color: '#a80f49' },
+    { type: 'time', source: 'position', x: 206, y: 112, width: 100, height: 18, fontSize: 13, align: 'right', color: '#474b50' },
+    ...magnetLow.components,
+  ],
+  spinners: [smallHub('hub-left', 128, 150), smallHub('hub-right', 204, 150)],
+});
+
+// ---- "Studio": black leather, a cream meter panel, steel knobs
+
+const studioLow = lower({ width: 380, y: 150, look: 'steel', playLook: 'steel', toggleLook: 'tab', big: 76, mid: 54, toggle: [50, 34], list: 150 });
+const studio = skin('studio', 'Studio', 'A recorder in black leather with a cream meter panel, steel knobs and tabs that light up blue.', ['recorder', 'leather', 'meter', 'cream', 'steel', 'skeuomorphic'], {
+  theme: theme({ background: '#e9dfbf', surface: '#f4ecd2', surfaceRaised: '#fffaf0', foreground: '#2a2418', muted: '#62573f', accent: '#a3261c', accentContrast: '#fff8ec', border: '#8d8262', ok: '#1f6b3a', danger: '#a3261c', focus: '#1f5fbf' }, '"Georgia", "Times New Roman", serif'),
+  width: 380,
+  height: studioLow.height,
+  resize: studioLow.resize,
+  css: `
+    body { background: radial-gradient(circle, rgba(255,255,255,.05) .7px, transparent 1px) 0 0 / 4px 4px, radial-gradient(circle, rgba(0,0,0,.4) .7px, transparent 1px) 2px 2px / 4px 4px, linear-gradient(#26282b, #17181a); font-family: Georgia, serif; }
+    .stitch { position: absolute; inset: 8px; border-radius: 10px; border: 1.5px dashed rgba(255,255,255,.16); }
+    .panel { position: absolute; left: 24px; top: 22px; width: 332px; height: 116px; border-radius: 12px; background: radial-gradient(120% 90% at 50% 0%, #fbf4dc, #e6dcb8); box-shadow: inset 0 2px 6px rgba(60,40,10,.5), 0 0 0 3px #0e0f10, 0 0 0 4px #5a5c60, 0 2px 0 4px rgba(255,255,255,.1); overflow: hidden; }
+    .panel::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 100%;
+      background: repeating-conic-gradient(from -16.2deg at 50% 500%, #2a2418 0 .22deg, transparent .22deg 1.6deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 500%, transparent 0 566px, #000 566px 573px, transparent 573px); }
+    .panel::after { content: ''; position: absolute; inset: 0; background: conic-gradient(from 7deg at 50% 500%, #a3261c 0 9.4deg, transparent 9.4deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 500%, transparent 0 559px, #000 559px 563px, transparent 563px); }
+    ${beds('#f4ecd2', '#f4ecd2', true)}
+    .slot { box-shadow: inset 0 1px 3px rgba(60,40,10,.6), 0 0 0 2px #0e0f10, 0 1px 0 2px rgba(255,255,255,.12); }
+    .well { border-radius: 8px; box-shadow: inset 0 2px 6px rgba(60,40,10,.45), 0 0 0 3px #0e0f10, 0 0 0 4px #5a5c60; }
+    .face { color: #2a2d31; } .face svg { width: 38%; height: 38%; }
+    .steel { border-radius: 50%; background: conic-gradient(from 30deg, #f4f5f6, #8f9398, #e9ebed, #84888d, #f4f5f6, #8f9398, #e9ebed, #84888d, #f4f5f6); box-shadow: 0 0 0 1px #0b0b0c, 0 0 0 5px #2b2d30, 0 0 0 6px #0b0b0c, 0 5px 6px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.7); }
+    .tab { border-radius: 12px; color: #9fb0c0; background: linear-gradient(#34373b, #1d1f21); box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.2); }
+    .tab svg { width: 16px; height: 16px; }
+    ${STATES}
+    .pressed .steel { box-shadow: 0 0 0 1px #0b0b0c, 0 0 0 5px #2b2d30, 0 0 0 6px #0b0b0c, inset 0 3px 6px rgba(0,0,0,.45); }
+    .active .steel { color: #a3261c; box-shadow: 0 0 0 1px #0b0b0c, 0 0 0 5px #2b2d30, 0 0 0 6px #d2372b, 0 0 12px 3px rgba(210,55,43,.5), inset 0 0 0 1px rgba(255,255,255,.7); }
+    .active .tab { color: #06223d; background: linear-gradient(#d6efff, #6db9f5); box-shadow: 0 0 0 1px #000, 0 0 10px 2px rgba(109,185,245,.6), inset 0 1px 0 #fff; }
+  `,
+  art: `<div class="stitch"></div><div class="panel"></div>${studioLow.art}`,
+  buttons: studioLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 40, y: 52, width: 300, height: 22, fontSize: 16, align: 'center', color: '#2a2418' },
+    { type: 'text', source: 'track.artist', x: 40, y: 74, width: 300, height: 16, fontSize: 12, align: 'center', color: '#62573f' },
+    { type: 'time', source: 'position', x: 40, y: 98, width: 90, height: 30, fontSize: 22, color: '#a3261c' },
+    { type: 'spectrum', x: 136, y: 102, width: 108, height: 24, color: '#62573f' },
+    { type: 'text', source: 'player.status', x: 250, y: 100, width: 90, height: 14, fontSize: 10, align: 'right', color: '#a3261c' },
+    { type: 'time', source: 'duration', x: 250, y: 114, width: 90, height: 14, fontSize: 11, align: 'right', color: '#62573f' },
+    ...studioLow.components,
+  ],
+});
+
+// ---- "Crimson": two steel reels full of red tape on black
+
+const crimsonReel = '<div class="spool"><b></b><b style="transform:rotate(120deg)"></b><b style="transform:rotate(240deg)"></b><i></i></div>';
+const crimsonLow = lower({ width: 380, y: 270, look: 'bead', playLook: 'bead hot', toggleLook: 'bead', big: 64, mid: 52, toggle: [44, 44], list: 150 });
+const crimson = skin('crimson', 'Crimson', 'Two steel reels full of red tape on black cloth, and a thin red line between them.', ['reel', 'dark', 'red', 'steel', 'minimal', 'skeuomorphic'], {
+  theme: theme({ background: '#1c1c1d', surface: '#111112', surfaceRaised: '#2f2f31', foreground: '#f3f1ee', muted: '#b3afa9', accent: '#ff6257', accentContrast: '#1c0200', border: '#000000', ok: '#7fdca0', danger: '#ffa39b', focus: '#7fc4ff' }, HELVETICA),
+  width: 380,
+  height: crimsonLow.height,
+  resize: crimsonLow.resize,
+  css: `
+    body { background: repeating-linear-gradient(45deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px), repeating-linear-gradient(-45deg, rgba(0,0,0,.25) 0 1px, transparent 1px 3px), radial-gradient(120% 80% at 50% 20%, #2a2a2c, #151516); font-family: ${HELVETICA}; }
+    .line { position: absolute; left: 100px; top: 166px; width: 180px; height: 34px; border: 1.5px solid #c8281f; border-top: none; border-radius: 0 0 40px 40px; }
+    .caps { position: absolute; left: 150px; top: 190px; width: 80px; height: 20px; border-radius: 10px; background: linear-gradient(#fafafa, #cfcfcf); box-shadow: 0 2px 4px rgba(0,0,0,.6); }
+    .caps::after { content: ''; position: absolute; left: 24px; top: 7px; width: 32px; height: 6px; background: radial-gradient(circle, #c8281f 2.5px, transparent 3px) 0 0 / 12px 6px; }
+    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #b3221a 0 1.5px, #8f1a13 1.5px 3px); }
+    .spool { position: absolute; inset: 0; border-radius: 50%; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6));
+      background: radial-gradient(circle, transparent 0 68px, #f1f2f3 68px 70px, #9a9ea3 70px 74px, #e8eaec 74px 75px); }
+    .spool b { position: absolute; left: 50%; top: 50%; width: 46px; height: 72px; margin-left: -23px; transform-origin: 50% 0; border-radius: 0 0 8px 8px;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px), linear-gradient(90deg, #a9adb2, #f1f2f3 50%, #a9adb2); }
+    .spool i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px; border-radius: 50%; background: radial-gradient(circle, #1c1c1d 0 4px, #f4f5f6 4px 9px, #8f9398 9px 11px, #e9ebed 11px); box-shadow: 0 0 0 1px #5d6166; }
+    ${beds('#0c0c0d', '#111112', false)}
+    .face { color: #f3f1ee; } .face svg { width: 18px; height: 18px; }
+    .bead { border-radius: 50%; background: radial-gradient(circle at 40% 28%, #4a4a4d, #19191a 72%); box-shadow: 0 0 0 1px #000, 0 3px 4px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.18); }
+    .bead.hot { color: #2a0300; background: radial-gradient(circle at 40% 28%, #ff8a7f, #c8281f 72%); box-shadow: 0 0 0 1px #000, 0 3px 4px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.4); }
+    .bead.hot svg { width: 24px; height: 24px; }
+    ${STATES}
+    .pressed .bead { box-shadow: 0 0 0 1px #000, inset 0 3px 5px rgba(0,0,0,.7); }
+    .active .bead { color: #ff6257; box-shadow: 0 0 0 1px #000, 0 0 0 2.5px #c8281f, inset 0 1px 0 rgba(255,255,255,.18); }
+    .active .bead.hot { color: #fff; box-shadow: 0 0 0 1px #000, 0 0 14px 4px rgba(255,98,87,.6), inset 0 1px 0 rgba(255,255,255,.4); }
+  `,
+  art: `<div class="line"></div><div class="caps"></div>${crimsonLow.art}`,
+  buttons: crimsonLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 24, y: 214, width: 332, height: 22, fontSize: 16, align: 'center', color: '#f3f1ee' },
+    { type: 'text', source: 'track.artist', x: 24, y: 236, width: 332, height: 16, fontSize: 12, align: 'center', color: '#ff6257' },
+    { type: 'time', source: 'position', x: 24, y: 252, width: 80, height: 14, fontSize: 11, color: '#b3afa9' },
+    { type: 'text', source: 'player.status', x: 110, y: 252, width: 160, height: 14, fontSize: 10, align: 'center', color: '#b3afa9' },
+    { type: 'time', source: 'duration', x: 276, y: 252, width: 80, height: 14, fontSize: 11, align: 'right', color: '#b3afa9' },
+    ...crimsonLow.components,
+  ],
+  packs: [
+    { name: 'tape-left', x: 36, y: 24, width: 136, height: 136, from: 136, to: 60, html: '<div class="wound"></div>' },
+    { name: 'tape-right', x: 208, y: 24, width: 136, height: 136, from: 60, to: 136, html: '<div class="wound"></div>' },
+  ],
+  spinners: [
+    { name: 'reel-left', x: 29, y: 17, width: 150, height: 150, period: 3000, html: crimsonReel },
+    { name: 'reel-right', x: 201, y: 17, width: 150, height: 150, period: 3000, html: crimsonReel },
+  ],
+});
+
+// ---- "Mono": black on white and nothing else; the cover large
+
+const NOTE = '<div class="blank"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 4v10.2a3.2 3.2 0 1 0 2 3V8h6V4z"/></svg></div>';
+const monoLow = lower({ width: 360, y: 356, look: 'bare', playLook: 'disc', toggleLook: 'bare', big: 64, mid: 52, toggle: [44, 40], list: 150 });
+const mono = skin('mono', 'Mono', 'Black on white and nothing else: the cover large, a row of bars, plain signs.', ['minimal', 'black', 'white', 'light', 'cover', 'flat'], {
+  theme: theme({ background: '#ffffff', surface: '#ffffff', surfaceRaised: '#f2f2f2', foreground: '#000000', muted: '#555555', accent: '#000000', accentContrast: '#ffffff', border: '#000000', ok: '#0b5a2b', danger: '#a3231b', focus: '#1f5fbf' }, '"Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif', 12),
+  width: 360,
+  height: monoLow.height,
+  resize: monoLow.resize,
+  css: `
+    body { background: #fff; }
+    .rim { position: absolute; left: 68px; top: 20px; width: 224px; height: 224px; border-radius: 26px; box-shadow: 0 0 0 3px #000; }
+    .blank { position: absolute; inset: 0; border-radius: 24px; background: #f2f2f2; display: grid; place-items: center; color: #000; }
+    .blank svg { width: 64px; height: 64px; }
+    ${beds('#fff', '#fff', true)}
+    .slot { height: 4px !important; margin-top: 5px; border-radius: 2px; background: #000; box-shadow: none; }
+    .well { border-radius: 14px; box-shadow: inset 0 0 0 2.5px #000; }
+    .face { color: #000; } .face svg { width: 22px; height: 22px; }
+    .bare { border-radius: 50%; }
+    .disc { border-radius: 50%; color: #fff; background: #000; } .disc svg { width: 26px; height: 26px; }
+    .hover .bare { background: #eee; } .hover .disc { background: #333; }
+    .pressed .bare { background: #000; color: #fff; } .pressed .disc { background: #666; }
+    .active .bare { color: #fff; background: #000; } .active .disc { box-shadow: 0 0 0 3px #fff, 0 0 0 5.5px #000; }
+  `,
+  art: `<div class="rim"></div>${monoLow.art}`,
+  buttons: monoLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 24, y: 256, width: 312, height: 24, fontSize: 17, color: '#000000' },
+    { type: 'text', source: 'track.artist', x: 24, y: 280, width: 312, height: 18, fontSize: 12, color: '#555555' },
+    { type: 'spectrum', x: 24, y: 304, width: 312, height: 30, color: '#000000' },
+    { type: 'time', source: 'position', x: 24, y: 338, width: 80, height: 14, fontSize: 11, color: '#000000' },
+    { type: 'text', source: 'player.status', x: 110, y: 338, width: 140, height: 14, fontSize: 10, align: 'center', color: '#555555' },
+    { type: 'time', source: 'duration', x: 256, y: 338, width: 80, height: 14, fontSize: 11, align: 'right', color: '#000000' },
+    ...monoLow.components,
+  ],
+  overlays: [{ name: 'cover', x: 68, y: 20, width: 224, height: 224, source: 'track.cover', html: NOTE }],
+});
+
+// ---- "Wheel": a white pocket player, a bright screen with the cover and a ring of keys
+
+const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen with the cover of the album and a ring of keys below it.', ['pocket player', 'white', 'light', 'cover', 'ring', 'glossy'], {
+  theme: theme({ background: '#f4f5f6', surface: '#e8f1f8', surfaceRaised: '#ffffff', foreground: '#111417', muted: '#49535c', accent: '#1a62a8', accentContrast: '#ffffff', border: '#8e98a1', ok: '#0b5a2b', danger: '#a3231b', focus: '#b83216' }, '"Lucida Grande", "Segoe UI", "Helvetica Neue", sans-serif', 4),
+  width: 340,
+  height: 700,
+  resize: { stretchY: 610 },
+  pad: 2,
+  css: `
+    body { background: linear-gradient(120deg, rgba(255,255,255,.9) 0 40%, transparent 40.3%), linear-gradient(#fdfdfd, #e9eaec); box-shadow: inset 0 0 0 1px #b9bdc1, inset 0 0 0 3px #fff; }
+    .screen { position: absolute; left: 22px; top: 22px; width: 296px; height: 196px; border-radius: 6px; background: linear-gradient(#f4f9fc, #dcebf5); box-shadow: 0 0 0 4px #2a2d30, 0 0 0 5px #8e98a1; overflow: hidden; }
+    .bar { position: absolute; left: 0; right: 0; top: 0; height: 22px; background: linear-gradient(#f7fafc, #c9dbe8); box-shadow: 0 1px 0 #9fb3c2; }
+    .cell { position: absolute; right: 8px; top: 6px; width: 20px; height: 10px; border-radius: 2px; background: linear-gradient(#7fe07a, #2f9a2a); box-shadow: 0 0 0 1px #2a2d30; }
+    .ringpad { position: absolute; left: 60px; top: 250px; width: 220px; height: 220px; border-radius: 50%; background: linear-gradient(#b9bdc1, #a8acb0); box-shadow: inset 0 1px 2px rgba(0,0,0,.25), 0 1px 0 #fff; }
+    .blank { position: absolute; inset: 0; background: linear-gradient(135deg, #b9cfe0, #7fa3bf); display: grid; place-items: center; color: #fff; }
+    .blank svg { width: 40px; height: 40px; }
+    ${beds('#cfd3d7', '#e8f1f8', true)}
+    .face { color: #fff; } .face svg { width: 20px; height: 20px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)); }
+    .on { border-radius: 50%; }
+    .hub { border-radius: 50%; color: #6d747b; background: linear-gradient(#ffffff, #eceef0); box-shadow: 0 0 0 1px #a9aeb3, inset 0 1px 2px rgba(0,0,0,.08); }
+    .hub svg { width: 30px; height: 30px; filter: none; }
+    .lite { border-radius: 50%; color: #6d747b; } .lite svg { width: 17px; height: 17px; filter: none; }
+    .hover .on { background: rgba(255,255,255,.25); } .hover .hub { background: #fff; } .hover .lite { background: rgba(0,0,0,.06); }
+    .pressed .on { background: rgba(0,0,0,.14); } .pressed .hub { background: linear-gradient(#dfe2e5, #eef0f2); box-shadow: 0 0 0 1px #a9aeb3, inset 0 2px 4px rgba(0,0,0,.2); } .pressed .lite { background: rgba(0,0,0,.16); }
+    .active .hub { color: #1a62a8; box-shadow: 0 0 0 1px #1a62a8, 0 0 0 3px rgba(26,98,168,.3); }
+    .active .lite { color: #fff; background: #1a62a8; }
+  `,
+  art: `<div class="screen"><div class="bar"><div class="cell"></div></div></div><div class="ringpad"></div>
+    <div class="slot" style="left:40px;top:177px;width:260px;height:14px"></div>
+    <div class="slot" style="left:118px;top:497px;width:104px;height:14px"></div>
+    <div class="well" style="left:22px;top:530px;width:296px;height:156px"></div>`,
+  buttons: [
+    button('player.open', 'open', 140, 254, 60, 50, 'on'),
+    button('player.previous', 'previous', 64, 335, 60, 50, 'on'),
+    button('player.togglePlay', 'play', 126, 316, 88, 88, 'hub', PLAY),
+    button('player.next', 'next', 216, 335, 60, 50, 'on'),
+    button('player.stop', 'stop', 140, 416, 60, 50, 'on'),
+    button('player.repeat', 'repeat', 22, 482, 44, 44, 'lite', TOGGLE),
+    button('player.shuffle', 'shuffle', 66, 482, 44, 44, 'lite', TOGGLE),
+    button('window.equalizer', 'equalizer', 230, 482, 44, 44, 'lite', TOGGLE),
+    button('app.skins', 'skins', 274, 482, 44, 44, 'lite'),
+  ],
+  components: [
+    { type: 'text', source: 'player.status', x: 60, y: 24, width: 220, height: 18, fontSize: 12, align: 'center', color: '#111417' },
+    { type: 'text', source: 'track.title', x: 140, y: 66, width: 166, height: 22, fontSize: 14, color: '#111417' },
+    { type: 'text', source: 'track.artist', x: 140, y: 90, width: 166, height: 20, fontSize: 13, color: '#111417' },
+    { type: 'spectrum', x: 140, y: 118, width: 166, height: 24, color: '#1a62a8' },
+    { type: 'seekbar', x: 42, y: 180, width: 256, height: 8 },
+    { type: 'time', source: 'position', x: 42, y: 194, width: 80, height: 16, fontSize: 12, color: '#111417' },
+    { type: 'time', source: 'duration', x: 218, y: 194, width: 80, height: 16, fontSize: 12, align: 'right', color: '#111417' },
+    { type: 'volume', x: 120, y: 500, width: 100, height: 8 },
+    { type: 'playlist', x: 26, y: 534, width: 288, height: 148 },
+  ],
+  overlays: [{ name: 'cover', x: 40, y: 58, width: 88, height: 88, source: 'track.cover', html: NOTE }],
+});
+
 // What every skin says about itself beyond its looks: words to find it by, and the row of
 // its background that is drawn out when the window is made taller (it runs through the playlist).
 const MORE = {
@@ -1567,7 +2017,7 @@ const MORE = {
   dial: { keywords: ['dial', 'knob', 'aluminium', 'light', 'minimal', 'green'], resize: { stretchY: 590 } },
 };
 
-const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial];
+const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial, pocket, beat, stripe, amp, magnet, studio, crimson, mono, wheel];
 
 // ---------------------------------------------------------------- rendering
 
@@ -1840,14 +2290,14 @@ function build(design, mockDir) {
         width: design.width,
         height: design.height,
         background: 'assets/background.png',
-        ...(MORE[design.folder].resize ? { resize: MORE[design.folder].resize } : {}),
+        resize: design.resize ?? MORE[design.folder]?.resize,
         components: [...packs, ...spinners, ...overlays, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
       },
     },
   };
   // id, name and description first: the order a reader expects
   const { id, name, description, theme } = design.manifest;
-  const ordered = { formatVersion: 1, id, name, version: '1.0.0', author: 'FLAC Commander', description, keywords: MORE[design.folder].keywords, preview: 'preview.png', theme, windows: manifest.windows };
+  const ordered = { formatVersion: 1, id, name, version: '1.0.0', author: 'FLAC Commander', description, keywords: design.keywords ?? MORE[design.folder]?.keywords, preview: 'preview.png', theme, windows: manifest.windows };
   writeFileSync(join(out, 'skin.json'), `${JSON.stringify(ordered, null, 2)}\n`);
   rmSync(work, { recursive: true, force: true });
   console.log(`skins/${design.folder}: ${buttons.length} buttons, ${design.width} × ${design.height}`);

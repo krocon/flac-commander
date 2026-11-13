@@ -1,0 +1,237 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.pocket",
+  "name": "Pocket",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "A white pocket calculator that plays music: a slanted display and round keys in three colours.",
+  "keywords": [
+    "calculator",
+    "light",
+    "minimal",
+    "white",
+    "round keys"
+  ],
+  "preview": "preview.png",
+  "theme": {
+    "background": "#f1f1ee",
+    "surface": "#dfe5da",
+    "surfaceRaised": "#ffffff",
+    "foreground": "#1b201c",
+    "muted": "#4d564f",
+    "accent": "#9c2b1e",
+    "accentContrast": "#ffffff",
+    "border": "#9aa39b",
+    "ok": "#1f6b3a",
+    "danger": "#9c2b1e",
+    "focus": "#1f5fbf",
+    "fontFamily": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "fontMono": "\"Menlo\", \"Consolas\", monospace",
+    "radius": 3
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 340,
+      "height": 452,
+      "background": "assets/background.png",
+      "resize": {
+        "stretchY": 363
+      },
+      "components": [
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 42,
+          "y": 38,
+          "width": 256,
+          "height": 18,
+          "fontSize": 13,
+          "color": "#1b201c"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 42,
+          "y": 56,
+          "width": 150,
+          "height": 14,
+          "fontSize": 10,
+          "color": "#4d564f"
+        },
+        {
+          "type": "spectrum",
+          "x": 42,
+          "y": 76,
+          "width": 110,
+          "height": 30,
+          "color": "#4d564f"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 200,
+          "y": 56,
+          "width": 98,
+          "height": 14,
+          "fontSize": 10,
+          "align": "right",
+          "color": "#9c2b1e"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 160,
+          "y": 70,
+          "width": 138,
+          "height": 40,
+          "fontSize": 32,
+          "align": "right",
+          "color": "#1b201c"
+        },
+        {
+          "type": "seekbar",
+          "x": 24,
+          "y": 139,
+          "width": 292,
+          "height": 8
+        },
+        {
+          "type": "volume",
+          "x": 174,
+          "y": 251,
+          "width": 86,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 30,
+          "y": 165,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 84,
+          "y": 165,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 138,
+          "y": 160,
+          "width": 64,
+          "height": 64,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 202,
+          "y": 165,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 256,
+          "y": 165,
+          "width": 54,
+          "height": 54,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 22,
+          "y": 232,
+          "width": 46,
+          "height": 46,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 68,
+          "y": 232,
+          "width": 46,
+          "height": 46,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 114,
+          "y": 232,
+          "width": 46,
+          "height": 46,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 272,
+          "y": 232,
+          "width": 46,
+          "height": 46,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 28,
+          "y": 292,
+          "width": 284,
+          "height": 142
+        }
+      ]
+    }
+  }
+}
