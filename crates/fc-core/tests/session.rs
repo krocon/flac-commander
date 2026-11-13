@@ -35,7 +35,7 @@ impl Rig {
         let (playlists_tx, playlists) = mpsc::channel();
         let session = Session::start(
             backend,
-            SessionConfig { state_file, shuffle_seed: 7 },
+            SessionConfig { state_file, shuffle_seed: 7, on_spectrum: None },
             move |state| {
                 let _ = states_tx.send(state.clone());
             },

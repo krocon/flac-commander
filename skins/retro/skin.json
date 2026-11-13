@@ -71,6 +71,14 @@
           "color": "#6fa87a"
         },
         {
+          "type": "spectrum",
+          "x": 112,
+          "y": 58,
+          "width": 194,
+          "height": 14,
+          "color": "#5dff7a"
+        },
+        {
           "type": "time",
           "source": "duration",
           "x": 226,

@@ -21,6 +21,10 @@ pub const SKIN_ACTIVE: &str = "skins://active";
 /// A secondary window was opened or closed. Payload: `windows::WindowsState`.
 pub const WINDOWS_STATE: &str = "windows://state";
 
+/// Levels of the frequency bands for visualizers: an array of numbers in 0…1, about 25 times
+/// per second while music plays and a window asked for it (`player_set_spectrum`).
+pub const PLAYER_SPECTRUM: &str = "player://spectrum";
+
 /// The test tone ended. Mirrored by `TestToneFinished` in `core/system/system.models.ts`.
 pub const TEST_TONE_FINISHED: &str = "audio://test-tone-finished";
 

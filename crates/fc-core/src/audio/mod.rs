@@ -10,4 +10,5 @@ pub mod formats;
 pub mod output;
 pub mod player;
 pub mod resample;
+pub mod spectrum;
 pub mod tone;

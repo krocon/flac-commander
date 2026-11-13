@@ -16,6 +16,7 @@ use crate::audio::dts::{DTS_SCAN_SAMPLES, is_dts_in_pcm};
 use crate::audio::equalizer::{EqControl, EqSettings, Equalizer};
 use crate::audio::output::{self, OutputFormat, remap_channels};
 use crate::audio::resample::StreamResampler;
+use crate::audio::spectrum::{self, SpectrumAnalyzer};
 use crate::error::{AppError, AppResult, ErrorCode};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -95,6 +96,8 @@ struct Shared {
     refilling: AtomicBool,
     underruns: AtomicU64,
     equalizer: EqControl,
+    /// Someone shows a spectrum: the callback passes a mono copy of the audio on.
+    spectrum: AtomicBool,
 }
 
 /// Length of the fade when playback starts, pauses or the volume changes (against clicks).
@@ -106,6 +109,8 @@ pub struct Renderer {
     shared: Arc<Shared>,
     gain: f32,
     equalizer: Equalizer,
+    /// Mono audio for the spectrum; what does not fit is dropped.
+    tap: rtrb::Producer<f32>,
 }
 
 impl Renderer {
@@ -155,6 +160,13 @@ impl Renderer {
         silence.fill(0.0);
         let (filled, missing) = self.consumer.pop_partial_slice(audio);
         self.equalizer.process(filled, channels, format.sample_rate, &self.shared.equalizer);
+        if self.shared.spectrum.load(Ordering::Relaxed) {
+            for frame in filled.chunks_exact(channels) {
+                let mono = frame.iter().sum::<f32>() / channels as f32;
+                // full: the analysis is behind and will take the newer audio next time
+                let _ = self.tap.push(mono);
+            }
+        }
         for frame in filled.chunks_mut(channels) {
             if self.gain != target {
                 self.gain = if self.gain < target {
@@ -220,6 +232,9 @@ impl OutputBackend for DefaultOutput {
     }
 }
 
+/// Receives the spectrum: [`spectrum::BANDS`] levels in `0.0..=1.0`.
+pub type SpectrumSink = Box<dyn Fn(&[f32]) + Send>;
+
 enum Msg {
     Load {
         path: PathBuf,
@@ -232,6 +247,7 @@ enum Msg {
     Seek(u64),
     SetVolume(f32),
     SetEqualizer(EqSettings),
+    SetSpectrum(bool),
     /// From the error callback of output number `output_id`.
     DeviceError {
         output_id: u64,
@@ -254,6 +270,20 @@ impl Player {
         B: OutputBackend,
         F: Fn(&PlayerState) + Send + 'static,
     {
+        Self::spawn_with_spectrum(backend, on_state, None)
+    }
+
+    /// Like [`Self::spawn`]; `on_spectrum` gets the levels of the frequency bands about 25
+    /// times per second while music plays and [`Self::set_spectrum`] is on.
+    pub fn spawn_with_spectrum<B, F>(
+        backend: B,
+        on_state: F,
+        on_spectrum: Option<SpectrumSink>,
+    ) -> AppResult<Self>
+    where
+        B: OutputBackend,
+        F: Fn(&PlayerState) + Send + 'static,
+    {
         let (tx, rx) = mpsc::channel();
         let state = Arc::new(Mutex::new(PlayerState::default()));
         let engine_tx = tx.clone();
@@ -261,7 +291,8 @@ impl Player {
         thread::Builder::new()
             .name("audio-engine".to_owned())
             .spawn(move || {
-                Engine::new(backend, rx, engine_tx, engine_state, Box::new(on_state)).run();
+                Engine::new(backend, rx, engine_tx, engine_state, Box::new(on_state), on_spectrum)
+                    .run();
             })
             .map_err(|e| {
                 AppError::internal("audio engine thread could not be started")
@@ -312,6 +343,11 @@ impl Player {
         self.send(Msg::SetEqualizer(settings))
     }
 
+    /// Switches the spectrum analysis on or off (it costs a little, so only while shown).
+    pub fn set_spectrum(&self, enabled: bool) -> AppResult<()> {
+        self.send(Msg::SetSpectrum(enabled))
+    }
+
     fn send(&self, msg: Msg) -> AppResult<()> {
         self.tx.send(msg).map_err(|_| AppError::internal("the audio engine is not running"))
     }
@@ -327,6 +363,10 @@ fn lock(state: &Mutex<PlayerState>) -> std::sync::MutexGuard<'_, PlayerState> {
 const RING_SAMPLES: usize = 1 << 18;
 /// How much audio the engine keeps queued. Short, so that little is decoded in vain on a seek.
 const QUEUE_MS: u64 = 300;
+/// Mono samples the callback can hand over between two looks of the engine.
+const TAP_SAMPLES: usize = 16_384;
+/// Time between two spectra.
+const SPECTRUM_INTERVAL: Duration = Duration::from_millis(40);
 /// Longest pause between two states while playing.
 const PUBLISH_INTERVAL: Duration = Duration::from_millis(200);
 /// How long the engine sleeps when the queue is full or nothing plays.
@@ -342,6 +382,8 @@ struct Output<S> {
     producer: rtrb::Producer<f32>,
     /// Samples to keep queued (whole frames).
     target: usize,
+    /// Mono audio from the callback for the spectrum.
+    tap: rtrb::Consumer<f32>,
 }
 
 impl<S> Output<S> {
@@ -417,6 +459,14 @@ struct Engine<B: OutputBackend> {
     state: Arc<Mutex<PlayerState>>,
     on_state: Box<dyn Fn(&PlayerState) + Send>,
     published: Option<(PlayerState, Instant)>,
+    on_spectrum: Option<SpectrumSink>,
+    spectrum_enabled: bool,
+    analyzer: SpectrumAnalyzer,
+    /// The most recent mono samples, at most one analysis window.
+    recent: Vec<f32>,
+    last_spectrum: Instant,
+    /// A spectrum other than silence was sent: silence is still owed when playback stops.
+    spectrum_shown: bool,
 }
 
 impl<B: OutputBackend> Engine<B> {
@@ -426,6 +476,7 @@ impl<B: OutputBackend> Engine<B> {
         tx: Sender<Msg>,
         state: Arc<Mutex<PlayerState>>,
         on_state: Box<dyn Fn(&PlayerState) + Send>,
+        on_spectrum: Option<SpectrumSink>,
     ) -> Self {
         let shared = Arc::new(Shared::default());
         shared.volume.store(1.0f32.to_bits(), Ordering::Relaxed);
@@ -445,6 +496,12 @@ impl<B: OutputBackend> Engine<B> {
             state,
             on_state,
             published: None,
+            on_spectrum,
+            spectrum_enabled: false,
+            analyzer: SpectrumAnalyzer::default(),
+            recent: Vec::with_capacity(2 * spectrum::WINDOW),
+            last_spectrum: Instant::now(),
+            spectrum_shown: false,
         }
     }
 
@@ -465,6 +522,7 @@ impl<B: OutputBackend> Engine<B> {
             }
             self.finish_track_if_played();
             self.publish();
+            self.analyse();
         }
     }
 
@@ -495,6 +553,10 @@ impl<B: OutputBackend> Engine<B> {
             Msg::SetEqualizer(settings) => {
                 self.equalizer = settings.sanitised();
                 self.shared.equalizer.set(self.equalizer);
+            }
+            Msg::SetSpectrum(enabled) => {
+                self.spectrum_enabled = enabled && self.on_spectrum.is_some();
+                self.shared.spectrum.store(self.spectrum_enabled, Ordering::Relaxed);
             }
             Msg::DeviceError { output_id, error } => {
                 if self.output.as_ref().is_some_and(|o| o.id == output_id) {
@@ -577,11 +639,13 @@ impl<B: OutputBackend> Engine<B> {
             .store(self.shared.flush_requested.load(Ordering::Relaxed), Ordering::Relaxed);
         self.shared.played_frames.store(0, Ordering::Relaxed);
         self.shared.underruns.store(0, Ordering::Relaxed);
+        let (tap, tap_reader) = rtrb::RingBuffer::<f32>::new(TAP_SAMPLES);
         let renderer = Renderer {
             consumer,
             shared: self.shared.clone(),
             gain: 0.0,
             equalizer: Equalizer::default(),
+            tap,
         };
         self.outputs_opened += 1;
         let id = self.outputs_opened;
@@ -599,7 +663,8 @@ impl<B: OutputBackend> Engine<B> {
         let channels = usize::from(format.channels);
         let wanted = (u64::from(format.sample_rate) * QUEUE_MS / 1000) as usize * channels;
         let target = wanted.min(RING_SAMPLES) / channels * channels;
-        self.output = Some(Output { _stream: stream, id, format, producer, target });
+        self.output =
+            Some(Output { _stream: stream, id, format, producer, target, tap: tap_reader });
         Ok(format)
     }
 
@@ -776,6 +841,39 @@ impl<B: OutputBackend> Engine<B> {
         let played = self.shared.played_frames.load(Ordering::Acquire);
         let position = track.base_ms + played * 1000 / u64::from(output.format.sample_rate);
         track.duration_ms().map_or(position, |d| position.min(d))
+    }
+
+    /// Takes the audio the callback set aside and, a few times per second, reports its spectrum.
+    fn analyse(&mut self) {
+        let Some(output) = &mut self.output else {
+            return;
+        };
+        let waiting = output.tap.slots();
+        if waiting > 0
+            && let Ok(chunk) = output.tap.read_chunk(waiting)
+        {
+            let (first, second) = chunk.as_slices();
+            self.recent.extend_from_slice(first);
+            self.recent.extend_from_slice(second);
+            chunk.commit_all();
+            let surplus = self.recent.len().saturating_sub(spectrum::WINDOW);
+            self.recent.drain(..surplus);
+        }
+        let Some(sink) = &self.on_spectrum else {
+            return;
+        };
+        let playing = self.status == PlaybackStatus::Playing && self.spectrum_enabled;
+        if playing && self.last_spectrum.elapsed() >= SPECTRUM_INTERVAL {
+            let bands = self.analyzer.bands(&self.recent, output.format.sample_rate);
+            sink(&bands);
+            self.last_spectrum = Instant::now();
+            self.spectrum_shown = true;
+        } else if !playing && self.spectrum_shown {
+            // nothing plays any more: the bars fall
+            self.recent.clear();
+            sink(&[0.0; spectrum::BANDS]);
+            self.spectrum_shown = false;
+        }
     }
 
     /// Stores and reports the state if it changed; while playing at most every

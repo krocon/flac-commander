@@ -264,6 +264,59 @@ fn the_equalizer_shapes_what_comes_out_and_shows_in_the_state() {
 }
 
 #[test]
+fn the_spectrum_shows_the_tone_while_it_plays_and_falls_when_it_stops() {
+    use fc_core::audio::player::Player;
+    use fc_core::audio::spectrum::{BANDS, band_range};
+    use std::sync::mpsc;
+
+    let (backend, link) = common::fake_backend(common::FORMAT);
+    let (states_tx, states) = mpsc::channel();
+    let (spectra_tx, spectra) = mpsc::channel::<Vec<f32>>();
+    let player = Player::spawn_with_spectrum(
+        backend,
+        move |state| {
+            let _ = states_tx.send(state.clone());
+        },
+        Some(Box::new(move |bands| {
+            let _ = spectra_tx.send(bands.to_vec());
+        })),
+    )
+    .unwrap();
+    let mut device = Device::attach(player, link, states);
+
+    // not asked for: nothing is computed
+    device.load("sine.flac", true);
+    device.run_to_the_end();
+    assert!(spectra.try_recv().is_err(), "a spectrum nobody asked for");
+
+    device.player.set_spectrum(true).unwrap();
+    device.player.play().unwrap();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    let tone = loop {
+        device.render_block();
+        match spectra.try_recv() {
+            Ok(bands) if bands.iter().any(|b| *b > 0.5) => break bands,
+            _ => assert!(std::time::Instant::now() < deadline, "no spectrum of the tone"),
+        }
+    };
+    assert_eq!(tone.len(), BANDS);
+    let loudest = (0..BANDS).max_by(|a, b| tone[*a].total_cmp(&tone[*b])).unwrap();
+    let (from, to) = band_range(loudest);
+    assert!(from <= 440.0 && 440.0 < to, "loudest band is {from}–{to} Hz: {tone:?}");
+
+    // when the track has ended the bars fall to nothing
+    device.run_until("end of track", |s| s.status == PlaybackStatus::Stopped);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    loop {
+        match spectra.try_recv() {
+            Ok(bands) if bands.iter().all(|b| *b == 0.0) => break,
+            _ => assert!(std::time::Instant::now() < deadline, "the spectrum never fell"),
+        }
+        std::thread::yield_now();
+    }
+}
+
+#[test]
 fn playback_starts_and_pauses_without_a_click() {
     let mut device = Device::new();
     device.load("sine.flac", true);

@@ -12,6 +12,8 @@ cpal = "0.18.2"
 # Tags (title, artist, album) of all supported formats.
 lofty = "0.25.5"
 log.workspace = true
+# FFT for the spectrum of the visualizer (already in the tree through rubato).
+realfft = "3.5"
 # Resampling to the device rate (docs/decisions/0006).
 rubato = "5.1.0"
 # Lock-free SPSC ring buffer between engine thread and audio callback.

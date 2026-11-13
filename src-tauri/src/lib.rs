@@ -21,6 +21,8 @@ use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 pub struct AppState {
     /// Player and playlist: the one playback session of the app.
     pub session: Session,
+    /// Labels of the windows that show a spectrum right now: it is computed while there is one.
+    pub spectrum_windows: Mutex<std::collections::BTreeSet<String>>,
     /// Built-in and imported skins.
     pub skins: Arc<Mutex<SkinLibrary>>,
     /// True while a test tone plays.
@@ -114,6 +116,7 @@ pub fn run() {
             log_panics();
             let player_events = app.handle().clone();
             let playlist_events = app.handle().clone();
+            let spectrum_events = app.handle().clone();
             let state_file = match app.path().app_config_dir() {
                 Ok(folder) => Some(folder.join(STATE_FILE)),
                 Err(e) => {
@@ -127,7 +130,14 @@ pub fn run() {
             // every window hears every state: that keeps several windows in step
             let session = Session::start(
                 DefaultOutput,
-                SessionConfig { state_file, shuffle_seed },
+                SessionConfig {
+                    state_file,
+                    shuffle_seed,
+                    on_spectrum: Some(Box::new(move |bands| {
+                        // dropped silently if it cannot be sent: the next one comes in 40 ms
+                        let _ = spectrum_events.emit(events::PLAYER_SPECTRUM, bands);
+                    })),
+                },
                 move |state| {
                     if let Err(e) = player_events.emit(events::PLAYER_STATE, state) {
                         log::error!("event {} could not be sent: {e}", events::PLAYER_STATE);
@@ -157,7 +167,12 @@ pub fn run() {
             };
             let version = app.package_info().version.to_string();
             let skins = Arc::new(Mutex::new(SkinLibrary::load(skins_folder, &version)));
-            let state = AppState { session, skins, tone_busy: Arc::default() };
+            let state = AppState {
+                session,
+                skins,
+                spectrum_windows: Mutex::default(),
+                tone_busy: Arc::default(),
+            };
             // the window of a fixed-size skin has its size before it shows anything
             if let (Ok(skin), Some(window)) =
                 (commands::skins::active_skin(&state), app.get_webview_window("main"))
@@ -187,6 +202,7 @@ pub fn run() {
             commands::player::player_set_volume,
             commands::player::player_set_equalizer,
             commands::player::equalizer_presets,
+            commands::player::player_set_spectrum,
             commands::playlist::playlist_state,
             commands::playlist::playlist_open,
             commands::playlist::playlist_play,

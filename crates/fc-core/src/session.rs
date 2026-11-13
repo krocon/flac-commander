@@ -7,7 +7,7 @@
 
 use crate::audio::equalizer::EqSettings;
 use crate::audio::formats::{extension_of, is_playable_extension};
-use crate::audio::player::{OutputBackend, PlaybackStatus, Player, PlayerState};
+use crate::audio::player::{OutputBackend, PlaybackStatus, Player, PlayerState, SpectrumSink};
 use crate::error::{AppResult, ErrorCode};
 use crate::metadata::read_meta;
 use crate::playlist::{Advance, Playlist, PlaylistState, RepeatMode};
@@ -32,6 +32,8 @@ pub struct SessionConfig {
     pub state_file: Option<PathBuf>,
     /// Seed of the shuffle order.
     pub shuffle_seed: u64,
+    /// Where the spectrum for visualizers goes; `None`: it is never computed.
+    pub on_spectrum: Option<SpectrumSink>,
 }
 
 /// Whether tracks that were just added start playing.
@@ -251,10 +253,14 @@ impl Session {
         }));
 
         let hook = inner.clone();
-        let player = Player::spawn(backend, move |state| {
-            on_player(state);
-            lock(&hook).on_player_state(state);
-        })?;
+        let player = Player::spawn_with_spectrum(
+            backend,
+            move |state| {
+                on_player(state);
+                lock(&hook).on_player_state(state);
+            },
+            config.on_spectrum,
+        )?;
         player.set_volume(saved.volume)?;
         player.set_equalizer(saved.equalizer)?;
         {

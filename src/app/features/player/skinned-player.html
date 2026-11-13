@@ -116,6 +116,16 @@
           [style.height.px]="c.height"
         />
       }
+      @case ('spectrum') {
+        <app-visualizer
+          class="placed"
+          [color]="c.color"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+        />
+      }
       @case ('image') {
         <div
           class="placed image"

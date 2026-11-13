@@ -174,6 +174,27 @@ export class FakePlayerApi extends PlayerApi {
     return () => this.handlers.delete(handler);
   }
 
+  readonly spectrumHandlers = new Set<(bands: readonly number[]) => void>();
+
+  /** Requests for the spectrum, apart from the commands: every player view sends them. */
+  readonly spectrumRequests: string[] = [];
+
+  override async setSpectrum(enabled: boolean): Promise<void> {
+    this.spectrumRequests.push(enabled ? 'on' : 'off');
+  }
+
+  override async onSpectrum(handler: (bands: readonly number[]) => void): Promise<Unsubscribe> {
+    this.spectrumHandlers.add(handler);
+    return () => this.spectrumHandlers.delete(handler);
+  }
+
+  /** The backend reports a spectrum. */
+  emitSpectrum(bands: readonly number[]): void {
+    for (const handler of this.spectrumHandlers) {
+      handler(bands);
+    }
+  }
+
   /** The backend reports a state. */
   emit(state: PlayerState): void {
     for (const handler of this.handlers) {

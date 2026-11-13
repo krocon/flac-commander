@@ -5,7 +5,7 @@ use crate::AppState;
 use fc_core::AppResult;
 use fc_core::audio::equalizer::{EqPreset, EqSettings, PRESETS};
 use fc_core::audio::player::PlayerState;
-use tauri::State;
+use tauri::{State, WebviewWindow};
 
 /// The current state, for a window that starts or reloads while the engine is running.
 #[tauri::command]
@@ -53,6 +53,26 @@ pub async fn player_set_equalizer(
 #[tauri::command]
 pub async fn equalizer_presets() -> AppResult<&'static [EqPreset]> {
     Ok(PRESETS)
+}
+
+/// A window starts or stops showing a spectrum. The engine analyses while any window shows one.
+#[tauri::command]
+pub async fn player_set_spectrum(
+    window: WebviewWindow,
+    state: State<'_, AppState>,
+    enabled: bool,
+) -> AppResult<()> {
+    let wanted = {
+        let mut windows =
+            state.spectrum_windows.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if enabled {
+            windows.insert(window.label().to_owned());
+        } else {
+            windows.remove(window.label());
+        }
+        !windows.is_empty()
+    };
+    state.session.player().set_spectrum(wanted)
 }
 
 #[cfg(test)]
