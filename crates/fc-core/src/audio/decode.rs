@@ -10,11 +10,12 @@ use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
 use symphonia::core::codecs::audio::{AudioDecoder, AudioDecoderOptions};
-use symphonia::core::errors::Error as SymphoniaError;
+use symphonia::core::errors::{Error as SymphoniaError, SeekErrorKind};
 use symphonia::core::formats::probe::Hint;
-use symphonia::core::formats::{FormatOptions, FormatReader, TrackType};
+use symphonia::core::formats::{FormatOptions, FormatReader, SeekMode, SeekTo, TrackType};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
+use symphonia::core::units::{Time, TimeBase};
 
 /// Technical properties of the audio track of a file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -37,9 +38,14 @@ pub struct Decoder {
     format: Box<dyn FormatReader>,
     decoder: Box<dyn AudioDecoder>,
     track_id: u32,
+    time_base: Option<TimeBase>,
     info: TrackInfo,
     buf: Vec<f32>,
     skipped_packets: u64,
+    /// Set by a seek behind the end; cleared by the next seek.
+    at_end: bool,
+    /// Frames still to drop after a seek that landed before the requested position.
+    skip_frames: u64,
 }
 
 impl Decoder {
@@ -102,14 +108,18 @@ impl Decoder {
             duration_ms,
         };
         let track_id = track.id;
+        let time_base = track.time_base;
         Ok(Self {
             path: path.to_owned(),
             format,
             decoder,
             track_id,
+            time_base,
             info,
             buf: Vec::new(),
             skipped_packets: 0,
+            at_end: false,
+            skip_frames: 0,
         })
     }
 
@@ -127,6 +137,9 @@ impl Decoder {
     /// A single damaged packet is skipped (a click instead of an aborted track); a file that ends
     /// in the middle or cannot be read is an error.
     pub fn next_chunk(&mut self) -> AppResult<Option<&[f32]>> {
+        if self.at_end {
+            return Ok(None);
+        }
         loop {
             let packet = match self.format.next_packet() {
                 Ok(Some(packet)) => packet,
@@ -138,11 +151,15 @@ impl Decoder {
             }
             match self.decoder.decode(&packet) {
                 Ok(audio) => {
-                    if audio.frames() == 0 {
+                    let frames = audio.frames() as u64;
+                    let skip = self.skip_frames.min(frames);
+                    self.skip_frames -= skip;
+                    if skip == frames {
                         continue;
                     }
                     audio.copy_to_vec_interleaved(&mut self.buf);
-                    return Ok(Some(&self.buf));
+                    let start = skip as usize * usize::from(self.info.channels);
+                    return Ok(Some(&self.buf[start..]));
                 }
                 Err(SymphoniaError::DecodeError(reason)) => {
                     self.skipped_packets += 1;
@@ -150,6 +167,64 @@ impl Decoder {
                 }
                 Err(e) => return Err(self.stream_error(&e)),
             }
+        }
+    }
+
+    /// Continues decoding at `position_ms`, exact to the frame: formats that can only address
+    /// packets are positioned before it and the frames in between are dropped.
+    ///
+    /// A position at or behind the end is not an error: the next [`Self::next_chunk`] reports
+    /// the end of the track.
+    pub fn seek(&mut self, position_ms: u64) -> AppResult<()> {
+        self.at_end = false;
+        self.skip_frames = 0;
+        if self.info.duration_ms.is_some_and(|d| position_ms >= d) {
+            self.at_end = true;
+            return Ok(());
+        }
+        // Always from a freshly opened stream, and only forwards: after a seek backwards the
+        // FLAC reader of Symphonia 0.6.1 delivers one packet from the new position and then
+        // continues at the old one (docs/RISKS.md R15; `seeking_is_exact…` in tests/formats.rs).
+        let fresh = Self::open(&self.path)?;
+        self.format = fresh.format;
+        self.decoder = fresh.decoder;
+        self.track_id = fresh.track_id;
+        self.time_base = fresh.time_base;
+        if position_ms == 0 {
+            return Ok(());
+        }
+        let rate = i128::from(self.info.sample_rate);
+        let target_frame = i128::from(position_ms) * rate / 1000;
+        let time = Time::try_from_secs_f64(position_ms as f64 / 1000.0).ok_or_else(|| {
+            AppError::internal(format!("seek position {position_ms} ms is out of range"))
+        })?;
+        let to = SeekTo::Time { time, track_id: Some(self.track_id) };
+        match self.format.seek(SeekMode::Accurate, to) {
+            Ok(seeked) => {
+                self.decoder.reset();
+                // where decoding really continues, in frames (negative inside an encoder delay)
+                let actual_frame = self
+                    .time_base
+                    .and_then(|tb| tb.calc_time(seeked.actual_ts))
+                    .map(|t| (t.as_nanos() * rate + 500_000_000).div_euclid(1_000_000_000));
+                self.skip_frames = actual_frame
+                    .map_or(0, |f| u64::try_from((target_frame - f).max(0)).unwrap_or(0));
+                Ok(())
+            }
+            Err(SymphoniaError::SeekError(SeekErrorKind::OutOfRange)) => {
+                self.at_end = true;
+                Ok(())
+            }
+            Err(SymphoniaError::IoError(io)) if io.kind() == io::ErrorKind::UnexpectedEof => {
+                self.at_end = true;
+                Ok(())
+            }
+            Err(SymphoniaError::SeekError(kind)) => Err(AppError::new(
+                ErrorCode::DecodeFailed,
+                format!("{}: cannot seek", self.path.display()),
+            )
+            .with_details(format!("{kind:?}"))),
+            Err(e) => Err(self.stream_error(&e)),
         }
     }
 

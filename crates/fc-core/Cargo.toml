@@ -10,6 +10,10 @@ repository.workspace = true
 [dependencies]
 cpal = "0.18.2"
 log.workspace = true
+# Resampling to the device rate (docs/decisions/0006).
+rubato = "5.1.0"
+# Lock-free SPSC ring buffer between engine thread and audio callback.
+rtrb = "0.4.1"
 serde.workspace = true
 # Decoders are chosen explicitly: every enabled format has a decode test (tests/formats.rs).
 symphonia = { version = "0.6.1", default-features = false, features = [
@@ -22,9 +26,6 @@ thiserror.workspace = true
 serde_json.workspace = true
 # Phase 0 evaluation only (examples/probe.rs); becomes a dependency with the metadata module (Phase 3).
 lofty = "0.25.5"
-# Lock-free SPSC ring buffer between decoder thread and audio callback (examples/play.rs);
-# becomes a dependency with the playback engine (Phase 2).
-rtrb = "0.4.1"
 
 [lints]
 workspace = true
