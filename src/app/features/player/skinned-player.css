@@ -1,0 +1,127 @@
+:host {
+  display: block;
+}
+
+.window {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--player-background);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  color: var(--player-foreground);
+  font-family: var(--player-font-family);
+
+  &.pixelated,
+  &.pixelated .placed {
+    image-rendering: pixelated;
+  }
+}
+
+.placed {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+button {
+  padding: 0;
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  background: var(--player-surface-raised);
+  color: var(--player-foreground);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  overflow: hidden;
+
+  /* a skin's pictures replace the standard look, state by state */
+  &.pictured {
+    border: none;
+    border-radius: 0;
+    background: var(--normal) center / 100% 100% no-repeat;
+
+    &:hover {
+      background-image: var(--hover, var(--normal));
+    }
+
+    &.active {
+      background-image: var(--active, var(--normal));
+    }
+
+    &:active {
+      background-image: var(--pressed, var(--normal));
+    }
+
+    &:disabled {
+      background-image: var(--disabled, var(--normal));
+    }
+  }
+
+  &:not(.pictured).active {
+    color: var(--player-accent);
+    border-color: var(--player-accent);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+}
+
+.text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  font-family: var(--player-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* sliders drawn with the skin's colours: a recessed track and a flat thumb */
+input[type='range'] {
+  appearance: none;
+  padding: 0;
+  background: var(--player-surface);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    height: 100%;
+    background: transparent;
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 10px;
+    height: 100%;
+    background: var(--player-accent);
+    border: 1px solid var(--player-accent-contrast);
+    border-radius: var(--player-radius);
+  }
+
+  &::-moz-range-track {
+    height: 100%;
+    background: transparent;
+  }
+
+  &::-moz-range-thumb {
+    width: 10px;
+    height: 100%;
+    background: var(--player-accent);
+    border: 1px solid var(--player-accent-contrast);
+    border-radius: var(--player-radius);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+}
+
+.image {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}

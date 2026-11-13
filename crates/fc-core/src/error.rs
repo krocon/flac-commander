@@ -25,13 +25,15 @@ pub enum ErrorCode {
     AudioDevice,
     /// The output is in use by another operation of this app.
     OutputBusy,
+    /// A skin package that breaks the rules of the format; `details` lists what is wrong.
+    InvalidSkin,
     /// A bug or an unexpected state; the message says where.
     Internal,
 }
 
 impl ErrorCode {
     /// All codes, for the contract test with the frontend.
-    pub const ALL: [ErrorCode; 9] = [
+    pub const ALL: [ErrorCode; 10] = [
         ErrorCode::NotFound,
         ErrorCode::PermissionDenied,
         ErrorCode::Io,
@@ -40,6 +42,7 @@ impl ErrorCode {
         ErrorCode::NoOutputDevice,
         ErrorCode::AudioDevice,
         ErrorCode::OutputBusy,
+        ErrorCode::InvalidSkin,
         ErrorCode::Internal,
     ];
 }
@@ -120,6 +123,7 @@ mod tests {
                 "no_output_device",
                 "audio_device",
                 "output_busy",
+                "invalid_skin",
                 "internal"
             ]
         );

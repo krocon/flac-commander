@@ -56,6 +56,8 @@ struct Inner {
     failures_in_a_row: u32,
     volume: f32,
     position_ms: u64,
+    /// Id of the active skin: kept here only to be saved with the rest.
+    skin: Option<String>,
 }
 
 /// Cheap to clone: every clone is the same session.
@@ -99,6 +101,7 @@ impl Inner {
             tracks: entries.iter().map(|e| e.path.clone()).collect(),
             current,
             position_ms: if current.is_some() { self.position_ms } else { 0 },
+            skin: self.skin.clone(),
             ..SavedState::default()
         }
     }
@@ -234,6 +237,7 @@ impl Session {
             failures_in_a_row: 0,
             volume: saved.volume,
             position_ms: saved.position_ms,
+            skin: saved.skin.clone(),
         }));
 
         let hook = inner.clone();
@@ -263,6 +267,18 @@ impl Session {
     /// The player, for what concerns the playing track only: pause, seek, volume.
     pub fn player(&self) -> &Player {
         &self.player
+    }
+
+    /// The id of the skin that was active when the state was saved.
+    pub fn skin(&self) -> Option<String> {
+        lock(&self.inner).skin.clone()
+    }
+
+    /// Remembers the active skin.
+    pub fn set_skin(&self, id: Option<String>) {
+        let mut inner = lock(&self.inner);
+        inner.skin = id;
+        inner.save();
     }
 
     pub fn playlist_state(&self) -> PlaylistState {

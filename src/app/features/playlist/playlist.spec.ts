@@ -33,7 +33,7 @@ describe('Playlist', () => {
   }
 
   function button(label: string): HTMLButtonElement {
-    const found = [...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+    const found = el.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
     if (!found) {
       throw new Error(`no button "${label}"`);
     }
@@ -158,6 +158,23 @@ describe('Playlist', () => {
     await vi.waitFor(() =>
       expect(api.commands).toEqual(['remove 1', 'clear', 'open "Dateien hinzufügen"']),
     );
+  });
+
+  it('shows signs instead of words where there is little room, with the same names', async () => {
+    api.snapshot = PLAYLIST;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PlaylistApi, useValue: api },
+        { provide: LogApi, useValue: new FakeLogApi() },
+      ],
+    });
+    const fixture = TestBed.createComponent(Playlist);
+    fixture.componentRef.setInput('compact', true);
+    el = fixture.nativeElement as HTMLElement;
+    await shown();
+    expect(button('Dateien hinzufügen').textContent?.trim()).toBe('+');
+    expect(button('Aus der Playlist entfernen').textContent?.trim()).toBe('−');
+    expect(button('Playlist leeren').textContent?.trim()).toBe('✕');
   });
 
   it('follows the backend: tags arrive, the current track moves on', async () => {

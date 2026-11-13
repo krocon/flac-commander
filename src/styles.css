@@ -31,6 +31,8 @@ html,
 body {
   height: 100%;
   margin: 0;
+  /* the app fills the window and scrolls inside its own lists */
+  overflow: hidden;
 }
 
 body {

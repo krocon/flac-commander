@@ -57,13 +57,20 @@ vorige fertig ist.
 - [ ] Verschobene Dateien wiederfinden (heute: als fehlend markiert)
 - [ ] Drag & Drop in der echten App von Hand prüfen ([MANUAL-TESTS.md](MANUAL-TESTS.md) L3)
 
-## Phase 4 – Skin-Engine
+## Phase 4 – Skin-Engine ✅
 
-- [ ] Manifest-Schema v1 mit Validierung und Fehlerdiagnose ([SKIN-FORMAT.md](SKIN-FORMAT.md))
-- [ ] Skin-Loader und Asset-Protokoll, sicherer ZIP-Import ([SECURITY.md](SECURITY.md))
-- [ ] Wechsel zur Laufzeit
-- [ ] Mitgelieferte Skins: Retro (eigene Grafik, Winamp-inspiriert) und Modern (dunkel)
-- [ ] Kontrastprüfung der mitgelieferten Skins
+- [x] Manifest-Schema v1 mit vollständiger Prüfung und Diagnose je Stelle ([SKIN-FORMAT.md](SKIN-FORMAT.md))
+- [x] Zwei Layout-Arten: `flow` (App legt an, Skin färbt) und `absolute` (Skin platziert Bausteine, feste Fenstergröße)
+- [x] Skin-Bibliothek: mitgelieferte Skins im Programm eingebettet, importierte im Datenordner
+- [x] Sicherer ZIP-Import: Zip-Slip, Links, Dekompressionsbombe, Dateitypen nach Inhalt – je mit Test
+- [x] Bilder nur über das Protokoll `skin://`, das ausschließlich geprüfte Dateien kennt
+- [x] Wechsel zur Laufzeit für alle Fenster; aktiver Skin wird gespeichert; Fenstergröße folgt dem Skin
+- [x] Mitgelieferte Skins: **Modern** und **Retro** (eigene, erzeugte Grafik); Test auf WCAG AA
+- [x] Skin-Auswahl mit Vorschau, Import, Entfernen; ⌘0 / Strg+0 als fester Weg zurück
+- [x] gebündelte App unter macOS geprüft: Wechsel auf Retro, Neustart, Fenstergröße
+- [ ] Import eines Fremd-Skins und Ablehnung eines fehlerhaften in der echten App von Hand prüfen (S4, S5)
+- [ ] Kontrastwarnung für importierte Skins
+- [ ] Rahmenlose Fenster, Bilder für Regler, Bitmap-Schriften, Hochskalieren
 
 ## Phase 5 – Mehrfenster
 

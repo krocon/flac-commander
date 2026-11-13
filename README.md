@@ -4,9 +4,9 @@ Plattformübergreifender Musikplayer für lokale Musikbibliotheken: vollständig
 unabhängige Fenster und eine native Audio-Engine in Rust. Die Bedienung greift die Winamp-Tradition auf, Code,
 Architektur und Skin-Format sind eigenständig.
 
-**Stand: Phase 3 abgeschlossen (Playlist und Persistenz).** Die App spielt Playlists aus lokalen Dateien und Ordnern,
-zeigt Titel und Interpret aus den Tags und merkt sich Playlist, Position, Lautstärke und Wiedergabemodus. Skins und
-mehrere Fenster folgen ([Roadmap](docs/ROADMAP.md)).
+**Stand: Phase 4 abgeschlossen (Skin-Engine).** Die App spielt Playlists aus lokalen Dateien, merkt sich ihren
+Zustand und lässt sich mit Skins umgestalten – mitgeliefert sind „Modern" und „Retro", eigene Skins lassen sich als
+ZIP importieren. Mehrere Fenster, Equalizer und Visualisierung folgen ([Roadmap](docs/ROADMAP.md)).
 
 ## Was heute funktioniert
 
@@ -18,11 +18,12 @@ mehrere Fenster folgen ([Roadmap](docs/ROADMAP.md)).
 | Formate | FLAC, MP3, WAV, Ogg Vorbis, Opus, AAC/M4A, ALAC, AIFF – jeweils durch Tests an echten Dateien belegt |
 | Engine | eigener Thread, lock-freier Ringpuffer, Resampling auf die Geräterate, framegenaues Seek |
 | Robustheit | nicht abspielbare Dateien werden markiert und übersprungen; fehlende Dateien nach dem Neustart markiert; Geräteverlust pausiert |
-| Gemerkt wird | Playlist, aktueller Titel mit Position, Lautstärke, Wiederholen, Zufall |
+| Skins | zur Laufzeit wechselbar; eigenes, rein deklaratives Format mit vollständiger Prüfung; sicherer ZIP-Import ([SKIN-FORMAT.md](docs/SKIN-FORMAT.md)) |
+| Gemerkt wird | Playlist, aktueller Titel mit Position, Lautstärke, Wiederholen, Zufall, Skin |
 | Tastatur | zentrales Aktionssystem, Playlist als Listbox bedienbar |
 | Fehler und Protokoll | einheitliche Fehlercodes, Texte in Deutsch und Englisch, Logdatei |
 
-Noch nicht vorhanden: Skins, Mehrfenster, Bibliothek, Equalizer, Albumcover, Umsortieren der Playlist, Mehrfachauswahl.
+Noch nicht vorhanden: Mehrfenster, Bibliothek, Equalizer, Visualisierung, Albumcover, Winamp-Skins, Umsortieren der Playlist, Mehrfachauswahl.
 Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft.
 
 ### Tastatur
@@ -36,6 +37,8 @@ Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft
 | Z / B | vorheriger / nächster Titel |
 | R / S | Wiederholen umschalten / Zufall |
 | ⌘O bzw. Strg+O | Dateien hinzufügen |
+| ⌘K bzw. Strg+K | Skin wählen |
+| ⌘0 bzw. Strg+0 | zurück zum Standard-Skin (gilt in jedem Skin) |
 | in der Playlist: ↑ ↓ Pos1 Ende | Auswahl bewegen |
 | in der Playlist: Enter / Entf | ausgewählten Titel abspielen / entfernen |
 
@@ -79,7 +82,7 @@ Mehr dazu in [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) – Schichten, Datenflüsse, Abhängigkeiten
 - [AUDIO-ENGINE.md](docs/AUDIO-ENGINE.md) – Audio-Architektur und Threading
-- [SKIN-FORMAT.md](docs/SKIN-FORMAT.md) – Entwurf des Skin-Formats
+- [SKIN-FORMAT.md](docs/SKIN-FORMAT.md) – das Skin-Format und wie man einen Skin baut
 - [SECURITY.md](docs/SECURITY.md) – Sicherheitsmodell, Skin-Import
 - [ROADMAP.md](docs/ROADMAP.md) – Phasen und Meilensteine
 - [RISKS.md](docs/RISKS.md) – technische Risiken und offene Entscheidungen

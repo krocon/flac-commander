@@ -1,0 +1,141 @@
+dialog {
+  width: min(520px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  padding: 14px;
+  color: var(--player-foreground);
+  background: var(--player-surface);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  font-family: var(--player-font-family);
+  font-size: 13px;
+
+  &::backdrop {
+    background: rgb(0 0 0 / 55%);
+  }
+}
+
+header,
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+p {
+  margin: 0;
+}
+
+.skins {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  > li {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px;
+    background: var(--player-background);
+    border: 1px solid var(--player-border);
+    border-radius: var(--player-radius);
+
+    &.active {
+      border-color: var(--player-accent);
+    }
+  }
+}
+
+img,
+.no-preview {
+  width: 64px;
+  height: 88px;
+  object-fit: cover;
+  background: var(--player-surface-raised);
+  border: 1px solid var(--player-border);
+  image-rendering: pixelated;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.badge {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--player-accent);
+  border-radius: var(--player-radius);
+  color: var(--player-accent);
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.meta,
+.description {
+  color: var(--player-muted);
+  font-size: 12px;
+}
+
+.description {
+  margin-top: 4px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+button {
+  font: inherit;
+  color: var(--player-foreground);
+  background: var(--player-surface-raised);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 4px 12px;
+  cursor: pointer;
+
+  &.primary {
+    background: var(--player-accent);
+    border-color: var(--player-accent);
+    color: var(--player-accent-contrast);
+    font-weight: 600;
+  }
+
+  &.plain {
+    background: none;
+    border: none;
+    padding: 2px 6px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+}
+
+.notice {
+  color: var(--player-ok);
+  margin-bottom: 10px;
+}
+
+.error {
+  color: var(--player-danger);
+  margin-bottom: 10px;
+
+  ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    font-family: var(--player-font-mono);
+    font-size: 12px;
+  }
+}

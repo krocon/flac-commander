@@ -1,16 +1,13 @@
 <section class="player" [attr.aria-label]="t.player">
   <div class="display">
-    @if (store.track(); as track) {
-      <p class="title" [title]="track.path">{{ title() }}</p>
-      <p class="details">{{ details() }}</p>
-    } @else {
-      <p class="title empty">{{ t.noTrack }}</p>
-      <p class="details">{{ t.noTrackHint }}</p>
-    }
+    <p class="title" [class.empty]="!store.hasTrack()" [title]="store.track()?.path ?? ''">
+      {{ view.title() }}
+    </p>
+    <p class="details">{{ view.details() }}</p>
   </div>
 
   <div class="seek">
-    <span class="time" aria-hidden="true">{{ position() }}</span>
+    <span class="time" aria-hidden="true">{{ view.position() }}</span>
     <input
       #seek
       type="range"
@@ -18,13 +15,13 @@
       step="1000"
       [max]="store.durationMs() ?? 0"
       [value]="store.positionMs()"
-      [disabled]="!seekable()"
+      [disabled]="!view.seekable()"
       [attr.aria-label]="t.position"
-      [attr.aria-valuetext]="positionText()"
+      [attr.aria-valuetext]="view.positionText()"
       (input)="store.previewSeek(seek.valueAsNumber)"
       (change)="store.commitSeek(seek.valueAsNumber)"
     />
-    <span class="time" aria-hidden="true">{{ duration() }}</span>
+    <span class="time" aria-hidden="true">{{ view.duration() }}</span>
   </div>
 
   <div class="controls">
@@ -129,18 +126,18 @@
         min="0"
         max="100"
         step="1"
-        [value]="volumePercent()"
+        [value]="view.volumePercent()"
         [attr.aria-label]="t.volume"
-        [attr.aria-valuetext]="t.percent(volumePercent())"
+        [attr.aria-valuetext]="t.percent(view.volumePercent())"
         (input)="store.previewVolume(volume.valueAsNumber / 100)"
         (change)="store.commitVolume()"
       />
-      <span class="percent" aria-hidden="true">{{ t.percent(volumePercent()) }}</span>
+      <span class="percent" aria-hidden="true">{{ t.percent(view.volumePercent()) }}</span>
     </div>
   </div>
 
   <div class="footer">
-    <p class="status" role="status">{{ statusText() }}</p>
+    <p class="status" role="status">{{ view.status() }}</p>
     @if (store.state().underruns > 0) {
       <p class="underruns">{{ t.underruns(store.state().underruns) }}</p>
     }

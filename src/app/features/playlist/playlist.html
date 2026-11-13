@@ -46,19 +46,31 @@
   }
 
   <div class="footer">
-    <button type="button" [title]="actions.hint('player.open')" (click)="store.open()">
-      {{ t.add }}
+    <button
+      type="button"
+      [attr.aria-label]="t.add"
+      [title]="actions.hint('player.open')"
+      (click)="store.open()"
+    >
+      {{ compact() ? '+' : t.add }}
     </button>
     <button
       type="button"
       [disabled]="store.selectedId() === null"
+      [attr.aria-label]="t.remove"
       [title]="t.remove"
       (click)="store.removeSelected()"
     >
-      {{ t.remove }}
+      {{ compact() ? '−' : t.remove }}
     </button>
-    <button type="button" [disabled]="store.isEmpty()" (click)="store.clear()">
-      {{ t.clear }}
+    <button
+      type="button"
+      [disabled]="store.isEmpty()"
+      [attr.aria-label]="t.clear"
+      [title]="t.clear"
+      (click)="store.clear()"
+    >
+      {{ compact() ? '✕' : t.clear }}
     </button>
     @if (!store.isEmpty()) {
       <span class="summary">{{ summary() }}</span>

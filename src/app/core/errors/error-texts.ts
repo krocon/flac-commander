@@ -10,6 +10,7 @@ export const ERROR_TEXTS_EN = {
   no_output_device: 'No audio output device found',
   audio_device: 'The audio output device reported an error',
   output_busy: 'The audio output is in use',
+  invalid_skin: 'The skin was not accepted',
   internal: 'Internal error',
   backend_unavailable: 'The desktop backend is not available (is the app running in a browser?)',
   unknown: 'Unexpected error',

@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, viewChild } from '@angular/core';
 import { ActionService } from '../../core/actions/action.service';
 import { describeError } from '../../core/errors/app-error';
 import { ERROR_TEXTS } from '../../core/errors/error-texts';
@@ -14,6 +14,9 @@ import { entryLabel, PlaylistStore } from './playlist.store';
   styleUrl: './playlist.css',
 })
 export class Playlist {
+  /** Little room (inside a skin's box): the buttons show a sign instead of their text. */
+  readonly compact = input(false);
+
   protected readonly store = inject(PlaylistStore);
   protected readonly actions = inject(ActionService);
   protected readonly t = PLAYLIST_TEXTS;

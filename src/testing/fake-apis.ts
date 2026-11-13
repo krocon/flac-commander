@@ -8,6 +8,8 @@ import {
   PlaylistState,
   RepeatMode,
 } from '../app/core/playlist/playlist.models';
+import { SkinApi } from '../app/core/skins/skin-api';
+import { ActiveSkin, SkinInfo, SkinTheme } from '../app/core/skins/skin.models';
 import { SystemApi } from '../app/core/system/system-api';
 import { SystemInfo, TestToneFinished } from '../app/core/system/system.models';
 
@@ -259,6 +261,204 @@ export class FakePlaylistApi extends PlaylistApi {
   drag(over: boolean): void {
     for (const handler of this.dragHandlers) {
       handler(over);
+    }
+  }
+
+  private command(text: string): void {
+    if (this.failure) {
+      throw this.failure;
+    }
+    this.commands.push(text);
+  }
+}
+
+const NO_THEME: SkinTheme = {
+  background: null,
+  surface: null,
+  surfaceRaised: null,
+  foreground: null,
+  muted: null,
+  accent: null,
+  accentContrast: null,
+  border: null,
+  ok: null,
+  danger: null,
+  focus: null,
+  fontFamily: null,
+  fontMono: null,
+  radius: null,
+};
+
+export const MODERN_INFO: SkinInfo = {
+  id: 'io.github.krocon.modern',
+  name: 'Modern',
+  version: '1.0.0',
+  author: 'FLAC Commander',
+  description: 'Dark, calm and resizable.',
+  preview: null,
+  builtIn: true,
+};
+
+export const RETRO_INFO: SkinInfo = {
+  id: 'io.github.krocon.retro',
+  name: 'Retro',
+  version: '1.0.0',
+  author: 'FLAC Commander',
+  description: 'Pixels and bevels.',
+  preview: 'preview.png',
+  builtIn: true,
+};
+
+export const IMPORTED_INFO: SkinInfo = {
+  id: 'org.example.neon',
+  name: 'Neon',
+  version: '2.1.0',
+  author: null,
+  description: null,
+  preview: null,
+  builtIn: false,
+};
+
+export const MODERN_SKIN: ActiveSkin = {
+  info: MODERN_INFO,
+  theme: { ...NO_THEME, accent: '#ffdd00', background: '#141414', radius: 6 },
+  player: {
+    layout: 'flow',
+    width: null,
+    height: null,
+    background: null,
+    pixelated: false,
+    components: [],
+  },
+};
+
+const BLOCK = {
+  action: null,
+  source: null,
+  states: null,
+  align: null,
+  fontSize: null,
+  color: null,
+};
+
+export const RETRO_SKIN: ActiveSkin = {
+  info: RETRO_INFO,
+  theme: { ...NO_THEME, accent: '#5dff7a', fontFamily: 'ui-monospace, monospace', radius: 0 },
+  player: {
+    layout: 'absolute',
+    width: 320,
+    height: 440,
+    background: 'assets/background.png',
+    pixelated: true,
+    components: [
+      {
+        ...BLOCK,
+        type: 'text',
+        source: 'track.title',
+        x: 14,
+        y: 26,
+        width: 292,
+        height: 18,
+        fontSize: 14,
+        color: '#5dff7a',
+      },
+      {
+        ...BLOCK,
+        type: 'time',
+        source: 'position',
+        x: 14,
+        y: 64,
+        width: 90,
+        height: 26,
+        fontSize: 22,
+      },
+      { ...BLOCK, type: 'text', source: 'player.status', x: 110, y: 74, width: 110, height: 14 },
+      {
+        ...BLOCK,
+        type: 'time',
+        source: 'duration',
+        x: 226,
+        y: 74,
+        width: 80,
+        height: 14,
+        align: 'right',
+      },
+      { ...BLOCK, type: 'seekbar', x: 8, y: 100, width: 304, height: 16 },
+      {
+        ...BLOCK,
+        type: 'button',
+        action: 'player.togglePlay',
+        x: 40,
+        y: 124,
+        width: 30,
+        height: 24,
+        states: {
+          normal: 'assets/play.png',
+          hover: null,
+          pressed: 'assets/play-pressed.png',
+          active: 'assets/play-active.png',
+          disabled: null,
+        },
+      },
+      { ...BLOCK, type: 'button', action: 'player.stop', x: 72, y: 124, width: 30, height: 24 },
+      { ...BLOCK, type: 'button', action: 'app.skins', x: 282, y: 124, width: 30, height: 24 },
+      { ...BLOCK, type: 'volume', x: 176, y: 150, width: 136, height: 12 },
+      { ...BLOCK, type: 'playlist', x: 10, y: 166, width: 300, height: 264 },
+    ],
+  },
+};
+
+/** The backend's skins: records the commands, the test reports the active skin. */
+export class FakeSkinApi extends SkinApi {
+  readonly commands: string[] = [];
+  readonly handlers = new Set<(skin: ActiveSkin) => void>();
+  snapshot: ActiveSkin = MODERN_SKIN;
+  skins: readonly SkinInfo[] = [MODERN_INFO, RETRO_INFO];
+  /** What an import installs; `null`: the dialog is cancelled. */
+  imported: SkinInfo | null = IMPORTED_INFO;
+  failure: unknown = null;
+
+  override async list(): Promise<readonly SkinInfo[]> {
+    return this.skins;
+  }
+
+  override async active(): Promise<ActiveSkin> {
+    return this.snapshot;
+  }
+
+  override async activate(id: string): Promise<void> {
+    this.command(`activate ${id}`);
+  }
+
+  override async import(dialogTitle: string): Promise<SkinInfo | null> {
+    this.command(`import "${dialogTitle}"`);
+    if (this.imported) {
+      this.skins = [...this.skins, this.imported];
+    }
+    return this.imported;
+  }
+
+  override async remove(id: string): Promise<void> {
+    this.command(`remove ${id}`);
+    this.skins = this.skins.filter((s) => s.id !== id);
+  }
+
+  override async onActive(handler: (skin: ActiveSkin) => void): Promise<Unsubscribe> {
+    this.handlers.add(handler);
+    return () => this.handlers.delete(handler);
+  }
+
+  override assetUrl(skinId: string, path: string): string {
+    return `skin://${skinId}/${path}`;
+  }
+
+  override async fitViewport(width: number, height: number): Promise<void> {
+    this.command(`fit ${width}x${height}`);
+  }
+
+  emit(skin: ActiveSkin): void {
+    for (const handler of this.handlers) {
+      handler(skin);
     }
   }
 

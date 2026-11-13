@@ -13,6 +13,7 @@ export const BACKEND_ERROR_CODES = [
   'no_output_device',
   'audio_device',
   'output_busy',
+  'invalid_skin',
   'internal',
 ] as const;
 

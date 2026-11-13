@@ -30,6 +30,8 @@ pub struct SavedState {
     pub current: Option<usize>,
     /// Where it was, to continue there.
     pub position_ms: u64,
+    /// Id of the active skin; `None`: the default skin.
+    pub skin: Option<String>,
 }
 
 impl Default for SavedState {
@@ -42,6 +44,7 @@ impl Default for SavedState {
             tracks: Vec::new(),
             current: None,
             position_ms: 0,
+            skin: None,
         }
     }
 }
@@ -55,6 +58,8 @@ impl SavedState {
         if self.current.is_none() {
             self.position_ms = 0;
         }
+        // an id is used as a folder name: only what a skin id may look like
+        self.skin = self.skin.filter(|id| crate::skins::manifest::is_valid_id(id));
         self
     }
 }
@@ -211,6 +216,7 @@ mod tests {
             tracks: vec![PathBuf::from("/music/Ä/01 – Öl.flac"), PathBuf::from("b.mp3")],
             current: Some(1),
             position_ms: 61_500,
+            skin: Some("io.github.krocon.retro".to_owned()),
             ..SavedState::default()
         }
     }
@@ -251,6 +257,14 @@ mod tests {
         assert_eq!(state.current, None);
         assert_eq!(state.position_ms, 0);
         assert_eq!(state.tracks.len(), 1);
+    }
+
+    #[test]
+    fn a_skin_id_that_could_be_a_path_is_dropped() {
+        let path = folder("skin-id").join("state.json");
+        fs::write(&path, r#"{"version":1,"skin":"../../etc"}"#).unwrap();
+        let Loaded::State(state) = load(&path) else { panic!("not loaded") };
+        assert_eq!(state.skin, None);
     }
 
     #[test]

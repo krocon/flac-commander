@@ -1,6 +1,6 @@
 # Sicherheit
 
-## Stand heute (Phase 3)
+## Stand heute (Phase 4)
 
 - **Keine Netzwerkzugriffe.** Die App verbindet sich mit nichts.
 - **Minimale Rechte der WebView** (`src-tauri/capabilities/default.json`): `core:default` (eigene Commands, Events)
@@ -29,10 +29,11 @@
 - `state.json` wird wie fremde Daten gelesen: Werte außerhalb ihres Bereichs werden korrigiert, höchstens 50 000
   Einträge, Unlesbares wird beiseitegelegt statt die App am Start zu hindern.
 
-## Skins (ab Phase 4)
+## Skins
 
 Ein Skin kommt von Dritten und ist nicht vertrauenswürdig. Das Format ([SKIN-FORMAT.md](SKIN-FORMAT.md)) ist deshalb
-rein deklarativ; dazu kommen diese Regeln für den Import. Jede bekommt einen Test, bevor der Importer als fertig gilt.
+rein deklarativ; dazu kommen diese Regeln für den Import. Jede ist umgesetzt und hat einen Test
+(`crates/fc-core/src/skins/tests.rs`, `src-tauri/src/commands/skins.rs`).
 
 | Angriff | Regel |
 | --- | --- |
@@ -42,12 +43,16 @@ rein deklarativ; dazu kommen diese Regeln für den Import. Jede bekommt einen Te
 | Dekompressionsbombe | Grenzen für Zahl der Einträge, Größe je Datei, Gesamtgröße und Kompressionsverhältnis; gezählt wird beim Entpacken, nicht nach den Angaben im Archiv. |
 | Übergroße Bilder | Maße werden vor dem Dekodieren aus dem Header gelesen und begrenzt. |
 | Falscher Dateityp | Erlaubt sind PNG, JPEG, WebP – erkannt am Inhalt, nicht an der Endung. |
-| SVG | SVG kann Skripte, externe Verweise und eingebettetes HTML enthalten. Entweder nicht erlaubt (Vorschlag für v1) oder nur nach Bereinigung auf eine feste Element- und Attributliste und Auslieferung als Bild (`<img>`), nie inline. |
+| SVG | Nicht erlaubt: SVG kann Skripte, externe Verweise und eingebettetes HTML enthalten. |
 | Nachladen aus dem Netz | Keine URLs in Manifesten; die CSP lässt ohnehin nur das eigene Schema zu. |
 | Absturz durch ungültige Daten | Validierung vollständig vor dem Aktivieren; bei Fehlern bleibt der bisherige Skin. |
-| Unbedienbare Oberfläche | Pflicht-Bausteine und Mindestgrößen; ein fester Tastenweg „Standard-Skin wiederherstellen" außerhalb des Skins. |
+| Unbedienbare Oberfläche | Pflicht-Bausteine (Wiedergabe, Skin wählen) und Mindestgröße für Tasten; ⌘0 / Strg+0 stellt den Standard-Skin wieder her und gehört keinem Skin. |
+| CSS einschleusen | Farben nur als `#`-Hexwerte, Schriften nur aus einem engen Zeichensatz; die Werte werden als einzelne CSS-Variablen gesetzt, nie in ein Stylesheet kopiert. |
+| Eingebaute Skins überschreiben | Ein Import mit der Id eines mitgelieferten Skins wird abgelehnt. |
 
-Skin-Assets liefert ein eigenes URL-Schema aus, das nur Dateien des aktiven, validierten Skins kennt.
+Skin-Bilder liefert das Protokoll `skin://` aus dem Speicher: Es kennt nur Dateien, die die Prüfung gesehen hat,
+liest also nie vom Dateisystem, gibt `skin.json` nicht heraus und sendet `X-Content-Type-Options: nosniff`. Die CSP
+erlaubt `skin:` ausschließlich für Bilder.
 
 ## Abhängigkeiten
 

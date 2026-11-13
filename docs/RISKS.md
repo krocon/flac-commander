@@ -1,6 +1,6 @@
 # Technische Risiken und offene Entscheidungen
 
-Stand: Ende Phase 3.
+Stand: Ende Phase 4.
 
 ## Risiken
 
@@ -13,6 +13,7 @@ Stand: Ende Phase 3.
 | R5 | **Gerätewechsel** | CPAL meldet einen Wechsel des Standardgeräts nicht überall; abgezogene Geräte kommen als Stromfehler. | Stromfehler sind behandelt (Pause, Fortsetzen auf neuem Gerät). **Offen:** ein Wechsel des Standardgeräts ohne Fehler wird nicht bemerkt. | 3 |
 | R6 | **Mehrere WebViews** | Jedes Fenster ist ein eigener WebView-Prozess mit eigenem Angular-Zustand; sechs Fenster kosten Speicher und Startzeit. | Messen, bevor das Fensterkonzept festgelegt wird; Alternative: mehrere „Fenster" als Bereiche einer WebView, nur abgelöste Fenster als eigene WebView. | 5 |
 | R7 | **Rahmenlose/transparente Fenster** | Pixelgenaue Skins brauchen Fenster ohne Systemrahmen; Verhalten (Schatten, Ziehen, Größenänderung, Transparenz) unterscheidet sich je Plattform, unter Linux je Compositor. | Früh ein Prototyp-Fenster je Plattform; Skin-Format erlaubt einen Rückfall auf den Systemrahmen. | 4–5 |
+| R19 | **Fenstergröße je Plattform** | `set_size` zählt unter macOS die Titelleiste mit (32 px fehlten dem Retro-Skin). | Umgangen: Das Fenster meldet seine echte Inhaltsgröße, Rust gleicht aus (`skins_fit_viewport`). Unter Windows und Linux ungeprüft. | 4, beobachten |
 | R8 | **WebKitGTK unter Linux** | Andere Engine als unter macOS/Windows: Unterschiede bei CSS und Performance möglich. | Skins unter Linux in den manuellen Tests; keine Engine-spezifischen CSS-Funktionen ohne Fallback. | 4 |
 | R9 | **Medientasten und Tray** | Kein einheitlicher Weg; macOS verlangt „Now Playing"-Integration, Linux MPRIS. | Bibliothek evaluieren (Kandidat `souvlaki`, ungeprüft), hinter `platform/` kapseln. | nach 3 |
 | R10 | **AAC-Varianten** | Geprüft ist nur AAC-LC. HE-AAC/HE-AACv2 und geschützte Dateien sind ungeprüft. | Testdateien ergänzen; nicht Unterstütztes ablehnen. | 2 |

@@ -12,7 +12,10 @@ import {
   PLAYLIST,
   TRACK_STATE,
 } from '../../../testing/fake-apis';
+import { PlaylistStore } from '../playlist/playlist.store';
 import { Player } from './player';
+import { playerActions } from './player.actions';
+import { PlayerStore } from './player.store';
 
 describe('Player', () => {
   let api: FakePlayerApi;
@@ -28,8 +31,10 @@ describe('Player', () => {
         { provide: LogApi, useValue: new FakeLogApi() },
       ],
     });
-    el = TestBed.createComponent(Player).nativeElement as HTMLElement;
+    // the app registers the player's actions; here the test does
     actions = TestBed.inject(ActionService);
+    actions.register(playerActions(TestBed.inject(PlayerStore), TestBed.inject(PlaylistStore)));
+    el = TestBed.createComponent(Player).nativeElement as HTMLElement;
   }
 
   function button(label: string): HTMLButtonElement {
@@ -234,12 +239,5 @@ describe('Player', () => {
     expect(el.querySelector('.underruns')).toBeNull();
     api.emit({ ...TRACK_STATE, underruns: 3 });
     await vi.waitFor(() => expect(text('.underruns')).toBe('Aussetzer: 3'));
-  });
-
-  it('removes its actions when it is destroyed', async () => {
-    create();
-    await vi.waitFor(() => expect(actions.hint('player.stop')).not.toBe(''));
-    TestBed.resetTestingModule();
-    expect(actions.hint('player.stop')).toBe('');
   });
 });
