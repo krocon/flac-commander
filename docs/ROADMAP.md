@@ -23,27 +23,29 @@ vorige fertig ist.
 - [x] CI: Frontend (Format, Lint, Test, Build) und Rust (fmt, clippy, test) auf Linux, macOS, Windows
 - [x] Start der gebündelten App unter macOS geprüft
 
-## Phase 2 – Audio-MVP
+## Phase 2 – Audio-MVP ✅
 
-Ziel: ein stabiler Player mit einfacher Oberfläche.
-
-- [ ] Engine-Thread mit Befehlsqueue und Zustandsmaschine (reiner Typ, vollständig unit-getestet)
-- [ ] Ringpuffer zwischen Engine und Callback, Positionszählung im Callback
-- [ ] Resampling auf die Geräterate (R2), Kanal-Mapping
-- [ ] Play, Pause, Stop, Seek, Lautstärke
-- [ ] Events `player://state` und `player://position`, Command `player_state` für neue Fenster
-- [ ] Erkennen und Ablehnen von DTS-WAV (R3); Entscheidung zu Opus (R1)
-- [ ] Wiederherstellung nach Gerätefehlern
-- [ ] Oberfläche: Titel, Zeit, Seekbar, Lautstärke, Transport-Tasten; Aktionssystem für Tastenkürzel
-- [ ] Nachweis: Wiedergabe läuft weiter, wenn die WebView neu lädt
+- [x] Engine-Thread mit Befehlsqueue und Zustandsmaschine (`audio/player.rs`), 26 Tests gegen ein simuliertes Gerät
+- [x] Ringpuffer zwischen Engine und Callback, Positionszählung im Callback
+- [x] Resampling auf die Geräterate (rubato), Kanal-Mapping – das Gerät wird nicht umgestellt
+- [x] Play, Pause, Stop, Seek (framegenau), Lautstärke; Rampen gegen Knacken
+- [x] Event `player://state`, Command `player_state` für neue oder neu geladene Fenster
+- [x] DTS in WAV wird erkannt und abgelehnt; Opus über libopus (Feature `opus`)
+- [x] Geräteverlust: Pause mit Meldung, Fortsetzen auf dem neuen Gerät
+- [x] Oberfläche: Titel, Format, Zeit, Seekbar, Lautstärke, Transport-Tasten; Aktionssystem für Tastenkürzel
+- [x] Datei öffnen über den System-Dialog (in Rust) und über die Kommandozeile
+- [x] gebündelte App unter macOS geprüft (Wiedergabe, Seek, Pause, Tastatur)
+- [ ] Nachweis in der echten App: Wiedergabe läuft weiter, wenn die WebView neu lädt (Architektur und Store-Test
+      decken es ab; der Handtest steht aus, [MANUAL-TESTS.md](MANUAL-TESTS.md) P9)
 - [ ] Manuelle Tests unter Windows und Linux
+- [ ] Erkennen eines gewechselten Standardgeräts (R5)
 
 ## Phase 3 – Playlist und Persistenz
 
 - [ ] Playlist und Queue im Kern (Next/Previous, Wiederholen, Zufall), Tests für alle Operationen
 - [ ] Metadaten mit Lofty (Titel, Interpret, Album, Dauer, Cover)
-- [ ] Datei-Dialog und Drag & Drop
-- [ ] Einstellungen und Playlist speichern und wiederherstellen (versionierte Dateien)
+- [ ] Drag & Drop; mehrere Dateien im Dialog
+- [ ] Einstellungen (Lautstärke, letzter Titel) und Playlist speichern und wiederherstellen (versionierte Dateien)
 - [ ] Fehlende und verschobene Dateien behandeln
 
 ## Phase 4 – Skin-Engine

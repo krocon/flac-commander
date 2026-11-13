@@ -1,6 +1,7 @@
 # 0003 – Symphonia, CPAL, Lofty; Ringpuffer mit rtrb
 
-Status: angenommen (2026-11-13). Opus und Resampler sind offen (siehe unten).
+Status: angenommen (2026-11-13). Die unten offenen Punkte (Opus, Resampler) entscheidet
+[0006](0006-resampling-opus-seek.md).
 
 ## Kontext
 

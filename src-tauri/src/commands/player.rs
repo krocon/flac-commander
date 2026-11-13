@@ -99,7 +99,10 @@ mod tests {
         let extensions = playable_extensions();
         assert!(extensions.contains(&"flac"));
         assert!(extensions.contains(&"mp3"));
-        assert!(!extensions.contains(&"opus"));
+        assert!(!extensions.contains(&"txt"));
+        for extension in &extensions {
+            assert!(fc_core::audio::formats::is_playable_extension(extension), "{extension}");
+        }
         // m4a is listed for AAC and ALAC: once is enough
         assert_eq!(extensions.iter().filter(|e| **e == "m4a").count(), 1);
     }

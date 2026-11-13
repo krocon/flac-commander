@@ -1,130 +1,165 @@
 # Audio-Engine
 
-Stand: Phase 1. **Implementiert und getestet** sind die Bausteine (Formattabelle, Decoder, Ausgabestrom, Testton) und
-ein Abspiel-Spike auf der Kommandozeile. **Die Engine selbst (Befehlsqueue, Zustandsmaschine, Seek, Lautstärke) ist
-Phase 2** und unten als Entwurf beschrieben.
+Stand: Phase 2. Die Engine spielt eine Datei: Laden, Play, Pause, Stop, Seek, Lautstärke, Resampling auf die
+Geräterate, Wiederaufnahme nach Geräteverlust. Playlist, Titelwechsel, Equalizer und Gapless folgen
+([ROADMAP.md](ROADMAP.md)).
 
-## Was es gibt
+## Bausteine (`crates/fc-core/src/audio/`)
 
-| Baustein | Datei | Aufgabe |
-| --- | --- | --- |
-| Formattabelle | `audio/formats.rs` | Zielformate, Endungen, „unterstützt" nur mit Test |
-| Decoder | `audio/decode.rs` | Datei → verschachtelte `f32`-Samples, `TrackInfo` (Codec, Rate, Kanäle, Dauer) |
-| Ausgabe | `audio/output.rs` | Geräteliste, Standardformat, Ausgabestrom mit Render-Callback, Kanal-Mapping |
-| Testton | `audio/tone.rs` | 440 Hz, 0,7 s, leise, mit Ein-/Ausblenden; ein Ton zur Zeit |
-| Spike | `examples/play.rs` | Decoder → Ringpuffer → Callback, Datei real abspielen |
+| Datei | Aufgabe |
+| --- | --- |
+| `formats.rs` | Zielformate und Endungen; „unterstützt" nur mit Dekodiertest |
+| `decode.rs` | Datei → verschachtelte `f32`-Samples, `TrackInfo`, framegenaues Seek |
+| `resample.rs` | Abtastratenwandlung eines Stroms (rubato, FFT) |
+| `dts.rs` | Erkennung von DTS-Bitströmen in PCM-Dateien |
+| `output.rs` | Geräteliste, Ausgabestrom (CPAL), Kanal-Mapping |
+| `player.rs` | **die Engine**: Thread, Befehlsqueue, Zustand, Echtzeit-Renderer |
+| `tone.rs` | Testton |
 
-### Formatunterstützung (gemessen, nicht behauptet)
-
-Jede Zeile ist durch `crates/fc-core/tests/formats.rs` belegt: Die Datei wird vollständig dekodiert, Frame-Zahl und
-Effektivwert des Sinus müssen stimmen.
-
-| Format | Container / Codec | Ergebnis |
-| --- | --- | --- |
-| FLAC | flac / flac, 16 Bit 44,1 kHz und 24 Bit 96 kHz mono | ✅ verlustfrei, exakte Frame-Zahl |
-| WAV | wave / pcm_s16le | ✅ |
-| AIFF | aiff / pcm_s16be | ✅ |
-| ALAC | isomp4 / alac | ✅ |
-| MP3 | mp3 / mp3 | ✅ |
-| Ogg Vorbis | ogg / vorbis | ✅ |
-| AAC | isomp4 / aac (LC) | ✅ – nur AAC-LC geprüft; HE-AAC ist ungeprüft |
-| Opus | ogg / opus | ❌ kein Decoder in Symphonia 0.6.1 → `unsupported_format` |
-
-Fehlerfälle mit Test: fehlende Datei (`not_found`), Text mit Audio-Endung (`unsupported_format`/`decode_failed`),
-mitten im Audio abgeschnittene Datei (liefert die vorhandenen Frames, dann Ende oder `decode_failed`), Ordner statt
-Datei. Einzelne beschädigte Pakete werden übersprungen und gezählt statt den Titel abzubrechen.
-
-Nicht automatisiert geprüft: sehr lange Dateien, Mehrkanal > 2, verkettete Ogg-Streams, DRM-geschützte M4A (werden
-voraussichtlich als nicht unterstützt abgelehnt).
-
-**Bekannte Falle: DTS in WAV.** `samples/…/Der Mix (DTS).wav` ist ein DTS-Bitstrom in einem WAV-Container. Symphonia
-erkennt korrekt „PCM 16 Bit" – abgespielt wäre das lautes Rauschen. Die Engine muss solche Dateien am DTS-Syncwort in
-den ersten Frames erkennen und ablehnen (Phase 2, eigener Test).
-
-### Der Spike
-
-```bash
-cargo run -p fc-core --example play -- "datei.flac" --seconds 10 --gain 0.3
-```
-
-Gemessen auf macOS 27 / Apple Silicon / CoreAudio mit Dateien aus `samples/` (FLAC 16/44,1, MP3) und der
-24/96-Testdatei: Wiedergabe in Echtzeit, **0 Unterläufe**, 0 übersprungene Pakete. Dem Spike fehlen bewusst
-Resampling, Seek, Pause und die Befehlsqueue.
-
-## Threading (Entwurf Phase 2)
+## Threading
 
 ```text
-Tauri-Commands (beliebiger Thread)
-      │  Befehle: Load, Play, Pause, Stop, Seek, SetVolume, Next, Previous
-      ▼  std::sync::mpsc (unbeschränkt; Senden blockiert nie)
-┌─────────────────────────── Engine-Thread ───────────────────────────┐
-│ besitzt: Zustandsmaschine, Decoder, Resampler, Produzent des        │
-│ Ringpuffers, den Ausgabestrom (nicht Send auf jeder Plattform)      │
-│ Schleife: Befehle abarbeiten → dekodieren → resamplen → Ring füllen │
-│ darf: Dateien lesen, allokieren, blockieren, loggen                 │
-└──────────────┬──────────────────────────────────────▲───────────────┘
-   rtrb SPSC   │ f32-Samples             Atomics      │ Position, Unterläufe,
-   (lock-frei) ▼                                      │ „Puffer leer"
-┌──────────────────────── Audio-Callback (Echtzeit) ──┴───────────────┐
-│ kopiert aus dem Ring, multipliziert mit der Lautstärke (Atomic),    │
-│ füllt bei Unterlauf mit Stille                                      │
-│ darf NICHT: blockieren, sperren, allokieren, Dateien lesen, loggen  │
-└─────────────────────────────────────────────────────────────────────┘
+Player (beliebiger Thread: Tauri-Commands)
+      │  Load, Play, Pause, Stop, Seek, SetVolume          – kehren sofort zurück
+      ▼  std::sync::mpsc
+┌─────────────────────────── Engine-Thread „audio-engine" ─────────────────────────┐
+│ besitzt Decoder, Resampler, Zustandsmaschine, den Ausgabestrom (nicht überall     │
+│ Send) und das schreibende Ende des Ringpuffers                                    │
+│ Schleife: Befehl abarbeiten → dekodieren → resamplen → Kanäle abbilden → Ring     │
+│ füllen (hält ~300 ms vor) → Ende erkennen → Zustand melden                        │
+│ darf blockieren, Dateien lesen, allokieren, loggen                                │
+└──────────────┬──────────────────────────────────────────▲─────────────────────────┘
+   rtrb SPSC   │ f32, lock-frei                 Atomics   │ gespielte Frames, Flush-Quittung,
+               ▼                                          │ Unterläufe
+┌──────────────────────── Renderer (Audio-Callback, Echtzeit) ──────────────────────┐
+│ kopiert aus dem Ring, wendet Lautstärke mit 8-ms-Rampe an, zählt Frames,          │
+│ füllt bei leerem Ring mit Stille                                                  │
+│ keine Sperre, keine Allokation, kein I/O, kein Log                                │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Regeln für den Callback, heute schon eingehalten (`output.rs`, `tone.rs`, `play.rs`):
+Der Zustand (`PlayerState`: Status, Titel, Position, Lautstärke, Fehler, Unterläufe) wird bei jeder Änderung
+gemeldet und während der Wiedergabe höchstens alle 200 ms für die Position allein. Die Tauri-Schicht sendet ihn als
+Event `player://state` an alle Fenster; ein neues oder neu geladenes Fenster holt ihn einmal mit `player_state`.
 
-- Keine Allokation: der Zwischenpuffer wird vor dem Start angelegt (eine Sekunde Audio; wächst nur, falls ein Backend
-  je mehr auf einmal verlangt).
-- Keine Sperren, kein I/O. Rückmeldungen laufen über Atomics oder einen beschränkten Kanal mit `try_send`.
-- Fehler des Geräts kommen über den Fehler-Callback von CPAL und werden als `AppError` weitergereicht.
+Befehle haben keine Antwort mit Ergebnis: Ob ein `Load` geklappt hat, steht im nächsten Zustand (`track` oder
+`error`). So gibt es genau eine Quelle für das, was das Fenster zeigt.
 
-### Zustandsmaschine (Entwurf)
+### Zustände
 
 ```text
-Stopped ──Load──▶ Loading ──ok──▶ Paused ⇄ Playing ──Ende──▶ (nächster Titel | Stopped)
-                     └──Fehler──▶ Stopped + Fehler-Event; die Playlist geht zum nächsten Titel
+Stopped ──Load──▶ Stopped (Titel geladen) ──Play──▶ Playing ⇄ Paused
+   ▲                      ▲                            │
+   │                      └──── Stop / Ende des Titels ┘   (Position zurück auf 0)
+   └── Load schlägt fehl / Titel nicht weiter dekodierbar: kein Titel, `error` gesetzt
+Gerät fällt aus: Playing → Paused, `error` gesetzt, Position bleibt; Play öffnet das (neue) Gerät
 ```
 
-Die Zustandsmaschine wird als reiner Typ ohne Audio-Hardware gebaut und vollständig mit Unit-Tests abgedeckt; nur der
-dünne Rand (Strom öffnen) braucht ein Gerät.
+### Position
 
-### Seek
+Die Position ist das, was der Callback wirklich ausgegeben hat (`played_frames` seit dem letzten Flush plus
+Startposition), nicht das, was dekodiert wurde. Sie läuft deshalb nicht voraus und bleibt in der Pause stehen.
 
-Befehl an den Engine-Thread: Ring leeren (Generation hochzählen, der Callback verwirft alte Samples), `format.seek()`,
-Decoder zurücksetzen, weiterfüllen. Die gemeldete Position ist die vom Callback gezählte, nicht die dekodierte.
+### Seek, Stop, Titelwechsel: Flush
 
-### Abtastrate und Resampling
+Der Engine-Thread kann den Ring nicht selbst leeren (das lesende Ende gehört dem Callback). Er erhöht einen Zähler,
+der Callback verwirft beim nächsten Aufruf alles Eingereihte, setzt die Frame-Zählung zurück und quittiert. Erst dann
+füllt die Engine neu. Bleibt die Quittung eine Sekunde aus, gilt das Gerät als ausgefallen.
 
-Beobachtung aus Phase 0: Öffnet man unter macOS einen Strom mit einer anderen Rate als der des Geräts, **stellt
-CoreAudio das Gerät systemweit um, und es bleibt nach dem Schließen so**. Der Spike hat die eingebauten Lautsprecher
-dadurch auf 96 kHz gestellt.
+Seek im Decoder ist **framegenau**: Formate, die nur Pakete adressieren, werden davor positioniert, die Frames
+dazwischen verworfen (`seeking_is_exact_to_the_frame_in_lossless_formats`). Dabei wird der Strom **neu geöffnet und
+nur vorwärts gesucht** – siehe „Bekannte Fehler der Bibliotheken".
 
-Entscheidung für Phase 2: Standard ist **Resampling auf die Geräterate** (Kandidat: `rubato` 5.x, wird in Phase 2
-evaluiert). Das Umschalten des Geräts („bit-perfect") wird eine ausdrückliche Einstellung und stellt die
-ursprüngliche Rate beim Beenden wieder her.
+### Lautstärke, Start und Pause ohne Knacken
 
-### Gerätewechsel und Wiederherstellung (Entwurf)
+Die Lautstärke ist ein Atomic, das der Callback liest; sie wirkt sofort, unabhängig vom Füllstand. Jede Änderung der
+Verstärkung (Start, Pause, Lautstärke) läuft über eine 8-ms-Rampe. Beim Pausieren nimmt der Callback nur noch die
+Frames für die Ausblendung aus dem Ring; der Rest bleibt für das Fortsetzen liegen – es geht kein Frame verloren
+(`pause_holds_the_position_and_play_continues_from_it`).
 
-- Stromfehler (`DeviceNotAvailable`, Gerät abgezogen): Engine pausiert, merkt sich die Position, meldet ein Event und
-  versucht den Strom auf dem neuen Standardgerät zu öffnen. Gelingt das, läuft die Wiedergabe weiter.
-- Wechsel des Standardgeräts ohne Fehler erkennt CPAL nicht auf jeder Plattform zuverlässig – zu prüfen je Plattform
-  ([MANUAL-TESTS.md](MANUAL-TESTS.md)).
-- Nicht dekodierbare Datei: Fehler-Event mit Pfad, die Playlist springt weiter; nach mehreren Fehlern in Folge stoppt
-  sie, statt die ganze Liste durchzurasen.
+### Abtastrate
 
-### Gapless (Phase 6)
+Die Engine stellt das Gerät **nie** um. Jeder Titel wird auf die Rate des Standardgeräts gewandelt (rubato 5.1,
+FFT-Resampler, synchron); bei gleicher Rate entfällt die Wandlung vollständig. Die Einschwingverzögerung des Filters
+wird am Anfang abgeschnitten und am Ende nachgeschoben, sodass ein Titel exakt seine Länge behält.
 
-Symphonia liefert Encoder-Delay und -Padding (`Track.delay`, `Track.padding`) und kann sie abschneiden
-(`AudioDecoderOptions::gapless`). Der Engine-Thread öffnet den nächsten Titel, bevor der aktuelle endet, und füllt
-denselben Ring ohne Lücke weiter (bei anderer Rate über den Resampler).
+Grund: Ein Strom mit abweichender Rate stellt unter macOS das Gerät systemweit um, und es bleibt so (in Phase 0
+beobachtet). Ein „Bit-perfect"-Modus mit Umschalten und Zurückstellen ist eine spätere, ausdrückliche Einstellung.
+
+### Gerätefehler
+
+- Meldet CPAL einen Stromfehler, schließt die Engine die Ausgabe, pausiert, behält die Position und setzt `error`.
+  Das nächste `Play` öffnet das dann aktuelle Standardgerät, passt den Resampler an dessen Rate an und setzt an der
+  gemerkten Position fort (`a_lost_device_pauses_and_play_continues_on_a_new_one`).
+- Gibt es kein Gerät, schlägt `Load` bzw. `Play` mit `no_output_device` fehl; der Titel bleibt geladen.
+- Ein bloßer Wechsel des Standardgeräts ohne Fehler wird nicht erkannt: Die Wiedergabe bleibt auf dem alten Gerät.
+  Offen, siehe [RISKS.md](RISKS.md) R5.
+
+### Dateifehler
+
+- Nicht dekodierbare oder fehlende Datei: kein Titel, `error` mit Code.
+- Einzelne beschädigte Pakete werden übersprungen (ein Knacken statt eines Abbruchs) und protokolliert.
+- Datei endet mitten im Audio: Was da ist, wird gespielt, dann `decode_failed`.
+- **DTS in WAV** („DTS-CD"): wird am Syncwort erkannt und als `unsupported_format` abgelehnt statt als Rauschen
+  abgespielt. Geprüft mit einer künstlichen Datei im Test und mit `samples/…/Der Mix (DTS).wav`.
+
+## Formate (gemessen, nicht behauptet)
+
+Jede Zeile ist durch `tests/formats.rs` (vollständig dekodiert, Frame-Zahl und Pegel geprüft, Seek) und
+`tests/player.rs` (durch die Engine gespielt) belegt.
+
+| Format | Container / Codec | Dekodieren | Seek |
+| --- | --- | --- | --- |
+| FLAC | flac / flac, 16 Bit 44,1 kHz und 24 Bit 96 kHz mono | ✅ exakt | ✅ framegenau |
+| WAV | wave / pcm_s16le | ✅ exakt | ✅ framegenau |
+| AIFF | aiff / pcm_s16be | ✅ exakt | ✅ framegenau |
+| ALAC | isomp4 / alac | ✅ exakt | ✅ framegenau |
+| MP3 | mp3 / mp3 | ✅ | ✅ auf wenige ms |
+| Ogg Vorbis | ogg / vorbis | ✅ | ✅ auf wenige ms |
+| AAC | isomp4 / aac (LC) | ✅ – HE-AAC ungeprüft | ✅ auf wenige ms |
+| Opus | ogg / opus | ✅ über libopus (Cargo-Feature `opus`, Standard an) | ✅ auf wenige ms |
+
+Ohne das Feature `opus` (kein cmake/C-Compiler nötig) werden Opus-Dateien als `unsupported_format` abgelehnt; die
+Tests laufen in beiden Varianten.
+
+Nicht automatisiert geprüft: sehr lange Dateien, mehr als zwei Kanäle am Gerät, verkettete Ogg-Streams, geschützte
+M4A-Dateien.
+
+## Bekannte Fehler der Bibliotheken
+
+**Symphonia 0.6.1, FLAC: Rückwärts-Seek.** Nach `seek()` auf eine frühere Position liefert der FLAC-Leser ein Paket
+von der neuen Stelle und setzt dann an der alten fort (nachgestellt: nach drei Paketen Seek auf 0 → Pakete mit
+Zeitstempel 0, 13824, 18432 … statt 0, 4608, 9216 …). Vorwärts-Seeks sind korrekt. `Decoder::seek` öffnet deshalb
+den Strom jedes Mal neu und sucht von dort vorwärts; `seeking_back_and_forth_always_lands_where_asked` hält das fest
+und zeigt, wenn der Umweg nach einem Symphonia-Update entfallen kann. Kosten: ein erneutes Öffnen und Sondieren der
+Datei je Seek – lokal nicht messbar, bei Netzlaufwerken zu beobachten.
+
+## Messungen (macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher, Gerät auf 48 kHz)
+
+- `examples/play.rs`: FLAC 16/44,1 ab Minute 1 und MP3, je 2–3 s, resampelt auf 48 kHz: 0 Unterläufe.
+- Gebündelte App: Datei per Kommandozeile geöffnet, Anzeige läuft mit, Seek per Klick auf die Leiste, Pause,
+  Pfeiltaste (+5 s) – geprüft; siehe [MANUAL-TESTS.md](MANUAL-TESTS.md).
+
+## Tests ohne Hardware
+
+`tests/player.rs` ersetzt das Ausgabegerät (`OutputBackend`) und ruft den `Renderer` selbst auf, Block für Block.
+Der Test ist damit das Gerät: Er bestimmt, wie viele Frames „gespielt" werden, und prüft, was herauskam (Anzahl,
+Pegel, Stille). Es gibt keine festen Wartezeiten; gewartet wird auf einen gemeldeten Zustand. Weil dieses Gerät
+schneller als Echtzeit läuft, wartet es über `Renderer::would_underrun()` auf die Engine.
 
 ## Plattformen
 
 | Plattform | Backend (CPAL) | Stand |
 | --- | --- | --- |
-| macOS | CoreAudio | geprüft (Testton in der App, Spike mit FLAC/MP3) |
-| Windows | WASAPI (Shared Mode) | baut in der CI; **Ausgabe ungeprüft** |
-| Linux | ALSA (PipeWire/PulseAudio über deren ALSA-Schicht) | baut in der CI; **Ausgabe ungeprüft**; braucht `libasound2-dev` |
+| macOS | CoreAudio | geprüft (Engine und App) |
+| Windows | WASAPI (Shared Mode) | baut und testet in der CI; **Ausgabe an Hardware ungeprüft** |
+| Linux | ALSA (PipeWire/PulseAudio über deren ALSA-Schicht) | baut und testet in der CI; **Ausgabe an Hardware ungeprüft** |
 
-CPAL hat optionale Backends für JACK, PipeWire und PulseAudio (Features). Sie bleiben aus, bis ein Bedarf belegt ist.
+## Noch nicht enthalten
+
+- Titelwechsel, Playlist, Wiederholen (Phase 3) – am Ende eines Titels stoppt die Engine.
+- Gapless (Phase 6): Symphonia liefert Delay und Padding (`Track.delay`, `Track.padding`); der nächste Titel würde in
+  denselben Ring gefüllt.
+- Equalizer/DSP und Analysewerte für Visualisierungen (Phase 6): gehören in den Engine-Thread vor den Ring.
+- Auswahl des Ausgabegeräts; Erkennen eines gewechselten Standardgeräts.
+- Speichern der Lautstärke (Phase 3).

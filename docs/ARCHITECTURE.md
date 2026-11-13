@@ -1,6 +1,6 @@
 # Architektur
 
-Stand: Phase 1. Was hier als „geplant" markiert ist, existiert noch nicht.
+Stand: Phase 2. Was hier als „geplant" markiert ist, existiert noch nicht.
 
 ## Schichten
 
@@ -22,9 +22,9 @@ Stand: Phase 1. Was hier als „geplant" markiert ist, existiert noch nicht.
                                 │ Rust-Funktionsaufrufe
 ┌───────────────────────────────▼──────────────────────────────────────┐
 │ Rust-Kern                                    crates/fc-core/         │
-│   audio/       Formate, Decoder (Symphonia), Ausgabe (CPAL), Testton │
+│   audio/       player (Engine), decode, resample, output, dts, tone  │
 │   error.rs     AppError / ErrorCode                                  │
-│   geplant: engine, playlist, metadata, library, skins, storage       │
+│   geplant: playlist, metadata, library, skins, storage               │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -33,10 +33,12 @@ Stand: Phase 1. Was hier als „geplant" markiert ist, existiert noch nicht.
 1. **`fc-core` kennt weder Tauri noch eine WebView.** Der Kern ist eine eigene Crate ohne `tauri`-Abhängigkeit; der
    Compiler erzwingt die Regel. Er lässt sich aus Tests, Beispielen und der Kommandozeile betreiben
    ([ADR 0001](decisions/0001-cargo-workspace-mit-kern-crate.md)).
-2. **Audio gehört dem Prozess, nicht einem Fenster.** Zustand liegt in `AppState` bzw. (ab Phase 2) in der Engine im
-   Rust-Prozess. Schließen oder Neuladen einer WebView beendet keine Wiedergabe.
-3. **Das Frontend simuliert keinen Backend-Zustand.** Ein Store zeigt, was Rust gemeldet hat. Beispiel heute: Der
-   Testton ist „läuft", weil der Command zurückkam, und „fertig", weil das Event kam – nie wegen eines Timers.
+2. **Audio gehört dem Prozess, nicht einem Fenster.** Die Engine läuft als eigener Thread im Rust-Prozess
+   (`AppState.player`). Eine WebView, die neu lädt, fragt mit `player_state` den Zustand ab und zeigt den laufenden
+   Titel; sie startet nichts.
+3. **Das Frontend simuliert keinen Backend-Zustand.** Ein Store zeigt, was Rust gemeldet hat. Ein Klick auf „Pause"
+   schickt nur den Befehl; die Anzeige wechselt, wenn die Engine „pausiert" meldet. Eigener Zustand des Fensters ist
+   allein der Wert eines Schiebereglers, solange er gezogen wird.
 4. **Komponenten rufen nie `invoke()`/`listen()`.** Sie sprechen mit einer abstrakten Fassade (`SystemApi`), die in
    `app.config.ts` an die Tauri-Implementierung gebunden wird. Tests ersetzen die Fassade (`src/testing/fake-apis.ts`).
 5. **Commands sind `async`**, Blockierendes läuft über `commands::blocking()` (`spawn_blocking`).
@@ -74,14 +76,19 @@ Regel für die Aufteilung: **Commands** für alles mit Antwort, **Events** für 
 meldet. Hochfrequente Audiodaten gehen nie über IPC; für Visualisierungen sind reduzierte Analysewerte vorgesehen
 (Phase 6).
 
-### Geplant ab Phase 2: Wiedergabe
+### Wiedergabe
 
 ```text
-UI → Command (play/pause/seek/volume) → Befehlsqueue → Engine-Thread
-Engine-Thread: Decoder → Resampler → Ringpuffer (lock-frei) → Audio-Callback → Gerät
-Engine-Thread → Event player://state (bei Änderung) und player://position (wenige Hz) → Stores
-Neues/neu geladenes Fenster → Command player_state → vollständiger Schnappschuss
+Klick / Taste → Aktion → PlayerStore → PlayerApi → call('player_play' | 'player_seek' | …)
+  → commands::player → Player (Befehlsqueue) → Engine-Thread            – der Command kehrt sofort zurück
+Engine-Thread: Decoder → Resampler → Kanal-Mapping → Ringpuffer → Renderer (Audio-Callback) → Gerät
+Engine-Thread → PlayerState bei jeder Änderung, beim Abspielen alle ≤ 200 ms
+  → Event player://state an alle Fenster → PlayerStore → Signals → Template
+Fenster startet oder lädt neu → erst Event abonnieren, dann call('player_state') → Schnappschuss
 ```
+
+„Datei öffnen" läuft vollständig in Rust: Der Command zeigt den System-Dialog, übergibt den Pfad der Engine und
+meldet dem Fenster nur, ob etwas gewählt wurde. Die WebView bekommt nie ein Dateirecht und schickt nie einen Pfad.
 
 Details: [AUDIO-ENGINE.md](AUDIO-ENGINE.md).
 
@@ -95,6 +102,10 @@ Details: [AUDIO-ENGINE.md](AUDIO-ENGINE.md).
   `core/i18n/i18n.ts`. Kein Text im Template.
 - **Farben, Schriften, Radien** nur als CSS-Variablen `--player-*` (`src/styles.css`). Das ist die Schnittstelle, die
   Skins ab Phase 4 überschreiben.
+- **Tastatur nur über das Aktionssystem** (`core/actions/`): Features registrieren Aktionen mit Kürzel, die
+  App-Wurzel hat den einzigen `keydown`-Listener. Tasten, die das fokussierte Element selbst braucht (Leertaste auf
+  einem Button, Pfeile auf einem Regler, Tippen in einem Feld), bleiben dort. Tooltips zeigen das Kürzel über
+  `actions.hint(id)`.
 - **Event-Abos** enden mit ihrem Besitzer: `untilDestroyed(subscribe(...), destroyRef)` – auch wenn der Besitzer
   zerstört wird, bevor das Abo steht.
 
@@ -109,14 +120,15 @@ je Plattform, Andocken/Snapping) stehen in [RISKS.md](RISKS.md).
 
 ```text
 crates/fc-core/          Rust-Kern (kein Tauri)
-  src/audio/             formats, decode, output, tone
+  src/audio/             player, decode, resample, dts, formats, output, tone
   src/error.rs
-  tests/formats.rs       Formatunterstützung an echten Dateien
+  tests/formats.rs       Dekodieren und Seek an echten Dateien
+  tests/player.rs        die Engine gegen ein simuliertes Ausgabegerät
   tests/fixtures/        selbst erzeugte Sinus-Dateien (scripts/make-fixtures.sh)
-  examples/              play (Abspiel-Spike), probe (Symphonia + Lofty)
+  examples/              play (Engine ohne App), probe (Symphonia + Lofty)
 src-tauri/               Tauri-Schale: commands/, events.rs, lib.rs, capabilities/
-src/app/core/            backend, errors, i18n, log, system
-src/app/features/        diagnostics (Phase 1); player, playlist, … folgen
+src/app/core/            actions, backend, errors, i18n, log, player, system
+src/app/features/        player, diagnostics; playlist, … folgen
 src/testing/             Fake-Fassaden für Tests
 docs/                    diese Dokumentation, decisions/ (ADRs)
 ```
@@ -131,12 +143,15 @@ Neue Abhängigkeiten nur mit Begründung in dieser Tabelle. Reines Rust ohne Sys
 | --- | --- | --- | --- | --- |
 | `tauri`, `tauri-build` | 2.12 / 2.7 | MIT/Apache-2.0 | Desktop-Schale | nur in `src-tauri` |
 | `tauri-plugin-log` | 2.10 | MIT/Apache-2.0 | Logdatei, auch für das Frontend | einziges Plugin mit WebView-Berechtigung |
+| `tauri-plugin-dialog` | 2.8 | MIT/Apache-2.0 | System-Dialog „Datei öffnen" | nur aus Rust genutzt, keine WebView-Berechtigung |
 | `symphonia` | 0.6.1 | **MPL-2.0** | Container und Decoder | reines Rust; kein Opus ([ADR 0003](decisions/0003-audio-bibliotheken.md)) |
+| `symphonia-adapter-libopus` | 0.3 | MIT/Apache-2.0, libopus BSD-artig | Opus-Decoder | **C-Bibliothek, gebündelt, braucht cmake**; optionales Feature `opus` ([ADR 0006](decisions/0006-resampling-opus-seek.md)) |
+| `rubato` | 5.1 | MIT/Apache-2.0 | Resampling auf die Geräterate | reines Rust |
 | `cpal` | 0.18.2 | Apache-2.0 | Audio-Ausgabe | CoreAudio, WASAPI, ALSA |
 | `serde`, `serde_json` | 1 | MIT/Apache-2.0 | DTOs über IPC | |
 | `thiserror` | 2 | MIT/Apache-2.0 | `AppError` | |
 | `log` | 0.4 | MIT/Apache-2.0 | Logging-Fassade im Kern | |
-| `rtrb` (dev) | 0.4.1 | MIT/Apache-2.0 | lock-freier SPSC-Ringpuffer | heute nur im Spike, ab Phase 2 regulär |
+| `rtrb` | 0.4.1 | MIT/Apache-2.0 | lock-freier SPSC-Ringpuffer Engine → Callback | |
 | `lofty` (dev) | 0.25.5 | MIT/Apache-2.0 | Tags | heute nur zur Evaluierung, ab Phase 3 regulär |
 
 ### npm
@@ -156,12 +171,12 @@ Tauri CLI.
 Die Regeln stammen aus Vorgängerprojekten; einige setzen dort vorhandene Infrastruktur voraus, die es hier noch nicht
 gibt. Stand heute:
 
-- **Aktionssystem für Tastatur** (`core/actions/`): noch nicht vorhanden; Phase 1 hat nur native Buttons. Es kommt mit
-  der Player-Oberfläche (Phase 2), bevor das erste Tastenkürzel entsteht.
 - **`pnpm texts` / `pnpm contrast`**: Prüfskripte fehlen noch. Die Vollständigkeit der Kataloge prüft
   `core/i18n/catalogs.spec.ts`; die Kontrastprüfung kommt mit dem Skin-System (Phase 4), weil dann erst mehrere
   Farbsätze existieren.
 - **`tauri-plugin-log`** ist ein Plugin mit WebView-Berechtigung (`log:default`: Zeilen schreiben). Das widerspricht
   „schmale Commands statt breiter Plugins" nicht im Kern – die Berechtigung erlaubt nur das Anhängen von Logzeilen –,
   ist aber eine bewusste Ausnahme.
+- **libopus** ist eine C-Bibliothek entgegen „reines Rust ohne Systembibliotheken bevorzugen": bewusst, abschaltbar,
+  begründet in ADR 0006.
 - Regeln zu SQL, Datenbankverbindungen, Geheimnissen und GuiExpert Table betreffen dieses Projekt (noch) nicht.
