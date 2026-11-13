@@ -5,8 +5,9 @@
 //! track ends, passes over tracks that cannot be played, reads tags in the background and saves
 //! the state.
 
+use crate::audio::equalizer::EqSettings;
 use crate::audio::formats::{extension_of, is_playable_extension};
-use crate::audio::player::{OutputBackend, PlaybackStatus, Player, PlayerState};
+use crate::audio::player::{OutputBackend, PlaybackStatus, Player, PlayerState, SpectrumSink};
 use crate::error::{AppResult, ErrorCode};
 use crate::metadata::read_meta;
 use crate::playlist::{Advance, Playlist, PlaylistState, RepeatMode};
@@ -31,6 +32,8 @@ pub struct SessionConfig {
     pub state_file: Option<PathBuf>,
     /// Seed of the shuffle order.
     pub shuffle_seed: u64,
+    /// Where the spectrum for visualizers goes; `None`: it is never computed.
+    pub on_spectrum: Option<SpectrumSink>,
 }
 
 /// Whether tracks that were just added start playing.
@@ -56,9 +59,12 @@ struct Inner {
     finished_seen: u64,
     failures_in_a_row: u32,
     volume: f32,
+    equalizer: EqSettings,
     position_ms: u64,
     /// Id of the active skin: kept here only to be saved with the rest.
     skin: Option<String>,
+    /// What the engine was last told to play after the current track.
+    next_sent: Option<PathBuf>,
     /// Places of the windows: kept here only to be saved with the rest.
     windows: BTreeMap<String, WindowPlace>,
 }
@@ -105,6 +111,7 @@ impl Inner {
             current,
             position_ms: if current.is_some() { self.position_ms } else { 0 },
             skin: self.skin.clone(),
+            equalizer: self.equalizer,
             windows: self.windows.clone(),
             ..SavedState::default()
         }
@@ -116,9 +123,31 @@ impl Inner {
         }
     }
 
-    fn changed(&self) {
+    fn changed(&mut self) {
         self.emit();
         self.save();
+        self.tell_next();
+    }
+
+    /// The path the playlist would go on with after the active track.
+    fn next_path(&self) -> Option<PathBuf> {
+        self.active?;
+        let id = self.playlist.peek(Advance::Auto)?;
+        self.playlist.entry(id).map(|e| e.path.clone())
+    }
+
+    /// Keeps the engine informed about the track that follows, so that it can play it without
+    /// a gap. Called whenever the answer may have changed.
+    fn tell_next(&mut self) {
+        let next = self.next_path();
+        if next != self.next_sent
+            && let Some(player) = &self.player
+        {
+            match player.set_next(next.clone()) {
+                Ok(()) => self.next_sent = next,
+                Err(e) => log::error!("next track not sent: {e}"),
+            }
+        }
     }
 
     /// Makes `id` current and hands it to the player.
@@ -135,6 +164,9 @@ impl Inner {
         {
             log::error!("load not sent: {e}");
         }
+        // loading makes the engine forget what was to follow
+        self.next_sent = None;
+        self.tell_next();
     }
 
     fn go(&mut self, why: Advance) -> bool {
@@ -185,12 +217,26 @@ impl Inner {
 
         if state.finished > self.finished_seen {
             self.finished_seen = state.finished;
-            self.go(Advance::Auto);
+            // the engine has used up the next track it was told
+            let told = self.next_sent.take();
+            let moved_on = state.status == PlaybackStatus::Playing
+                && told.is_some()
+                && state.track.as_ref().map(|t| &t.path) == told.as_ref()
+                && told == self.next_path();
+            if moved_on {
+                // the engine went on without a gap: the playlist only follows
+                self.active = self.playlist.advance(Advance::Auto);
+                self.active_autoplay = true;
+                self.failures_in_a_row = 0;
+            } else {
+                self.go(Advance::Auto);
+            }
             changed = true;
         }
 
-        if state.volume != self.volume {
+        if state.volume != self.volume || state.equalizer != self.equalizer {
             self.volume = state.volume;
+            self.equalizer = state.equalizer;
             self.save();
         }
         if changed {
@@ -240,17 +286,24 @@ impl Session {
             finished_seen: 0,
             failures_in_a_row: 0,
             volume: saved.volume,
+            equalizer: saved.equalizer,
             position_ms: saved.position_ms,
             skin: saved.skin.clone(),
+            next_sent: None,
             windows: saved.windows.clone(),
         }));
 
         let hook = inner.clone();
-        let player = Player::spawn(backend, move |state| {
-            on_player(state);
-            lock(&hook).on_player_state(state);
-        })?;
+        let player = Player::spawn_with_spectrum(
+            backend,
+            move |state| {
+                on_player(state);
+                lock(&hook).on_player_state(state);
+            },
+            config.on_spectrum,
+        )?;
         player.set_volume(saved.volume)?;
+        player.set_equalizer(saved.equalizer)?;
         {
             let mut inner = lock(&inner);
             inner.player = Some(player.clone());

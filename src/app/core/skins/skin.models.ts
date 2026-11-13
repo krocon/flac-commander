@@ -30,7 +30,7 @@ export interface SkinTheme {
 }
 
 export type SkinComponentType =
-  'button' | 'seekbar' | 'volume' | 'text' | 'time' | 'playlist' | 'image';
+  'button' | 'seekbar' | 'volume' | 'text' | 'time' | 'playlist' | 'image' | 'spectrum';
 
 export interface SkinStates {
   readonly normal: string | null;

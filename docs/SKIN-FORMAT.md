@@ -98,9 +98,10 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `time` | `source` (Pflicht), `fontSize`, `color`, `align` | `position` oder `duration`. |
 | `playlist` | – | Die Playlist mit ihren Knöpfen. |
 | `image` | `states.normal` (Pflicht) | Ein Bild ohne Funktion. |
+| `spectrum` | `color` | Balken, die der Musik folgen (ohne `color` in der Akzentfarbe). |
 
 **Aktionen** (`action`): `player.togglePlay`, `player.stop`, `player.next`, `player.previous`, `player.open`,
-`player.repeat`, `player.shuffle`, `app.skins`. Es gibt keine frei definierbaren Aktionen.
+`player.repeat`, `player.shuffle`, `app.skins`, `window.playlist`, `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
 
 **Textquellen** (`source` bei `text`): `track.title`, `track.artist`, `track.details`, `player.status` (zeigt auch
 Fehlermeldungen).
@@ -149,7 +150,7 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 
 ## Noch nicht im Format
 
-- Weitere Fenster (Playlist, Equalizer als eigene Fenster) – mit dem Mehrfenster-Konzept.
+- Eigenes Aussehen für das Playlist- und das Equalizer-Fenster (sie übernehmen heute Farben und Schrift des Skins).
 - Rahmenlose Fenster mit eigener Titelzeile und Ziehbereich.
 - Bitmap-Schriften und Bilder für Regler (heute zeichnet die App Regler in den Farben des Skins).
 - Ganzzahliges Hochskalieren pixeliger Skins.

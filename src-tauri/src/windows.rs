@@ -25,12 +25,20 @@ pub struct Secondary {
 }
 
 /// The complete list: a label that is not here is no window of this app.
-pub const SECONDARY: &[Secondary] = &[Secondary {
-    label: "playlist",
-    title: "Playlist – FLAC Commander",
-    size: (420.0, 520.0),
-    min_size: (260.0, 200.0),
-}];
+pub const SECONDARY: &[Secondary] = &[
+    Secondary {
+        label: "playlist",
+        title: "Playlist – FLAC Commander",
+        size: (420.0, 520.0),
+        min_size: (260.0, 200.0),
+    },
+    Secondary {
+        label: "equalizer",
+        title: "Equalizer – FLAC Commander",
+        size: (520.0, 330.0),
+        min_size: (440.0, 280.0),
+    },
+];
 
 fn secondary(label: &str) -> Option<&'static Secondary> {
     SECONDARY.iter().find(|s| s.label == label)
@@ -226,6 +234,7 @@ mod tests {
     #[test]
     fn only_known_windows_exist() {
         assert!(secondary("playlist").is_some());
+        assert!(secondary("equalizer").is_some());
         assert!(secondary("main").is_none());
         assert!(secondary("../etc").is_none());
         for spec in SECONDARY {

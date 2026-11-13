@@ -40,6 +40,11 @@ p {
   font-size: 12px;
 }
 
+.visualizer {
+  height: 28px;
+  margin-top: 6px;
+}
+
 .seek {
   display: grid;
   grid-template-columns: auto 1fr auto;

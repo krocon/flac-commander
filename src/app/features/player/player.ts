@@ -4,12 +4,14 @@ import { describeError } from '../../core/errors/app-error';
 import { PLAYLIST_TEXTS } from '../playlist/playlist-texts';
 import { PlaylistStore } from '../playlist/playlist.store';
 import { PLAYER_TEXTS } from './player-texts';
+import { Visualizer } from '../visualizer/visualizer';
 import { PlayerView } from './player-view';
 import { PlayerStore } from './player.store';
 
 /** Display, seek bar, transport buttons and volume of the one player. */
 @Component({
   selector: 'app-player',
+  imports: [Visualizer],
   templateUrl: './player.html',
   styleUrl: './player.css',
 })

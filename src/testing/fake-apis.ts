@@ -1,7 +1,13 @@
 import { Unsubscribe } from '../app/core/backend/events';
 import { LogApi } from '../app/core/log/log-api';
 import { PlayerApi } from '../app/core/player/player-api';
-import { EMPTY_PLAYER_STATE, PlayerState } from '../app/core/player/player.models';
+import {
+  EMPTY_PLAYER_STATE,
+  EqualizerPreset,
+  EqualizerSettings,
+  FLAT_EQUALIZER,
+  PlayerState,
+} from '../app/core/player/player.models';
 import { PlaylistApi } from '../app/core/playlist/playlist-api';
 import {
   EMPTY_PLAYLIST_STATE,
@@ -112,7 +118,13 @@ export const TRACK_STATE: PlayerState = {
   error: null,
   underruns: 0,
   finished: 0,
+  equalizer: FLAT_EQUALIZER,
 };
+
+export const PRESETS: readonly EqualizerPreset[] = [
+  { id: 'flat', preampDb: 0, gainsDb: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+  { id: 'bass', preampDb: -4, gainsDb: [6, 5, 4, 2, 0, 0, 0, 0, 0, 0] },
+];
 
 /** The backend's player: records the commands, the test reports states. */
 export class FakePlayerApi extends PlayerApi {
@@ -148,9 +160,39 @@ export class FakePlayerApi extends PlayerApi {
     this.command(`volume ${volume.toFixed(2)}`);
   }
 
+  override async setEqualizer(settings: EqualizerSettings): Promise<void> {
+    const gains = settings.gainsDb.join(',');
+    this.command(`equalizer ${settings.enabled ? 'on' : 'off'} ${settings.preampDb} [${gains}]`);
+  }
+
+  override async equalizerPresets(): Promise<readonly EqualizerPreset[]> {
+    return PRESETS;
+  }
+
   override async onState(handler: (state: PlayerState) => void): Promise<Unsubscribe> {
     this.handlers.add(handler);
     return () => this.handlers.delete(handler);
+  }
+
+  readonly spectrumHandlers = new Set<(bands: readonly number[]) => void>();
+
+  /** Requests for the spectrum, apart from the commands: every player view sends them. */
+  readonly spectrumRequests: string[] = [];
+
+  override async setSpectrum(enabled: boolean): Promise<void> {
+    this.spectrumRequests.push(enabled ? 'on' : 'off');
+  }
+
+  override async onSpectrum(handler: (bands: readonly number[]) => void): Promise<Unsubscribe> {
+    this.spectrumHandlers.add(handler);
+    return () => this.spectrumHandlers.delete(handler);
+  }
+
+  /** The backend reports a spectrum. */
+  emitSpectrum(bands: readonly number[]): void {
+    for (const handler of this.spectrumHandlers) {
+      handler(bands);
+    }
   }
 
   /** The backend reports a state. */

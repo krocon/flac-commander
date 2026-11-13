@@ -13,8 +13,10 @@
 
 use crate::audio::decode::{Decoder, TrackInfo};
 use crate::audio::dts::{DTS_SCAN_SAMPLES, is_dts_in_pcm};
+use crate::audio::equalizer::{EqControl, EqSettings, Equalizer};
 use crate::audio::output::{self, OutputFormat, remap_channels};
 use crate::audio::resample::StreamResampler;
+use crate::audio::spectrum::{self, SpectrumAnalyzer};
 use crate::error::{AppError, AppResult, ErrorCode};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -57,6 +59,7 @@ pub struct PlayerState {
     pub underruns: u64,
     /// Tracks played to their end since the start: a change tells the playlist to go on.
     pub finished: u64,
+    pub equalizer: EqSettings,
 }
 
 impl Default for PlayerState {
@@ -69,6 +72,7 @@ impl Default for PlayerState {
             error: None,
             underruns: 0,
             finished: 0,
+            equalizer: EqSettings::default(),
         }
     }
 }
@@ -91,6 +95,9 @@ struct Shared {
     /// then is expected.
     refilling: AtomicBool,
     underruns: AtomicU64,
+    equalizer: EqControl,
+    /// Someone shows a spectrum: the callback passes a mono copy of the audio on.
+    spectrum: AtomicBool,
 }
 
 /// Length of the fade when playback starts, pauses or the volume changes (against clicks).
@@ -101,6 +108,9 @@ pub struct Renderer {
     consumer: rtrb::Consumer<f32>,
     shared: Arc<Shared>,
     gain: f32,
+    equalizer: Equalizer,
+    /// Mono audio for the spectrum; what does not fit is dropped.
+    tap: rtrb::Producer<f32>,
 }
 
 impl Renderer {
@@ -149,6 +159,14 @@ impl Renderer {
         let (audio, silence) = out.split_at_mut(wanted);
         silence.fill(0.0);
         let (filled, missing) = self.consumer.pop_partial_slice(audio);
+        self.equalizer.process(filled, channels, format.sample_rate, &self.shared.equalizer);
+        if self.shared.spectrum.load(Ordering::Relaxed) {
+            for frame in filled.chunks_exact(channels) {
+                let mono = frame.iter().sum::<f32>() / channels as f32;
+                // full: the analysis is behind and will take the newer audio next time
+                let _ = self.tap.push(mono);
+            }
+        }
         for frame in filled.chunks_mut(channels) {
             if self.gain != target {
                 self.gain = if self.gain < target {
@@ -214,6 +232,9 @@ impl OutputBackend for DefaultOutput {
     }
 }
 
+/// Receives the spectrum: [`spectrum::BANDS`] levels in `0.0..=1.0`.
+pub type SpectrumSink = Box<dyn Fn(&[f32]) + Send>;
+
 enum Msg {
     Load {
         path: PathBuf,
@@ -225,6 +246,9 @@ enum Msg {
     Unload,
     Seek(u64),
     SetVolume(f32),
+    SetEqualizer(EqSettings),
+    SetSpectrum(bool),
+    SetNext(Option<PathBuf>),
     /// From the error callback of output number `output_id`.
     DeviceError {
         output_id: u64,
@@ -247,6 +271,20 @@ impl Player {
         B: OutputBackend,
         F: Fn(&PlayerState) + Send + 'static,
     {
+        Self::spawn_with_spectrum(backend, on_state, None)
+    }
+
+    /// Like [`Self::spawn`]; `on_spectrum` gets the levels of the frequency bands about 25
+    /// times per second while music plays and [`Self::set_spectrum`] is on.
+    pub fn spawn_with_spectrum<B, F>(
+        backend: B,
+        on_state: F,
+        on_spectrum: Option<SpectrumSink>,
+    ) -> AppResult<Self>
+    where
+        B: OutputBackend,
+        F: Fn(&PlayerState) + Send + 'static,
+    {
         let (tx, rx) = mpsc::channel();
         let state = Arc::new(Mutex::new(PlayerState::default()));
         let engine_tx = tx.clone();
@@ -254,7 +292,8 @@ impl Player {
         thread::Builder::new()
             .name("audio-engine".to_owned())
             .spawn(move || {
-                Engine::new(backend, rx, engine_tx, engine_state, Box::new(on_state)).run();
+                Engine::new(backend, rx, engine_tx, engine_state, Box::new(on_state), on_spectrum)
+                    .run();
             })
             .map_err(|e| {
                 AppError::internal("audio engine thread could not be started")
@@ -300,6 +339,23 @@ impl Player {
         self.send(Msg::SetVolume(volume))
     }
 
+    /// Values out of range are clamped.
+    pub fn set_equalizer(&self, settings: EqSettings) -> AppResult<()> {
+        self.send(Msg::SetEqualizer(settings))
+    }
+
+    /// Names the track that follows the current one. The engine queues it right behind the
+    /// current track – no gap – and moves on to it by itself; [`PlayerState::finished`] counts
+    /// up and `track` changes. `None`: playback stops at the end of the current track.
+    pub fn set_next(&self, path: Option<PathBuf>) -> AppResult<()> {
+        self.send(Msg::SetNext(path))
+    }
+
+    /// Switches the spectrum analysis on or off (it costs a little, so only while shown).
+    pub fn set_spectrum(&self, enabled: bool) -> AppResult<()> {
+        self.send(Msg::SetSpectrum(enabled))
+    }
+
     fn send(&self, msg: Msg) -> AppResult<()> {
         self.tx.send(msg).map_err(|_| AppError::internal("the audio engine is not running"))
     }
@@ -315,6 +371,10 @@ fn lock(state: &Mutex<PlayerState>) -> std::sync::MutexGuard<'_, PlayerState> {
 const RING_SAMPLES: usize = 1 << 18;
 /// How much audio the engine keeps queued. Short, so that little is decoded in vain on a seek.
 const QUEUE_MS: u64 = 300;
+/// Mono samples the callback can hand over between two looks of the engine.
+const TAP_SAMPLES: usize = 16_384;
+/// Time between two spectra.
+const SPECTRUM_INTERVAL: Duration = Duration::from_millis(40);
 /// Longest pause between two states while playing.
 const PUBLISH_INTERVAL: Duration = Duration::from_millis(200);
 /// How long the engine sleeps when the queue is full or nothing plays.
@@ -330,6 +390,8 @@ struct Output<S> {
     producer: rtrb::Producer<f32>,
     /// Samples to keep queued (whole frames).
     target: usize,
+    /// Mono audio from the callback for the spectrum.
+    tap: rtrb::Consumer<f32>,
 }
 
 impl<S> Output<S> {
@@ -352,6 +414,11 @@ struct Track {
     base_ms: u64,
     /// Set while nothing of the track is queued: where the next `play` starts.
     restart_at: Option<u64>,
+    /// Frames of this track queued since the last flush.
+    queued_frames: u64,
+    /// Frames the callback had played (since the last flush) when this track began: more
+    /// than 0 for a track that followed another one without a gap.
+    played_offset: u64,
 }
 
 impl Track {
@@ -397,13 +464,26 @@ struct Engine<B: OutputBackend> {
     output: Option<Output<B::Stream>>,
     outputs_opened: u64,
     track: Option<Track>,
+    /// What follows the current track, as far as the engine was told.
+    next: Option<PathBuf>,
+    /// The next track, opened and being queued behind the current one.
+    upcoming: Option<Track>,
     status: PlaybackStatus,
     volume: f32,
     error: Option<AppError>,
     finished: u64,
+    equalizer: EqSettings,
     state: Arc<Mutex<PlayerState>>,
     on_state: Box<dyn Fn(&PlayerState) + Send>,
     published: Option<(PlayerState, Instant)>,
+    on_spectrum: Option<SpectrumSink>,
+    spectrum_enabled: bool,
+    analyzer: SpectrumAnalyzer,
+    /// The most recent mono samples, at most one analysis window.
+    recent: Vec<f32>,
+    last_spectrum: Instant,
+    /// A spectrum other than silence was sent: silence is still owed when playback stops.
+    spectrum_shown: bool,
 }
 
 impl<B: OutputBackend> Engine<B> {
@@ -413,6 +493,7 @@ impl<B: OutputBackend> Engine<B> {
         tx: Sender<Msg>,
         state: Arc<Mutex<PlayerState>>,
         on_state: Box<dyn Fn(&PlayerState) + Send>,
+        on_spectrum: Option<SpectrumSink>,
     ) -> Self {
         let shared = Arc::new(Shared::default());
         shared.volume.store(1.0f32.to_bits(), Ordering::Relaxed);
@@ -424,13 +505,22 @@ impl<B: OutputBackend> Engine<B> {
             output: None,
             outputs_opened: 0,
             track: None,
+            next: None,
+            upcoming: None,
             status: PlaybackStatus::Stopped,
             volume: 1.0,
             error: None,
             finished: 0,
+            equalizer: EqSettings::default(),
             state,
             on_state,
             published: None,
+            on_spectrum,
+            spectrum_enabled: false,
+            analyzer: SpectrumAnalyzer::default(),
+            recent: Vec::with_capacity(2 * spectrum::WINDOW),
+            last_spectrum: Instant::now(),
+            spectrum_shown: false,
         }
     }
 
@@ -449,8 +539,10 @@ impl<B: OutputBackend> Engine<B> {
                 Err(RecvTimeoutError::Timeout) => {}
                 Err(RecvTimeoutError::Disconnected) => return,
             }
+            self.move_on_if_next_track_reached();
             self.finish_track_if_played();
             self.publish();
+            self.analyse();
         }
     }
 
@@ -469,6 +561,7 @@ impl<B: OutputBackend> Engine<B> {
                 self.set_playing(false);
                 self.status = PlaybackStatus::Stopped;
                 self.track = None;
+                self.next = None;
                 self.flush();
             }
             Msg::Seek(position_ms) => self.seek(position_ms),
@@ -477,6 +570,24 @@ impl<B: OutputBackend> Engine<B> {
                     self.volume = volume.clamp(0.0, 1.0);
                     self.shared.volume.store(self.volume.to_bits(), Ordering::Relaxed);
                 }
+            }
+            Msg::SetEqualizer(settings) => {
+                self.equalizer = settings.sanitised();
+                self.shared.equalizer.set(self.equalizer);
+            }
+            Msg::SetNext(path) => {
+                if self.next != path {
+                    self.next = path;
+                    if self.upcoming.is_some() {
+                        // the old next track is queued already: queue anew from here
+                        let position = self.position_ms();
+                        self.reposition(position);
+                    }
+                }
+            }
+            Msg::SetSpectrum(enabled) => {
+                self.spectrum_enabled = enabled && self.on_spectrum.is_some();
+                self.shared.spectrum.store(self.spectrum_enabled, Ordering::Relaxed);
             }
             Msg::DeviceError { output_id, error } => {
                 if self.output.as_ref().is_some_and(|o| o.id == output_id) {
@@ -494,6 +605,7 @@ impl<B: OutputBackend> Engine<B> {
         self.set_playing(false);
         self.status = PlaybackStatus::Stopped;
         self.track = None;
+        self.next = None;
         self.flush();
         self.error = None;
         match self.open_track(path) {
@@ -542,6 +654,8 @@ impl<B: OutputBackend> Engine<B> {
             input_done: false,
             base_ms: 0,
             restart_at: None,
+            queued_frames: 0,
+            played_offset: 0,
         };
         track.resampler = resampler_for(&track.loaded.info, format)?;
         self.shared.input_done.store(false, Ordering::Relaxed);
@@ -559,7 +673,14 @@ impl<B: OutputBackend> Engine<B> {
             .store(self.shared.flush_requested.load(Ordering::Relaxed), Ordering::Relaxed);
         self.shared.played_frames.store(0, Ordering::Relaxed);
         self.shared.underruns.store(0, Ordering::Relaxed);
-        let renderer = Renderer { consumer, shared: self.shared.clone(), gain: 0.0 };
+        let (tap, tap_reader) = rtrb::RingBuffer::<f32>::new(TAP_SAMPLES);
+        let renderer = Renderer {
+            consumer,
+            shared: self.shared.clone(),
+            gain: 0.0,
+            equalizer: Equalizer::default(),
+            tap,
+        };
         self.outputs_opened += 1;
         let id = self.outputs_opened;
         let tx = self.tx.clone();
@@ -576,7 +697,8 @@ impl<B: OutputBackend> Engine<B> {
         let channels = usize::from(format.channels);
         let wanted = (u64::from(format.sample_rate) * QUEUE_MS / 1000) as usize * channels;
         let target = wanted.min(RING_SAMPLES) / channels * channels;
-        self.output = Some(Output { _stream: stream, id, format, producer, target });
+        self.output =
+            Some(Output { _stream: stream, id, format, producer, target, tap: tap_reader });
         Ok(format)
     }
 
@@ -654,6 +776,8 @@ impl<B: OutputBackend> Engine<B> {
 
     /// Has the callback drop everything queued and waits until it did.
     fn flush(&mut self) {
+        // what was queued of the next track goes with the rest; it is opened again in time
+        self.upcoming = None;
         if self.output.is_none() {
             return;
         }
@@ -671,6 +795,11 @@ impl<B: OutputBackend> Engine<B> {
             // the callback runs every few milliseconds
             thread::sleep(Duration::from_millis(1));
         }
+        // the callback counts played frames from zero again
+        if let Some(track) = &mut self.track {
+            track.queued_frames = 0;
+            track.played_offset = 0;
+        }
     }
 
     /// The device is gone or broken: close it and keep the position for the next `play`.
@@ -679,6 +808,7 @@ impl<B: OutputBackend> Engine<B> {
         let position = self.position_ms();
         self.set_playing(false);
         self.output = None;
+        self.upcoming = None;
         if let Some(track) = &mut self.track {
             track.restart_at.get_or_insert(position);
         }
@@ -708,13 +838,31 @@ impl<B: OutputBackend> Engine<B> {
         if track.restart_at.is_some() {
             return false;
         }
-        match fill_queue(output, track) {
+        // once the current track is queued completely, the next one follows in the same queue
+        let filling_upcoming = self.upcoming.is_some();
+        let filling = match &mut self.upcoming {
+            Some(upcoming) => upcoming,
+            None => track,
+        };
+        match fill_queue(output, filling) {
             Ok(Progress::Busy) => {
                 self.shared.refilling.store(false, Ordering::Relaxed);
                 true
             }
             Ok(Progress::QueueFull) => false,
             Ok(Progress::TrackQueued) => {
+                if !filling_upcoming && self.next.is_some() {
+                    return self.queue_next_track();
+                }
+                self.shared.input_done.store(true, Ordering::Relaxed);
+                false
+            }
+            Err(e) if filling_upcoming => {
+                // the next track broke: what is queued of it plays out, then playback ends as
+                // if there were no next track – whoever named it will try it and see the error
+                log::warn!("next track given up: {e} ({:?})", e.details);
+                self.upcoming = None;
+                self.next = None;
                 self.shared.input_done.store(true, Ordering::Relaxed);
                 false
             }
@@ -725,12 +873,50 @@ impl<B: OutputBackend> Engine<B> {
         }
     }
 
+    /// Opens the track named as next and puts it in line behind the current one.
+    fn queue_next_track(&mut self) -> bool {
+        let (Some(path), Some(current)) = (self.next.clone(), &self.track) else {
+            return false;
+        };
+        // everything of the current track is queued: this is where the next one begins
+        let boundary = current.played_offset + current.queued_frames;
+        match self.open_track(&path) {
+            Ok(mut upcoming) => {
+                upcoming.played_offset = boundary;
+                self.upcoming = Some(upcoming);
+                true
+            }
+            Err(e) => {
+                log::warn!("next track {} cannot follow: {e} ({:?})", path.display(), e.details);
+                self.next = None;
+                self.shared.input_done.store(true, Ordering::Relaxed);
+                false
+            }
+        }
+    }
+
+    /// The callback has played the current track to its last frame and is in the next one.
+    fn move_on_if_next_track_reached(&mut self) {
+        let Some(boundary) = self.upcoming.as_ref().map(|upcoming| upcoming.played_offset) else {
+            return;
+        };
+        if self.shared.played_frames.load(Ordering::Acquire) >= boundary {
+            if let Some(track) = &self.track {
+                log::info!("finished {}", track.loaded.path.display());
+            }
+            self.track = self.upcoming.take();
+            self.next = None;
+            self.finished += 1;
+        }
+    }
+
     /// At the end of the track: back to the start, stopped.
     fn finish_track_if_played(&mut self) {
         let (Some(output), Some(track)) = (&self.output, &mut self.track) else {
             return;
         };
         let played = self.status == PlaybackStatus::Playing
+            && self.upcoming.is_none()
             && track.input_done
             && track.pending_left() == 0
             && output.queued() == 0;
@@ -751,8 +937,42 @@ impl<B: OutputBackend> Engine<B> {
             return position;
         }
         let played = self.shared.played_frames.load(Ordering::Acquire);
-        let position = track.base_ms + played * 1000 / u64::from(output.format.sample_rate);
+        let in_track = played.saturating_sub(track.played_offset);
+        let position = track.base_ms + in_track * 1000 / u64::from(output.format.sample_rate);
         track.duration_ms().map_or(position, |d| position.min(d))
+    }
+
+    /// Takes the audio the callback set aside and, a few times per second, reports its spectrum.
+    fn analyse(&mut self) {
+        let Some(output) = &mut self.output else {
+            return;
+        };
+        let waiting = output.tap.slots();
+        if waiting > 0
+            && let Ok(chunk) = output.tap.read_chunk(waiting)
+        {
+            let (first, second) = chunk.as_slices();
+            self.recent.extend_from_slice(first);
+            self.recent.extend_from_slice(second);
+            chunk.commit_all();
+            let surplus = self.recent.len().saturating_sub(spectrum::WINDOW);
+            self.recent.drain(..surplus);
+        }
+        let Some(sink) = &self.on_spectrum else {
+            return;
+        };
+        let playing = self.status == PlaybackStatus::Playing && self.spectrum_enabled;
+        if playing && self.last_spectrum.elapsed() >= SPECTRUM_INTERVAL {
+            let bands = self.analyzer.bands(&self.recent, output.format.sample_rate);
+            sink(&bands);
+            self.last_spectrum = Instant::now();
+            self.spectrum_shown = true;
+        } else if !playing && self.spectrum_shown {
+            // nothing plays any more: the bars fall
+            self.recent.clear();
+            sink(&[0.0; spectrum::BANDS]);
+            self.spectrum_shown = false;
+        }
     }
 
     /// Stores and reports the state if it changed; while playing at most every
@@ -766,6 +986,7 @@ impl<B: OutputBackend> Engine<B> {
             error: self.error.clone(),
             underruns: self.shared.underruns.load(Ordering::Relaxed),
             finished: self.finished,
+            equalizer: self.equalizer,
         };
         if let Some((last, at)) = &self.published {
             if *last == state {
@@ -801,7 +1022,9 @@ fn fill_queue<S>(output: &mut Output<S>, track: &mut Track) -> AppResult<Progres
             let end = track.pending_pos + room.min(track.pending_left());
             let (_, rest) =
                 output.producer.push_partial_slice(&track.pending[track.pending_pos..end]);
-            track.pending_pos = end - rest.len();
+            let pushed = end - rest.len() - track.pending_pos;
+            track.pending_pos += pushed;
+            track.queued_frames += (pushed / channels) as u64;
             return Ok(Progress::Busy);
         }
         if track.input_done {

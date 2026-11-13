@@ -919,6 +919,7 @@ dependencies = [
  "flate2",
  "lofty",
  "log",
+ "realfft",
  "rtrb",
  "rubato",
  "serde",

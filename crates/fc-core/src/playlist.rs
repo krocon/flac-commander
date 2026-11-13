@@ -249,6 +249,12 @@ impl Playlist {
         None
     }
 
+    /// The track [`Self::advance`] would move to, without moving. (Works on a copy of the
+    /// list: fine for the sizes a playlist has, to be revisited for very long ones.)
+    pub fn peek(&self, why: Advance) -> Option<u64> {
+        self.clone().advance(why)
+    }
+
     fn first_playable_in_order(&mut self) -> Option<u64> {
         let id = self
             .order
@@ -478,6 +484,27 @@ mod tests {
         list.clear();
         assert!(list.is_empty());
         assert_eq!(list.advance(Advance::Next), None);
+    }
+
+    #[test]
+    fn peeking_tells_the_next_track_without_moving() {
+        let (mut list, _) = playlist(3);
+        list.select(1);
+        assert_eq!(list.peek(Advance::Auto), Some(2));
+        assert_eq!(list.current().map(|e| e.id), Some(1));
+        list.select(3);
+        assert_eq!(list.peek(Advance::Auto), None);
+        list.set_repeat(RepeatMode::One);
+        assert_eq!(list.peek(Advance::Auto), Some(3));
+
+        // shuffled: what was peeked is what comes
+        let (mut list, _) = playlist(12);
+        list.set_shuffle(true);
+        list.set_repeat(RepeatMode::All);
+        for _ in 0..30 {
+            let peeked = list.peek(Advance::Auto);
+            assert_eq!(list.advance(Advance::Auto), peeked);
+        }
     }
 
     #[test]

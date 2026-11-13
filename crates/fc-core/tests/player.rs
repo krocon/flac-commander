@@ -7,7 +7,7 @@
 
 mod common;
 
-use common::{Device, STEREO_RMS, assert_frames};
+use common::{Device, STEREO_RMS, assert_frames, fixture};
 use fc_core::audio::output::OutputFormat;
 use fc_core::audio::player::{PlaybackStatus, PlayerState};
 use fc_core::{AppError, ErrorCode};
@@ -238,6 +238,198 @@ fn volume_scales_the_output_and_is_clamped() {
 }
 
 #[test]
+fn the_equalizer_shapes_what_comes_out_and_shows_in_the_state() {
+    use fc_core::audio::equalizer::EqSettings;
+    // the fixture is a 440 Hz sine: the 500 Hz band reaches it almost fully
+    let mut gains_db = [0.0; 10];
+    gains_db[4] = -12.0;
+    let settings = EqSettings { enabled: true, preamp_db: 0.0, gains_db };
+
+    let mut device = Device::new();
+    device.player.set_equalizer(settings).unwrap();
+    device.load("sine.flac", true);
+    let end = device.run_to_the_end();
+    assert_eq!(end.equalizer, settings);
+    let cut_db = 20.0 * (device.heard_rms() / STEREO_RMS).log10();
+    assert!((-12.5..=-8.0).contains(&cut_db), "440 Hz changed by {cut_db:.1} dB");
+
+    // switched off: the same track at its own level again; wild values are clamped
+    device.heard.clear();
+    let off = EqSettings { enabled: false, preamp_db: 99.0, gains_db };
+    device.player.set_equalizer(off).unwrap();
+    device.player.play().unwrap();
+    let end = device.run_to_the_end();
+    assert_eq!(end.equalizer.preamp_db, 12.0);
+    assert!((device.heard_rms() - STEREO_RMS).abs() < 0.002, "rms {}", device.heard_rms());
+}
+
+#[test]
+fn the_spectrum_shows_the_tone_while_it_plays_and_falls_when_it_stops() {
+    use fc_core::audio::player::Player;
+    use fc_core::audio::spectrum::{BANDS, band_range};
+    use std::sync::mpsc;
+
+    let (backend, link) = common::fake_backend(common::FORMAT);
+    let (states_tx, states) = mpsc::channel();
+    let (spectra_tx, spectra) = mpsc::channel::<Vec<f32>>();
+    let player = Player::spawn_with_spectrum(
+        backend,
+        move |state| {
+            let _ = states_tx.send(state.clone());
+        },
+        Some(Box::new(move |bands| {
+            let _ = spectra_tx.send(bands.to_vec());
+        })),
+    )
+    .unwrap();
+    let mut device = Device::attach(player, link, states);
+
+    // not asked for: nothing is computed
+    device.load("sine.flac", true);
+    device.run_to_the_end();
+    assert!(spectra.try_recv().is_err(), "a spectrum nobody asked for");
+
+    device.player.set_spectrum(true).unwrap();
+    device.player.play().unwrap();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    let tone = loop {
+        device.render_block();
+        match spectra.try_recv() {
+            Ok(bands) if bands.iter().any(|b| *b > 0.5) => break bands,
+            _ => assert!(std::time::Instant::now() < deadline, "no spectrum of the tone"),
+        }
+    };
+    assert_eq!(tone.len(), BANDS);
+    let loudest = (0..BANDS).max_by(|a, b| tone[*a].total_cmp(&tone[*b])).unwrap();
+    let (from, to) = band_range(loudest);
+    assert!(from <= 440.0 && 440.0 < to, "loudest band is {from}–{to} Hz: {tone:?}");
+
+    // when the track has ended the bars fall to nothing
+    device.run_until("end of track", |s| s.status == PlaybackStatus::Stopped);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    loop {
+        match spectra.try_recv() {
+            Ok(bands) if bands.iter().all(|b| *b == 0.0) => break,
+            _ => assert!(std::time::Instant::now() < deadline, "the spectrum never fell"),
+        }
+        std::thread::yield_now();
+    }
+}
+
+#[test]
+fn the_next_track_follows_without_a_gap() {
+    let mut device = Device::new();
+    device.load("sine.flac", false);
+    device.player.set_next(Some(fixture("sine.wav"))).unwrap();
+    device.player.play().unwrap();
+
+    // the engine moves on by itself: the track changes while it keeps playing
+    let second = device
+        .run_until("second track", |s| s.track.as_ref().is_some_and(|t| t.file_name == "sine.wav"));
+    assert_eq!(second.status, PlaybackStatus::Playing);
+    assert_eq!(second.finished, 1);
+    assert!(second.position_ms < 400, "position starts anew: {}", second.position_ms);
+    // it moved on when the first track had been played, not when it had been queued
+    assert!(device.heard.len() >= 48_000 - 64, "moved on after {} frames", device.heard.len());
+
+    let end = device.run_until("end of the second track", |s| s.status == PlaybackStatus::Stopped);
+    assert_eq!(end.finished, 2);
+    assert_eq!(end.underruns, 0);
+    assert_eq!(end.track.unwrap().file_name, "sine.wav");
+    assert_frames(device.heard.len(), 2 * 48_000, 64);
+    // a sine passes through zero now and then, but there is no silence between the tracks
+    assert!(device.longest_gap <= 2, "a gap of {} frames", device.longest_gap);
+}
+
+#[test]
+fn tracks_of_different_formats_and_rates_follow_each_other() {
+    let mut device = Device::new();
+    device.load("sine-96k-24bit-mono.flac", false);
+    device.player.set_next(Some(fixture("sine.mp3"))).unwrap();
+    device.player.play().unwrap();
+    device.run_until("second track", |s| s.finished == 1);
+    device.run_until("end", |s| s.status == PlaybackStatus::Stopped);
+    assert!(device.heard.len() >= 2 * 48_000 - 64, "{} frames", device.heard.len());
+    assert!(device.longest_gap <= 2, "a gap of {} frames", device.longest_gap);
+}
+
+#[test]
+fn a_track_can_follow_itself() {
+    let mut device = Device::new();
+    device.load("sine.flac", false);
+    device.player.set_next(Some(fixture("sine.flac"))).unwrap();
+    device.player.play().unwrap();
+    device.run_until("second round", |s| s.finished == 1);
+    // the next is used up: without a new one playback ends after this round
+    let end = device.run_until("end", |s| s.status == PlaybackStatus::Stopped);
+    assert_eq!(end.finished, 2);
+    assert_frames(device.heard.len(), 2 * 48_000, 64);
+}
+
+#[test]
+fn without_a_next_track_playback_ends_and_a_broken_one_is_not_played() {
+    let mut device = Device::new();
+    device.load("sine.flac", false);
+    device.player.set_next(Some(fixture("sine.wav"))).unwrap();
+    device.player.set_next(None).unwrap();
+    device.player.play().unwrap();
+    let end = device.run_to_the_end();
+    assert_eq!(end.finished, 1);
+    assert_frames(device.heard.len(), 48_000, 64);
+
+    device.heard.clear();
+    device.player.set_next(Some(fixture("garbage.mp3"))).unwrap();
+    device.player.play().unwrap();
+    device.run_until("playing", |s| s.status == PlaybackStatus::Playing);
+    let end = device.run_until("end", |s| s.status == PlaybackStatus::Stopped);
+    // the current track ends as usual; trying the broken one is left to the playlist
+    assert_eq!(end.finished, 2);
+    assert_eq!(end.error, None);
+    assert_eq!(end.track.unwrap().file_name, "sine.flac");
+    assert_frames(device.heard.len(), 48_000, 64);
+}
+
+#[test]
+fn seeking_back_after_the_next_track_was_queued_plays_the_rest_and_then_the_next() {
+    let mut device = Device::new();
+    device.load("sine.flac", false);
+    device.player.set_next(Some(fixture("sine.wav"))).unwrap();
+    device.player.play().unwrap();
+    // 900 ms in: the rest of the track and the start of the next one are queued
+    device.play_frames(43_200);
+    device.heard.clear();
+    device.player.seek(500).unwrap();
+    device.run_until("second track", |s| s.finished == 1);
+    let end = device.run_until("end", |s| s.status == PlaybackStatus::Stopped);
+    assert_eq!(end.finished, 2);
+    // at most what this fast device played of the old position before the engine took the
+    // command, then 500 ms and the whole next track
+    let expected = 24_000 + 48_000;
+    assert!(
+        device.heard.len() >= expected - 64 && device.heard.len() <= expected + 15_000,
+        "{} frames",
+        device.heard.len()
+    );
+}
+
+#[test]
+fn changing_the_next_track_late_still_plays_the_new_one() {
+    let mut device = Device::new();
+    device.load("sine.flac", false);
+    device.player.set_next(Some(fixture("sine.wav"))).unwrap();
+    device.player.play().unwrap();
+    device.play_frames(43_200);
+    // the old next track may be in the queue already; the new one is mono and louder
+    device.player.set_next(Some(fixture("sine-96k-24bit-mono.flac"))).unwrap();
+    let second = device.run_until("second track", |s| s.finished == 1);
+    assert_eq!(second.track.unwrap().file_name, "sine-96k-24bit-mono.flac");
+    device.run_until("end", |s| s.status == PlaybackStatus::Stopped);
+    let tail = &device.heard[device.heard.len() - 40_000..];
+    let rms = (tail.iter().map(|f| f[0] * f[0]).sum::<f32>() / 40_000.0).sqrt();
+    assert!((rms - 0.0884).abs() < 0.004, "the old next track was heard: rms {rms}");
+}
+
+#[test]
 fn playback_starts_and_pauses_without_a_click() {
     let mut device = Device::new();
     device.load("sine.flac", true);
@@ -433,6 +625,8 @@ fn the_state_serialises_as_the_frontend_expects() {
     assert!(json["error"].is_null());
     assert_eq!(json["underruns"], 0);
     assert_eq!(json["finished"], 0);
+    assert_eq!(json["equalizer"]["enabled"], false);
+    assert_eq!(json["equalizer"]["gainsDb"].as_array().unwrap().len(), 10);
     assert_eq!(json["track"]["fileName"], "sine.flac");
     assert!(json["track"]["path"].as_str().unwrap().ends_with("sine.flac"));
     assert_eq!(

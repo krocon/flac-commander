@@ -39,7 +39,8 @@ header button {
   height: 100%;
   padding: 8px;
 
-  app-playlist {
+  app-playlist,
+  app-equalizer {
     flex: 1;
   }
 }

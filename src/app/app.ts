@@ -3,6 +3,8 @@ import { APP_TEXTS } from './app-texts';
 import { ActionService } from './core/actions/action.service';
 import { LogApi } from './core/log/log-api';
 import { Diagnostics } from './features/diagnostics/diagnostics';
+import { Equalizer } from './features/equalizer/equalizer';
+import { EQUALIZER_TEXTS } from './features/equalizer/equalizer-texts';
 import { DiagnosticsStore } from './features/diagnostics/diagnostics.store';
 import { Player } from './features/player/player';
 import { playerActions } from './features/player/player.actions';
@@ -18,9 +20,13 @@ import { WindowsStore } from './features/windows/windows.store';
 
 @Component({
   selector: 'app-root',
-  imports: [Diagnostics, Player, Playlist, SkinChooser, SkinnedPlayer],
+  imports: [Diagnostics, Equalizer, Player, Playlist, SkinChooser, SkinnedPlayer],
   template: `
-    @if (windows.label === 'playlist') {
+    @if (windows.label === 'equalizer') {
+      <div class="solo">
+        <app-equalizer />
+      </div>
+    } @else if (windows.label === 'playlist') {
       <!-- the playlist window: the list and nothing else -->
       <div class="solo">
         <app-playlist />
@@ -40,6 +46,14 @@ import { WindowsStore } from './features/windows/windows.store';
             (click)="windows.toggle('playlist')"
           >
             {{ p.playlist }} ⧉
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="windows.equalizerOpen()"
+            [title]="actions.hint('window.equalizer')"
+            (click)="windows.toggle('equalizer')"
+          >
+            {{ e.equalizer }} ⧉
           </button>
           <button type="button" [title]="actions.hint('app.skins')" (click)="skins.openChooser()">
             {{ s.skins }}
@@ -81,6 +95,7 @@ export class App {
   protected readonly t = APP_TEXTS;
   protected readonly p = PLAYLIST_TEXTS;
   protected readonly s = SKINS_TEXTS;
+  protected readonly e = EQUALIZER_TEXTS;
   protected readonly version = computed(() => this.diagnostics.info()?.app.version ?? null);
 
   constructor() {
@@ -100,6 +115,13 @@ export class App {
         shortcut: { key: 'l', mod: true },
         active: () => this.windows.playlistDetached(),
         run: () => void this.windows.toggle('playlist'),
+      },
+      {
+        id: 'window.equalizer',
+        label: () => this.e.openWindow,
+        shortcut: { key: 'e', mod: true },
+        active: () => this.windows.equalizerOpen(),
+        run: () => void this.windows.toggle('equalizer'),
       },
       {
         // the way out of any skin: no skin can take this key away

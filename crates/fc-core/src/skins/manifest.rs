@@ -122,6 +122,8 @@ pub enum ComponentType {
     Time,
     Playlist,
     Image,
+    /// Bars that follow the music.
+    Spectrum,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -192,6 +194,8 @@ pub const ACTIONS: &[&str] = &[
     "player.repeat",
     "player.shuffle",
     "app.skins",
+    "window.playlist",
+    "window.equalizer",
 ];
 pub const TEXT_SOURCES: &[&str] =
     &["track.title", "track.artist", "track.details", "player.status"];
@@ -381,7 +385,10 @@ fn check_component(
                 r.add(format!("{at}.states.normal"), "an image needs its file here");
             }
         }
-        ComponentType::Seekbar | ComponentType::Volume | ComponentType::Playlist => {}
+        ComponentType::Seekbar
+        | ComponentType::Volume
+        | ComponentType::Playlist
+        | ComponentType::Spectrum => {}
     }
     if c.kind != ComponentType::Button && c.action.is_some() {
         r.add(format!("{at}.action"), "only buttons have an action");

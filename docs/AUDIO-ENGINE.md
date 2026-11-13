@@ -1,8 +1,7 @@
 # Audio-Engine
 
-Stand: Phase 2. Die Engine spielt eine Datei: Laden, Play, Pause, Stop, Seek, Lautstärke, Resampling auf die
-Geräterate, Wiederaufnahme nach Geräteverlust. Playlist, Titelwechsel, Equalizer und Gapless folgen
-([ROADMAP.md](ROADMAP.md)).
+Stand: Phase 6. Die Engine spielt Titel lückenlos hintereinander: Laden, Play, Pause, Stop, Seek, Lautstärke,
+Resampling auf die Geräterate, Equalizer, Spektrum für Visualizer, Wiederaufnahme nach Geräteverlust.
 
 ## Bausteine (`crates/fc-core/src/audio/`)
 
@@ -12,6 +11,8 @@ Geräterate, Wiederaufnahme nach Geräteverlust. Playlist, Titelwechsel, Equaliz
 | `decode.rs` | Datei → verschachtelte `f32`-Samples, `TrackInfo`, framegenaues Seek |
 | `resample.rs` | Abtastratenwandlung eines Stroms (rubato, FFT) |
 | `dts.rs` | Erkennung von DTS-Bitströmen in PCM-Dateien |
+| `equalizer.rs` | 10-Band-Equalizer mit Vorverstärkung (läuft im Callback) |
+| `spectrum.rs` | FFT → 24 Bandpegel für Visualizer |
 | `output.rs` | Geräteliste, Ausgabestrom (CPAL), Kanal-Mapping |
 | `player.rs` | **die Engine**: Thread, Befehlsqueue, Zustand, Echtzeit-Renderer |
 | `tone.rs` | Testton |
@@ -32,8 +33,8 @@ Player (beliebiger Thread: Tauri-Commands)
    rtrb SPSC   │ f32, lock-frei                 Atomics   │ gespielte Frames, Flush-Quittung,
                ▼                                          │ Unterläufe
 ┌──────────────────────── Renderer (Audio-Callback, Echtzeit) ──────────────────────┐
-│ kopiert aus dem Ring, wendet Lautstärke mit 8-ms-Rampe an, zählt Frames,          │
-│ füllt bei leerem Ring mit Stille                                                  │
+│ kopiert aus dem Ring → Equalizer → (Mono-Kopie fürs Spektrum) → Lautstärke mit    │
+│ 8-ms-Rampe; zählt Frames, füllt bei leerem Ring mit Stille                        │
 │ keine Sperre, keine Allokation, kein I/O, kein Log                                │
 └───────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -155,11 +156,28 @@ schneller als Echtzeit läuft, wartet es über `Renderer::would_underrun()` auf 
 | Windows | WASAPI (Shared Mode) | baut und testet in der CI; **Ausgabe an Hardware ungeprüft** |
 | Linux | ALSA (PipeWire/PulseAudio über deren ALSA-Schicht) | baut und testet in der CI; **Ausgabe an Hardware ungeprüft** |
 
+## Equalizer, Spektrum, Gapless
+
+Begründungen in [ADR 0009](decisions/0009-equalizer-spektrum-gapless.md).
+
+- **Equalizer** (`equalizer.rs`): zehn Peaking-Biquads, eine Oktave breit, ±12 dB, dazu Vorverstärkung. Er läuft im
+  Callback und wirkt deshalb sofort. Gemessen (Test): Anhebung und Absenkung treffen ihre Mittenfrequenz auf
+  0,3 dB; drei Oktaven entfernt ändert sich weniger als 0,6 dB.
+- **Spektrum** (`spectrum.rs`): Der Callback zweigt eine Mono-Kopie ab, der Engine-Thread rechnet etwa alle 40 ms
+  eine FFT über 2048 Samples und meldet 24 Pegel. Die Analyse läuft nur, solange ein Fenster sie anzeigt.
+- **Gapless**: `set_next(pfad)` nennt den Folgetitel. Ist der laufende Titel ganz eingereiht, wird der Folgetitel
+  dahinter in dieselbe Warteschlange gefüllt; an der Frame-Grenze wechselt `track`, `finished` zählt hoch.
+
+```text
+Titel A:  [ …dekodiert… Ende ]──┐
+                                ▼ gleiche Warteschlange, keine Lücke
+Titel B:                        [ Anfang …dekodiert… ]
+gespielt:  ─────────────────────│──────────────▶    Grenze erreicht → B ist der laufende Titel
+```
+
 ## Noch nicht enthalten
 
-- Die Engine spielt weiterhin genau einen Titel und zählt beendete Titel (`finished`); den Wechsel zum nächsten
-  macht die Sitzung (`session.rs`). Zwischen zwei Titeln entsteht dadurch eine kurze Lücke – Gapless ist Phase 6.
-- Gapless (Phase 6): Symphonia liefert Delay und Padding (`Track.delay`, `Track.padding`); der nächste Titel würde in
-  denselben Ring gefüllt.
-- Equalizer/DSP und Analysewerte für Visualisierungen (Phase 6): gehören in den Engine-Thread vor den Ring.
+- Limiter gegen Übersteuern durch den Equalizer.
 - Auswahl des Ausgabegeräts; Erkennen eines gewechselten Standardgeräts.
+- „Bit-perfect"-Modus mit Umschalten der Geräterate.
+- Überblenden (Crossfade) zwischen Titeln.

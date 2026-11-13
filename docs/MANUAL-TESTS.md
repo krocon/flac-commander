@@ -89,6 +89,19 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | W6 | Das Playlist-Fenster auf einen zweiten Bildschirm legen, App beenden, Bildschirm abziehen, starten | das Fenster erscheint auf dem verbliebenen Bildschirm |
 | W7 | Hauptfenster schließen, während das Playlist-Fenster offen ist | die App endet und speichert ihren Zustand |
 
+## Phase 6
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| A1 | Equalizer-Fenster öffnen (⌘E / Strg+E), „Equalizer an", einzelne Bänder ziehen | der Klang ändert sich sofort und passend zum Band (31 Hz: Bass, 16 kHz: Höhen); kein Knacken beim Ziehen |
+| A2 | Voreinstellungen durchschalten, „Zurücksetzen" | Regler springen, Klang folgt; ändert man danach einen Regler, zeigt die Auswahl „Eigene" |
+| A3 | Alle Bänder und die Vorverstärkung auf +12 dB bei lauter Musik | verzerrt (erwartet, kein Limiter) – aber kein Absturz, keine Aussetzer |
+| A4 | Equalizer einstellen, App neu starten | Einstellungen und Schalter wie zuvor |
+| A5 | Visualizer im Player ansehen; Pause; Stopp | Balken folgen der Musik (Bass links, Höhen rechts) und fallen bei Pause und Stopp auf null |
+| A6 | Systemeinstellung „Bewegung reduzieren" einschalten, App neu starten | kein Visualizer |
+| A7 | Ein Live-Album oder ein durchgehendes Werk in FLAC abspielen | die Titel gehen ohne Pause und ohne Knacken ineinander über; die Anzeige wechselt genau am Übergang |
+| A8 | Dasselbe mit MP3; mit Zufall; „Titel wiederholen" | keine hörbare Pause (bei MP3 je nach Datei ein winziger Absatz möglich) |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
@@ -102,4 +115,5 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 
 Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7; Phase 3 L2, L3,
-L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9.
+L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9; Phase 5 W1–W4, W6, W7; Phase 6 A1–A8 (nichts davon
+wurde gesehen oder gehört – nur durch Tests belegt).

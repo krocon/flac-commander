@@ -4,6 +4,7 @@
 //! crash never leaves half a file; a file that cannot be read is put aside and the app starts
 //! empty.
 
+use crate::audio::equalizer::EqSettings;
 use crate::error::{AppError, AppResult};
 use crate::playlist::RepeatMode;
 use serde::{Deserialize, Serialize};
@@ -33,6 +34,7 @@ pub struct SavedState {
     pub position_ms: u64,
     /// Id of the active skin; `None`: the default skin.
     pub skin: Option<String>,
+    pub equalizer: EqSettings,
     /// Place, size and visibility of the windows, by window label.
     pub windows: BTreeMap<String, WindowPlace>,
 }
@@ -71,6 +73,7 @@ impl Default for SavedState {
             current: None,
             position_ms: 0,
             skin: None,
+            equalizer: EqSettings::default(),
             windows: BTreeMap::new(),
         }
     }
@@ -87,6 +90,7 @@ impl SavedState {
         }
         // an id is used as a folder name: only what a skin id may look like
         self.skin = self.skin.filter(|id| crate::skins::manifest::is_valid_id(id));
+        self.equalizer = self.equalizer.sanitised();
         self.windows.retain(|label, place| {
             label.len() <= 40 && label.chars().all(|c| c.is_ascii_lowercase()) && place.is_sane()
         });

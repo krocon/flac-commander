@@ -1,6 +1,6 @@
 # Architektur
 
-Stand: Phase 5. Was hier als „geplant" markiert ist, existiert noch nicht.
+Stand: Phase 6. Was hier als „geplant" markiert ist, existiert noch nicht.
 
 ## Schichten
 
@@ -22,7 +22,8 @@ Stand: Phase 5. Was hier als „geplant" markiert ist, existiert noch nicht.
                                 │ Rust-Funktionsaufrufe
 ┌───────────────────────────────▼──────────────────────────────────────┐
 │ Rust-Kern                                    crates/fc-core/         │
-│   audio/       player (Engine), decode, resample, output, dts, tone  │
+│   audio/       player (Engine), decode, resample, equalizer,         │
+│                spectrum, output, dts, tone                           │
 │   session.rs   Player + Playlist + Speichern; playlist.rs, metadata, │
 │   storage.rs   error.rs                                              │
 │   skins/       Manifest, Prüfung, ZIP-Import, Bibliothek             │
@@ -147,7 +148,7 @@ Details: [AUDIO-ENGINE.md](AUDIO-ENGINE.md).
 ## Mehrere Fenster
 
 Jedes Fenster ist eine eigene WebView mit eigenem JavaScript-Kontext und zeigt dasselbe Frontend; das Fenster-Label
-(`main`, `playlist`) entscheidet, welcher Teil erscheint. Fenster teilen nichts in der WebView: Sie bleiben synchron,
+(`main`, `playlist`, `equalizer`) entscheidet, welcher Teil erscheint. Fenster teilen nichts in der WebView: Sie bleiben synchron,
 weil alle dieselben Events aus Rust hören und beim Start einen Schnappschuss holen. Kein Fenster startet eine Engine.
 
 ```text
@@ -164,7 +165,7 @@ Die Fensterliste ist fest (`windows.rs`), Nebenfenster werden beim Schließen nu
 
 ```text
 crates/fc-core/          Rust-Kern (kein Tauri)
-  src/audio/             player, decode, resample, dts, formats, output, tone
+  src/audio/             player, decode, resample, equalizer, spectrum, dts, formats, output, tone
   src/session.rs         Player + Playlist + Persistenz
   src/playlist.rs, metadata.rs, storage.rs, error.rs
   src/skins/             manifest (Schema, Prüfung), Bibliothek, ZIP-Import
@@ -175,7 +176,8 @@ crates/fc-core/          Rust-Kern (kein Tauri)
   examples/              play (Engine ohne App), probe (Symphonia + Lofty)
 src-tauri/               Tauri-Schale: commands/, events.rs, windows.rs, lib.rs, capabilities/
 src/app/core/            actions, backend, errors, i18n, log, player, playlist, skins, system, windows
-src/app/features/        player (auch SkinnedPlayer), playlist, skins, diagnostics
+src/app/features/        player (auch SkinnedPlayer), playlist, equalizer, visualizer, skins, windows,
+                         diagnostics
 skins/                   mitgelieferte Skins (ins Programm eingebettet)
 src/testing/             Fake-Fassaden für Tests
 docs/                    diese Dokumentation, decisions/ (ADRs)
@@ -195,6 +197,7 @@ Neue Abhängigkeiten nur mit Begründung in dieser Tabelle. Reines Rust ohne Sys
 | `symphonia` | 0.6.1 | **MPL-2.0** | Container und Decoder | reines Rust; kein Opus ([ADR 0003](decisions/0003-audio-bibliotheken.md)) |
 | `symphonia-adapter-libopus` | 0.3 | MIT/Apache-2.0, libopus BSD-artig | Opus-Decoder | **C-Bibliothek, gebündelt, braucht cmake**; optionales Feature `opus` ([ADR 0006](decisions/0006-resampling-opus-seek.md)) |
 | `zip`, `flate2` | 9.5 / 1.1 | MIT bzw. MIT/Apache-2.0 | Skin-Pakete entpacken | nur Deflate, reines Rust (miniz_oxide) |
+| `realfft` | 3.5 | MIT/Apache-2.0 | FFT für das Spektrum | reines Rust; über rubato ohnehin im Baum |
 | `rubato` | 5.1 | MIT/Apache-2.0 | Resampling auf die Geräterate | reines Rust |
 | `cpal` | 0.18.2 | Apache-2.0 | Audio-Ausgabe | CoreAudio, WASAPI, ALSA |
 | `serde`, `serde_json` | 1 | MIT/Apache-2.0 | DTOs über IPC | |

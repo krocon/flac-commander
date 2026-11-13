@@ -4,6 +4,7 @@ import { describeError } from '../../core/errors/app-error';
 import { SkinComponent, SkinPlayerWindow } from '../../core/skins/skin.models';
 import { Playlist } from '../playlist/playlist';
 import { SkinStore } from '../skins/skin.store';
+import { Visualizer } from '../visualizer/visualizer';
 import { PlayerView } from './player-view';
 import { PLAYER_TEXTS } from './player-texts';
 import { PlayerStore } from './player.store';
@@ -26,7 +27,7 @@ interface Placed {
  */
 @Component({
   selector: 'app-skinned-player',
-  imports: [Playlist],
+  imports: [Playlist, Visualizer],
   templateUrl: './skinned-player.html',
   styleUrl: './skinned-player.css',
 })

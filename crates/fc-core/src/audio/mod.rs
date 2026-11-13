@@ -5,8 +5,10 @@
 
 pub mod decode;
 pub mod dts;
+pub mod equalizer;
 pub mod formats;
 pub mod output;
 pub mod player;
 pub mod resample;
+pub mod spectrum;
 pub mod tone;
