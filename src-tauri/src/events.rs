@@ -14,6 +14,10 @@ pub const PLAYER_STATE: &str = "player://state";
 /// `core/playlist/playlist.models.ts`; its JSON form is tested in `fc-core/src/playlist.rs`.
 pub const PLAYLIST_STATE: &str = "playlist://state";
 
+/// Another skin is active. Payload: `commands::skins::ActiveSkin`, mirrored in
+/// `core/skins/skin.models.ts`.
+pub const SKIN_ACTIVE: &str = "skins://active";
+
 /// The test tone ended. Mirrored by `TestToneFinished` in `core/system/system.models.ts`.
 pub const TEST_TONE_FINISHED: &str = "audio://test-tone-finished";
 

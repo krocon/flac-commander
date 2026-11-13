@@ -63,6 +63,20 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | L11 | Vor dem Neustart eine Datei der Liste umbenennen | Eintrag bleibt, ist als nicht abspielbar markiert und wird übersprungen |
 | L12 | Ordner mit einigen Tausend Titeln hinzufügen | Fenster bleibt bedienbar, Tags füllen sich nach und nach |
 
+## Phase 4
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| S1 | „Skins" (oder ⌘K / Strg+K) | Dialog mit Modern (aktiv) und Retro samt Vorschau |
+| S2 | Retro „Verwenden" | Fenster wird 320 × 440 (Inhalt), grünes Display, Pixel-Tasten, Playlist im Skin; nichts ist abgeschnitten, keine Rollbalken am Fenster; Musik läuft dabei weiter |
+| S3 | Im Retro-Skin alles bedienen: Tasten, beide Regler, Playlist, Tastenkürzel | wie im Standard-Skin; gedrückte und aktive Tasten sehen anders aus; Tooltips mit Kürzel |
+| S4 | Einen eigenen Skin importieren (Kopie von `skins/retro` mit anderer `id`, als ZIP) | „… wurde installiert", erscheint in der Liste, lässt sich verwenden und entfernen |
+| S5 | Ein ZIP importieren, dessen `skin.json` einen Fehler hat (z. B. `"accent": "red"`) | Ablehnung mit Liste der Verstöße; der aktive Skin bleibt |
+| S6 | ⌘0 / Strg+0 im Retro-Skin | zurück zu Modern, Fenster wieder in der Größe veränderbar |
+| S7 | App mit aktivem Retro-Skin beenden und neu starten | startet im Retro-Skin in der richtigen Größe |
+| S8 | Nur Tastatur im Retro-Skin: Tab durch alle Bausteine | sichtbarer Fokus auf jedem Baustein, sinnvolle Reihenfolge |
+| S9 | Den aktiven importierten Skin entfernen | die App wechselt auf Modern |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
@@ -70,8 +84,9 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher | Phase 1: M1–M4, M6 in der gebündelten App (Debug-Bundle) | bestanden. Der Ton wurde nicht mit dem Ohr geprüft: belegt sind Start und Ende laut Backend und keine Gerätefehler. |
 | 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher, 48 kHz | Phase 2 in der gebündelten App: P1 (FLAC 16/44,1), P3 (Klick auf die Leiste), P2 (nur Pause: Zeit steht), P7 (nur →). Engine ohne App: FLAC ab Minute 1, MP3, DTS-WAV abgelehnt | bestanden, 0 Unterläufe. Nicht mit dem Ohr geprüft (4 % Lautstärke, niemand hat zugehört): belegt sind laufende Position, Zustände und fehlende Unterläufe. |
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 3 in der gebündelten App: L1 (Ordner mit 12 MP3), L4 (Sprung ans Ende → nächster Titel), L5 (nur „Nächster"), L10 (Neustart) | bestanden: Tags und Dauern erscheinen, Titelwechsel, Liste, Titel, Position 0:06 und Lautstärke 4 % nach dem Neustart wiederhergestellt. |
+| 2026-11-13 | macOS 27, Apple Silicon | Phase 4 in der gebündelten App: S1, S2, S7 | bestanden nach zwei Korrekturen (Fensterhöhe ohne Titelleiste, Regler und Playlist-Knöpfe im schmalen Skin). |
 | – | Windows 10/11, WASAPI | – | **offen** |
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 
 Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7; Phase 3 L2, L3,
-L6–L9, L11, L12 und der Rest von L5.
+L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9.

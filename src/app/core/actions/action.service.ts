@@ -8,6 +8,8 @@ export interface Action {
   readonly label: () => string;
   readonly shortcut?: Shortcut;
   readonly enabled?: () => boolean;
+  /** For actions that switch something: whether it is on (playing, repeat, shuffle). */
+  readonly active?: () => boolean;
   readonly run: () => void;
 }
 
@@ -38,6 +40,20 @@ export class ActionService {
     }
     action.run();
     return true;
+  }
+
+  /** The label of an action, in the current language. */
+  label(id: string): string {
+    return this.actions.get(id)?.label() ?? '';
+  }
+
+  isEnabled(id: string): boolean {
+    const action = this.actions.get(id);
+    return action !== undefined && action.enabled?.() !== false;
+  }
+
+  isActive(id: string): boolean {
+    return this.actions.get(id)?.active?.() === true;
   }
 
   /** Label with the shortcut, for tooltips: `Play (Space)`. */

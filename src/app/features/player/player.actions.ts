@@ -21,6 +21,7 @@ export function playerActions(store: PlayerStore, playlist: PlaylistStore): read
       id: 'player.togglePlay',
       label: () => t.playPause,
       shortcut: { key: ' ' },
+      active: () => store.isPlaying(),
       run: () => void store.togglePlay(),
     },
     {
@@ -53,12 +54,14 @@ export function playerActions(store: PlayerStore, playlist: PlaylistStore): read
             ? p.repeatOne
             : p.repeatOff,
       shortcut: { key: 'r' },
+      active: () => playlist.repeat() !== 'off',
       run: () => void playlist.cycleRepeat(),
     },
     {
       id: 'player.shuffle',
       label: () => p.shuffle,
       shortcut: { key: 's' },
+      active: () => playlist.shuffle(),
       run: () => void playlist.toggleShuffle(),
     },
     {

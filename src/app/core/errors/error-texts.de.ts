@@ -10,6 +10,7 @@ export const ERROR_TEXTS_DE: Translation<typeof ERROR_TEXTS_EN> = {
   no_output_device: 'Kein Audio-Ausgabegerät gefunden',
   audio_device: 'Das Audio-Ausgabegerät meldet einen Fehler',
   output_busy: 'Die Audio-Ausgabe ist gerade belegt',
+  invalid_skin: 'Der Skin wurde nicht angenommen',
   internal: 'Interner Fehler',
   backend_unavailable: 'Das Desktop-Backend ist nicht verfügbar (läuft die App im Browser?)',
   unknown: 'Unerwarteter Fehler',

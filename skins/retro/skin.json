@@ -1,0 +1,207 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.retro",
+  "name": "Retro",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "Pixels, bevels and a green display: a fixed-size player in the spirit of the nineties.",
+  "preview": "preview.png",
+  "theme": {
+    "background": "#232733",
+    "surface": "#0b120b",
+    "surfaceRaised": "#1d2b1d",
+    "foreground": "#b6f5c0",
+    "muted": "#6fa87a",
+    "accent": "#5dff7a",
+    "accentContrast": "#0b120b",
+    "border": "#1c202b",
+    "ok": "#5dff7a",
+    "danger": "#ff8f6b",
+    "focus": "#ffcc33",
+    "fontFamily": "ui-monospace, Menlo, Consolas, monospace",
+    "fontMono": "ui-monospace, Menlo, Consolas, monospace",
+    "radius": 0
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 320,
+      "height": 440,
+      "background": "assets/background.png",
+      "pixelated": true,
+      "components": [
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 14,
+          "y": 26,
+          "width": 292,
+          "height": 18,
+          "fontSize": 14,
+          "color": "#5dff7a"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 14,
+          "y": 46,
+          "width": 292,
+          "height": 14,
+          "fontSize": 11,
+          "color": "#6fa87a"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 14,
+          "y": 64,
+          "width": 90,
+          "height": 26,
+          "fontSize": 22,
+          "color": "#5dff7a"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 110,
+          "y": 74,
+          "width": 110,
+          "height": 14,
+          "fontSize": 10,
+          "color": "#6fa87a"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 226,
+          "y": 74,
+          "width": 80,
+          "height": 14,
+          "fontSize": 11,
+          "align": "right",
+          "color": "#6fa87a"
+        },
+        {
+          "type": "seekbar",
+          "x": 8,
+          "y": 100,
+          "width": 304,
+          "height": 16
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 8,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/previous.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 40,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/play.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 72,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/stop.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 104,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/next.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 136,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/open.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 176,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/repeat.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 208,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 282,
+          "y": 124,
+          "width": 30,
+          "height": 24,
+          "states": {
+            "normal": "assets/skins.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "volume",
+          "x": 176,
+          "y": 150,
+          "width": 136,
+          "height": 12
+        },
+        {
+          "type": "playlist",
+          "x": 10,
+          "y": 166,
+          "width": 300,
+          "height": 264
+        }
+      ]
+    }
+  }
+}

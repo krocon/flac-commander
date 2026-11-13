@@ -1,137 +1,162 @@
-# Skin-Format (Entwurf)
+# Skin-Format (Version 1)
 
-**Status: Entwurf für Phase 4. Nichts davon ist implementiert.** Vorhanden ist heute nur die Schnittstelle, auf der
-Skins aufsetzen: die CSS-Variablen `--player-*` in `src/styles.css`. Der Entwurf wird vor der Umsetzung noch einmal
-gegen die Player-Oberfläche aus Phase 2/3 geprüft.
+Stand: Phase 4 – implementiert. Maßgeblich ist der Code in `crates/fc-core/src/skins/manifest.rs`; jede Regel hier hat
+dort einen Test (`skins/tests.rs`). Die mitgelieferten Skins unter [`skins/`](../skins) sind zugleich die Beispiele.
 
 ## Grundsätze
 
-1. **Ein Skin ist Daten, kein Programm.** Kein JavaScript, kein frei geschriebenes CSS, kein HTML. Ein Skin wählt Werte
-   und ordnet vorgegebene Bausteine an.
-2. **Skins ändern die Darstellung, nie die Logik.** Jeder Baustein („Play-Taste", „Seekbar", „Titelanzeige") gehört
-   der App; der Skin bestimmt, ob, wo und wie er erscheint.
-3. **Ein ungültiger Skin wird abgelehnt, nicht halb geladen.** Die Validierung läuft vollständig in Rust und liefert
-   eine Liste verständlicher Diagnosen; die App bleibt beim bisherigen Skin.
-4. **Bedienbarkeit bleibt.** Jeder Baustein behält Namen, Rolle, Tastaturbedienung und sichtbaren Fokus, egal wie der
-   Skin ihn zeichnet. Pflicht-Bausteine (Play/Pause, Lautstärke) kann ein Skin nicht entfernen.
+1. **Ein Skin ist Daten, kein Programm.** Kein JavaScript, kein HTML, kein frei geschriebenes CSS. Ein Skin wählt Werte
+   und ordnet Bausteine an, die die App bereitstellt.
+2. **Skins ändern die Darstellung, nie die Logik.** Was eine Taste tut, was ein Text sagt und wie ein Regler bedient
+   und vorgelesen wird, gehört der App und ist in jedem Skin gleich.
+3. **Ein ungültiger Skin wird als Ganzes abgelehnt.** Die Prüfung läuft vollständig in Rust, bevor irgendetwas
+   angezeigt wird, und nennt alle Verstöße auf einmal. Die App behält den bisherigen Skin.
+4. **Es gibt immer einen Weg zurück.** Ein Skin mit eigenem Layout muss eine Taste „Skin wählen" enthalten, und
+   ⌘0 / Strg+0 schaltet in jedem Skin auf den Standard-Skin zurück.
 
 ## Paket
 
-Ein Ordner oder ein ZIP-Archiv (`.fcskin`) mit:
+Ein ZIP-Archiv (Endung `.fcskin` oder `.zip`) mit `skin.json` auf oberster Ebene – oder in genau einem Ordner, wie ihn
+„Ordner komprimieren" erzeugt. Außer `skin.json` sind nur Bilder erlaubt: **PNG, JPEG, WebP**, erkannt am Inhalt,
+nicht an der Endung. SVG ist nicht erlaubt (kann Skripte und externe Verweise enthalten).
 
-```text
-skin.json          Manifest (Pflicht)
-preview.png        Vorschaubild (optional)
-assets/…           Grafiken: PNG, JPEG, WebP; SVG nur nach Bereinigung (siehe SECURITY.md)
-```
+| Grenze | Wert |
+| --- | --- |
+| Dateien je Paket | 200 |
+| Größe je Datei | 5 MB |
+| Paket entpackt | 30 MB |
+| Bild je Seite | 4096 Pixel |
+| Archivdatei | 40 MB |
 
-## Manifest `skin.json`
+## `skin.json`
 
 ```json
 {
   "formatVersion": 1,
-  "id": "io.github.example.cyberpunk",
-  "name": "Cyberpunk",
+  "id": "org.example.neon",
+  "name": "Neon",
   "version": "1.0.0",
-  "author": "Community",
-  "description": "Dark futuristic player skin",
-  "minAppVersion": "0.4.0",
+  "author": "Jane Doe",
+  "description": "Pink on black.",
+  "minAppVersion": "0.1.0",
   "preview": "preview.png",
-  "theme": {
-    "background": "#141414",
-    "surface": "#1e1e1e",
-    "foreground": "#f5f5f5",
-    "muted": "#a8a8a8",
-    "accent": "#ffdd00",
-    "accentContrast": "#141414",
-    "border": "#3a3a3a",
-    "fontFamily": "system-ui, sans-serif",
-    "radius": 6
-  },
-  "windows": {
-    "player": {
-      "width": 420,
-      "height": 180,
-      "resizable": false,
-      "frame": "none",
-      "background": "assets/player-background.png",
-      "components": [
-        {
-          "type": "button",
-          "action": "player.playPause",
-          "x": 16, "y": 120, "width": 32, "height": 32,
-          "states": {
-            "normal": "assets/play.png",
-            "hover": "assets/play-hover.png",
-            "pressed": "assets/play-pressed.png",
-            "active": "assets/pause.png"
-          }
-        },
-        { "type": "seekbar", "x": 16, "y": 96, "width": 388, "height": 10 },
-        { "type": "text", "source": "track.title", "x": 16, "y": 16, "width": 300, "height": 20 }
-      ]
-    }
-  }
+  "theme": { "background": "#101010", "accent": "#ff2bd6", "radius": 2 },
+  "windows": { "player": { "layout": "flow" } }
 }
 ```
 
-### Felder
-
 | Feld | Pflicht | Regel |
 | --- | --- | --- |
-| `formatVersion` | ja | Ganzzahl. Die App lädt nur Versionen, die sie kennt; ältere werden migriert, neuere abgelehnt. |
-| `id` | ja | Eindeutig, `[a-z0-9.-]`, höchstens 100 Zeichen. Bestimmt den Installationsordner. |
-| `name`, `version` | ja | `version` ist SemVer. |
-| `author`, `description` | nein | Klartext, begrenzte Länge; wird nie als HTML ausgegeben. |
-| `minAppVersion` | nein | SemVer; ist die App älter, wird der Skin mit Hinweis abgelehnt. |
-| `preview` | nein | Relativer Pfad im Paket. |
-| `theme` | nein | Feste Schlüsselmenge; jeder Wert wird auf eine `--player-*`-Variable abgebildet. Unbekannte Schlüssel sind ein Fehler. Farben als `#rgb`/`#rrggbb`/`#rrggbbaa`. |
-| `windows` | nein | Schlüssel aus fester Menge: `player`, `playlist`, `equalizer`, `visualizer`, `library`, `skins`. Fehlt ein Fenster, gilt das Standardlayout der App mit den Farben des Skins. |
-| `windows.*.frame` | nein | `system` (Standard) oder `none` (rahmenlos, der Skin liefert Titelzeile und Schließen-Baustein mit). |
-| `components[].type` | ja | Aus dem Katalog der App: `button`, `toggle`, `slider`, `seekbar`, `text`, `time`, `image`, `list`, `spectrum`, `dragRegion`. |
-| `components[].action` / `source` | je Typ | Aus festen Listen (`player.play`, `player.next`, `track.title` …). Es gibt keine frei definierbaren Aktionen. |
-| `states` | nein | `normal`, `hover`, `pressed`, `active`, `disabled`, `focus`. Fehlt `focus`, zeichnet die App ihren eigenen Fokusring. |
+| `formatVersion` | ja | `1`. Andere Versionen werden abgelehnt. |
+| `id` | ja | 3–100 Zeichen aus `a–z`, `0–9`, `.`, `-`; beginnt mit einem Buchstaben; kein `..`. Bestimmt den Installationsordner. Die Ids der mitgelieferten Skins sind vergeben. |
+| `name` | ja | 1–100 Zeichen, keine Steuerzeichen. |
+| `version` | ja | drei Zahlen, `1.0.0`. |
+| `author`, `description` | nein | höchstens 100 bzw. 500 Zeichen. Werden als Text angezeigt, nie als HTML. |
+| `minAppVersion` | nein | drei Zahlen. Ist die App älter, wird der Skin mit Hinweis abgelehnt. |
+| `preview` | nein | Bild im Paket, wird in der Auswahl gezeigt. |
+| `theme` | nein | siehe unten. |
+| `windows.player` | nein | siehe unten. Fehlt es, legt die App ihren Standard-Player an. |
 
-Maße sind CSS-Pixel im Koordinatensystem des Fensters. Für pixelige Retro-Skins gibt es je Fenster
-`"scaling": "pixelated"` und einen ganzzahligen Skalierungsfaktor in den Einstellungen des Nutzers.
+Unbekannte Schlüssel sind ein Fehler, an jeder Stelle.
 
-### Layout-Modi
+### `theme`
 
-- **`absolute`** (wie im Beispiel): feste Positionen, für pixelgenaue Skins mit Hintergrundgrafik.
-- **`flow`**: der Skin nennt nur Reihenfolge und Sichtbarkeit von Bausteinen in benannten Bereichen; die App legt sie
-  aus. Für moderne, in der Größe veränderbare Skins.
+Jedes Feld setzt genau eine CSS-Variable; was fehlt, behält den Standardwert der App.
 
-Ein Fenster nutzt genau einen Modus.
+| Feld | Variable | Wert |
+| --- | --- | --- |
+| `background`, `surface`, `surfaceRaised` | `--player-background`, `-surface`, `-surface-raised` | Farbe |
+| `foreground`, `muted` | `--player-foreground`, `-muted` | Farbe |
+| `accent`, `accentContrast` | `--player-accent`, `-accent-contrast` | Farbe |
+| `border`, `ok`, `danger`, `focus` | `--player-border`, `-ok`, `-danger`, `-focus` | Farbe |
+| `fontFamily`, `fontMono` | `--player-font-family`, `-font-mono` | Schriftnamen mit Komma getrennt; nur Buchstaben, Ziffern, Leerzeichen, `-`, `_`, Anführungszeichen; höchstens 200 Zeichen |
+| `radius` | `--player-radius` | 0–32 (CSS-Pixel) |
 
-## Validierung und Diagnose
+Eine **Farbe** ist `#rgb`, `#rgba`, `#rrggbb` oder `#rrggbbaa` – nichts sonst. Schriftdateien kann ein Skin nicht
+mitbringen; er nennt Schriften, die das System hat.
 
-`validate_skin(path) -> Result<Skin, Vec<SkinDiagnostic>>` in `fc-core`, ohne Tauri, mit Unit-Tests für jede Regel:
+### `windows.player`
 
-- Schema: Pflichtfelder, Typen, Wertebereiche, unbekannte Schlüssel.
-- Pfade: nur relativ, ohne `..`, ohne absoluten Anteil, ohne Laufwerk; die Datei muss im Paket existieren.
-- Dateien: erlaubte Typen nach Inhalt (nicht nach Endung), Größen- und Maßgrenzen.
-- Geometrie: Bausteine liegen im Fenster; Pflicht-Bausteine sind vorhanden und groß genug zum Treffen.
-- Kontrast: Warnung (kein Fehler), wenn `foreground`/`background` unter WCAG AA liegt.
+| Feld | Regel |
+| --- | --- |
+| `layout` | `flow` (Standard): Die App legt den Player an, in der Größe veränderbar; der Skin liefert Farben und Schrift. `absolute`: Der Skin platziert jeden Baustein selbst in einem Fenster fester Größe. |
+| `width`, `height` | nur bei `absolute`, dann Pflicht: 200–2000 × 100–2000 CSS-Pixel. Das ist die Größe des Fensterinhalts. |
+| `background` | Bild im Paket, füllt das Fenster. |
+| `pixelated` | `true`: Bilder ohne Glättung skalieren (Pixel-Art). |
+| `components` | Liste der Bausteine, höchstens 200. Nur bei `absolute`. |
 
-Eine Diagnose nennt Stelle (`windows.player.components[2].states.hover`), Regel und Klartext.
+### Bausteine
 
-## Laden und Wechseln
+Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im Fenster liegen).
 
-Rust validiert und gibt dem Frontend ein bereinigtes Modell; Grafiken liefert ein eigenes URL-Schema, das nur Dateien
-des aktiven, validierten Skins ausgibt. Das Frontend setzt die CSS-Variablen und rendert die Bausteine aus dem Modell.
-Ein Wechsel braucht keinen Neustart: neues Modell, neue Variablen, Fenstergrößen anpassen. Schlägt das Laden fehl,
-bleibt der alte Skin aktiv.
+| `type` | Weitere Felder | Verhalten |
+| --- | --- | --- |
+| `button` | `action` (Pflicht), `states` | Führt eine Aktion der App aus. Mindestens 12 × 12. Ohne Bilder zeichnet die App eine beschriftete Taste. |
+| `seekbar` | – | Positionsregler des laufenden Titels. |
+| `volume` | – | Lautstärkeregler. |
+| `text` | `source` (Pflicht), `fontSize` (6–72), `color`, `align` | Eine Zeile Text; zu langer Text wird mit „…" gekürzt. |
+| `time` | `source` (Pflicht), `fontSize`, `color`, `align` | `position` oder `duration`. |
+| `playlist` | – | Die Playlist mit ihren Knöpfen. |
+| `image` | `states.normal` (Pflicht) | Ein Bild ohne Funktion. |
 
-## Mitgelieferte Skins (Phase 4)
+**Aktionen** (`action`): `player.togglePlay`, `player.stop`, `player.next`, `player.previous`, `player.open`,
+`player.repeat`, `player.shuffle`, `app.skins`. Es gibt keine frei definierbaren Aktionen.
 
-- **Retro**: pixelig, feste Größe, eigene Grafiken im Stil klassischer Player – keine Kopie fremder Skins.
-- **Modern**: dunkel, `flow`-Layout, in der Größe veränderbar; entspricht dem heutigen Basisthema.
+**Textquellen** (`source` bei `text`): `track.title`, `track.artist`, `track.details`, `player.status` (zeigt auch
+Fehlermeldungen).
 
-## Winamp-Skins (`.wsz`), Phase 7
+**Zustandsbilder** (`states` bei `button`): `normal`, `hover`, `pressed`, `active` (solange die Funktion an ist:
+Wiedergabe läuft, Wiederholen, Zufall), `disabled`. Fehlt ein Zustand, gilt `normal`.
 
-Klassische Skins sind ZIP-Archive mit Bitmaps fester Namen (`main.bmp`, `cbuttons.bmp`, `titlebar.bmp`, `pledit.bmp`
-…), Textdateien für Farben und Regionen und Bitmap-Schriften; Bedienelemente sind Ausschnitte fester Position in
-diesen Bitmaps. Ein Importer würde daraus ein Paket dieses Formats erzeugen (`absolute`-Layout mit festem Mapping).
-Vor jedem Code steht die in der Roadmap genannte Analyse; die Grenzen (Regionen, Schriften, Mini-Modus, Verhalten
-einzelner Skins) werden dort dokumentiert. Es werden weder fremde Skins mitgeliefert noch Code aus Webamp übernommen,
-ohne Lizenz und Rechte zu prüfen.
+**Pflicht bei `absolute`:** eine Taste mit `player.togglePlay` und eine mit `app.skins`.
+
+Bildpfade sind relativ zum Paket, mit `/`, ohne `..`, ohne führenden `/`, ohne Laufwerk.
+
+## Was die App hinzufügt, egal was der Skin zeichnet
+
+- Jede Taste hat ihren Namen (`aria-label`), ihren Tooltip mit Tastenkürzel und ist per Tastatur erreichbar; der
+  Fokusring kommt von der App.
+- Regler sind echte Regler mit vorgelesenem Wert.
+- Der Status ist eine Live-Region.
+- Tastenkürzel gelten in jedem Skin.
+
+## Importieren und Entfernen
+
+„Skins" → „Skin importieren …" (oder ⌘K / Strg+K). Die Prüfung meldet jeden Verstoß mit Stelle und Klartext, zum
+Beispiel:
+
+```text
+theme.accent: must be a colour like #rgb, #rrggbb or #rrggbbaa
+windows.player.components[3]: must have a size and lie inside the window
+```
+
+Importierte Skins liegen im Datenordner der App unter `skins/<id>/`. Ein Import mit derselben Id ersetzt den
+vorhandenen; mitgelieferte Skins lassen sich weder ersetzen noch entfernen. Ein installierter Skin, der nicht (mehr)
+gültig ist, wird beim Start ausgelassen und protokolliert.
+
+## Mitgelieferte Skins
+
+| Skin | Layout | Was er zeigt |
+| --- | --- | --- |
+| **Modern** (`io.github.krocon.modern`) | `flow` | dunkel, ruhig, in der Größe veränderbar – der Standard |
+| **Retro** (`io.github.krocon.retro`) | `absolute`, 320 × 440 | Pixel-Tasten mit Kanten, grünes Display, feste Größe. Alle Grafiken erzeugt `scripts/make-retro-skin.mjs`; es ist keine Kopie eines fremden Skins. |
+
+## Einen eigenen Skin bauen
+
+1. `skins/retro/skin.json` als Vorlage kopieren, `id`, `name` und Bilder ändern.
+2. Als ZIP packen (`skin.json` oben) und importieren.
+3. Die Meldungen der Prüfung abarbeiten.
+
+## Noch nicht im Format
+
+- Weitere Fenster (Playlist, Equalizer als eigene Fenster) – mit dem Mehrfenster-Konzept.
+- Rahmenlose Fenster mit eigener Titelzeile und Ziehbereich.
+- Bitmap-Schriften und Bilder für Regler (heute zeichnet die App Regler in den Farben des Skins).
+- Ganzzahliges Hochskalieren pixeliger Skins.
+- Kontrastwarnung beim Import. Die mitgelieferten Skins prüft ein Test auf WCAG AA (alle Textpaare ≥ 4,5 : 1,
+  `the_built_in_skins_meet_wcag_aa`); importierte Skins werden darauf noch nicht geprüft.
+
+## Winamp-Skins (`.wsz`)
+
+Analyse und Importer sind Phase 7, siehe [WINAMP-SKINS.md](WINAMP-SKINS.md), sobald vorhanden. Es werden weder fremde
+Skins mitgeliefert noch Code aus Webamp übernommen.

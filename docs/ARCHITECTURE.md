@@ -1,6 +1,6 @@
 # Architektur
 
-Stand: Phase 3. Was hier als „geplant" markiert ist, existiert noch nicht.
+Stand: Phase 4. Was hier als „geplant" markiert ist, existiert noch nicht.
 
 ## Schichten
 
@@ -25,7 +25,8 @@ Stand: Phase 3. Was hier als „geplant" markiert ist, existiert noch nicht.
 │   audio/       player (Engine), decode, resample, output, dts, tone  │
 │   session.rs   Player + Playlist + Speichern; playlist.rs, metadata, │
 │   storage.rs   error.rs                                              │
-│   geplant: library, skins                                            │
+│   skins/       Manifest, Prüfung, ZIP-Import, Bibliothek             │
+│   geplant: library                                                   │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -104,6 +105,20 @@ Session → Saver-Thread → state.json (entprellt, atomar); beim Beenden sofort
 Der Player kennt keine Liste, die Playlist kein Audio; nur die Sitzung kennt beide. Auswahl in der Liste ist
 Zustand des Fensters und geht nicht ans Backend.
 
+### Skins
+
+```text
+SkinStore → SkinApi → call('skins_activate', id) → SkinLibrary (geprüfte Skins im Speicher)
+  → Fenstergröße setzen → Event skins://active { info, theme, player } an alle Fenster
+SkinStore: theme → CSS-Variablen --player-* am Dokument
+App: layout 'flow' → Standard-Player + Playlist;  layout 'absolute' → SkinnedPlayer, der die
+     Bausteine des Skins an ihren Positionen rendert und dieselben Stores und Aktionen nutzt
+Bilder: <img>/background → skin://localhost/<id>/<pfad> → Rust liefert die geprüfte Datei aus dem Speicher
+```
+
+Ein Skin bringt kein Verhalten mit: Tasten führen Aktionen des Aktionssystems aus, Texte kommen aus `PlayerView`,
+das der Standard-Player ebenfalls nutzt.
+
 Fallengelassene Dateien nimmt Rust direkt aus dem Fensterereignis; das Fenster erfährt nur, dass gezogen wird
 (für den Hinweis), nie einen Pfad.
 
@@ -143,14 +158,16 @@ crates/fc-core/          Rust-Kern (kein Tauri)
   src/audio/             player, decode, resample, dts, formats, output, tone
   src/session.rs         Player + Playlist + Persistenz
   src/playlist.rs, metadata.rs, storage.rs, error.rs
+  src/skins/             manifest (Schema, Prüfung), Bibliothek, ZIP-Import
   tests/formats.rs       Dekodieren und Seek an echten Dateien
   tests/player.rs        die Engine gegen ein simuliertes Ausgabegerät
   tests/session.rs       Titelwechsel, defekte Dateien, Speichern/Wiederherstellen
   tests/fixtures/        selbst erzeugte Sinus-Dateien (scripts/make-fixtures.sh)
   examples/              play (Engine ohne App), probe (Symphonia + Lofty)
 src-tauri/               Tauri-Schale: commands/, events.rs, lib.rs, capabilities/
-src/app/core/            actions, backend, errors, i18n, log, player, playlist, system
-src/app/features/        player, playlist, diagnostics
+src/app/core/            actions, backend, errors, i18n, log, player, playlist, skins, system
+src/app/features/        player (auch SkinnedPlayer), playlist, skins, diagnostics
+skins/                   mitgelieferte Skins (ins Programm eingebettet)
 src/testing/             Fake-Fassaden für Tests
 docs/                    diese Dokumentation, decisions/ (ADRs)
 ```
@@ -168,6 +185,7 @@ Neue Abhängigkeiten nur mit Begründung in dieser Tabelle. Reines Rust ohne Sys
 | `tauri-plugin-dialog` | 2.8 | MIT/Apache-2.0 | System-Dialog „Datei öffnen" | nur aus Rust genutzt, keine WebView-Berechtigung |
 | `symphonia` | 0.6.1 | **MPL-2.0** | Container und Decoder | reines Rust; kein Opus ([ADR 0003](decisions/0003-audio-bibliotheken.md)) |
 | `symphonia-adapter-libopus` | 0.3 | MIT/Apache-2.0, libopus BSD-artig | Opus-Decoder | **C-Bibliothek, gebündelt, braucht cmake**; optionales Feature `opus` ([ADR 0006](decisions/0006-resampling-opus-seek.md)) |
+| `zip`, `flate2` | 9.5 / 1.1 | MIT bzw. MIT/Apache-2.0 | Skin-Pakete entpacken | nur Deflate, reines Rust (miniz_oxide) |
 | `rubato` | 5.1 | MIT/Apache-2.0 | Resampling auf die Geräterate | reines Rust |
 | `cpal` | 0.18.2 | Apache-2.0 | Audio-Ausgabe | CoreAudio, WASAPI, ALSA |
 | `serde`, `serde_json` | 1 | MIT/Apache-2.0 | DTOs über IPC | |

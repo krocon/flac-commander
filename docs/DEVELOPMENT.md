@@ -30,6 +30,7 @@
 | `pnpm tauri build --debug --bundles app` | gebündelte App zum Ausprobieren (`target/debug/bundle/`) |
 | `pnpm tauri:build:mac` / `:linux` / `:windows` | Release-Pakete je Plattform |
 | `pnpm fixtures` | Testdateien neu erzeugen (`scripts/make-fixtures.sh`) |
+| `node scripts/make-retro-skin.mjs` | Grafiken des Retro-Skins neu zeichnen (`skins/retro`) |
 
 ### Der Kern ohne App
 

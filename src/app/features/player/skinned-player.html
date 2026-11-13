@@ -1,0 +1,132 @@
+<div
+  class="window"
+  [class.pixelated]="layout().pixelated"
+  [style.width.px]="layout().width"
+  [style.height.px]="layout().height"
+  [style.background-image]="background()"
+>
+  @for (item of placed(); track $index) {
+    @let c = item.component;
+    @switch (c.type) {
+      @case ('button') {
+        <button
+          type="button"
+          class="placed"
+          [class.pictured]="item.normal !== null"
+          [class.active]="actions.isActive(c.action ?? '')"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [style.--normal]="item.normal"
+          [style.--hover]="item.hover"
+          [style.--pressed]="item.pressed"
+          [style.--active]="item.active"
+          [style.--disabled]="item.disabled"
+          [attr.aria-label]="label(c.action)"
+          [attr.aria-pressed]="item.active !== null ? actions.isActive(c.action ?? '') : null"
+          [title]="actions.hint(c.action ?? '')"
+          [disabled]="!actions.isEnabled(c.action ?? '')"
+          (click)="actions.run(c.action ?? '')"
+        >
+          @if (item.normal === null) {
+            <span class="caption">{{ label(c.action) }}</span>
+          }
+        </button>
+      }
+      @case ('text') {
+        <p
+          class="placed text"
+          [attr.role]="c.source === 'player.status' ? 'status' : null"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [style.line-height.px]="c.height"
+          [style.font-size.px]="c.fontSize"
+          [style.color]="c.color"
+          [style.text-align]="c.align"
+          [title]="text(c.source)"
+        >
+          {{ text(c.source) }}
+        </p>
+      }
+      @case ('time') {
+        <p
+          class="placed text time"
+          aria-hidden="true"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [style.line-height.px]="c.height"
+          [style.font-size.px]="c.fontSize"
+          [style.color]="c.color"
+          [style.text-align]="c.align"
+        >
+          {{ time(c.source) }}
+        </p>
+      }
+      @case ('seekbar') {
+        <input
+          #seek
+          class="placed"
+          type="range"
+          min="0"
+          step="1000"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [max]="store.durationMs() ?? 0"
+          [value]="store.positionMs()"
+          [disabled]="!view.seekable()"
+          [attr.aria-label]="t.position"
+          [attr.aria-valuetext]="view.positionText()"
+          (input)="store.previewSeek(seek.valueAsNumber)"
+          (change)="store.commitSeek(seek.valueAsNumber)"
+        />
+      }
+      @case ('volume') {
+        <input
+          #volume
+          class="placed"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [value]="view.volumePercent()"
+          [attr.aria-label]="t.volume"
+          [attr.aria-valuetext]="t.percent(view.volumePercent())"
+          (input)="store.previewVolume(volume.valueAsNumber / 100)"
+          (change)="store.commitVolume()"
+        />
+      }
+      @case ('playlist') {
+        <app-playlist
+          class="placed compact"
+          [compact]="true"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+        />
+      }
+      @case ('image') {
+        <div
+          class="placed image"
+          aria-hidden="true"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [style.background-image]="item.normal"
+        ></div>
+      }
+    }
+  }
+</div>

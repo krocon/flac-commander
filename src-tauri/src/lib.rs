@@ -9,8 +9,9 @@ pub mod events;
 
 use fc_core::audio::player::DefaultOutput;
 use fc_core::session::{PlayAdded, Session, SessionConfig};
-use std::sync::Arc;
+use fc_core::skins::SkinLibrary;
 use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
 use tauri::{DragDropEvent, Emitter, Manager, RunEvent, WindowEvent};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 
@@ -19,6 +20,8 @@ use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
 pub struct AppState {
     /// Player and playlist: the one playback session of the app.
     pub session: Session,
+    /// Built-in and imported skins.
+    pub skins: Arc<Mutex<SkinLibrary>>,
     /// True while a test tone plays.
     pub tone_busy: Arc<AtomicBool>,
 }
@@ -96,6 +99,16 @@ pub fn run() {
         .plugin(log_plugin())
         // used from Rust only: the webview gets no dialog permission
         .plugin(tauri_plugin_dialog::init())
+        // pictures of validated skins; the handler knows nothing but those
+        .register_uri_scheme_protocol("skin", |context, request| {
+            match context.app_handle().try_state::<AppState>() {
+                Some(state) => commands::skins::serve(&state.skins, &request),
+                None => tauri::http::Response::builder()
+                    .status(tauri::http::StatusCode::SERVICE_UNAVAILABLE)
+                    .body(Vec::new())
+                    .unwrap_or_default(),
+            }
+        })
         .setup(|app| {
             log_panics();
             let player_events = app.handle().clone();
@@ -134,7 +147,23 @@ pub fn run() {
                 let added = session.add_paths(&start.paths, PlayAdded::Always);
                 log::info!("command line: {} path(s), {added} track(s) added", start.paths.len());
             }
-            app.manage(AppState { session, tone_busy: Arc::default() });
+            let skins_folder = match app.path().app_data_dir() {
+                Ok(folder) => Some(folder.join("skins")),
+                Err(e) => {
+                    log::warn!("no data folder, skins cannot be imported: {e}");
+                    None
+                }
+            };
+            let version = app.package_info().version.to_string();
+            let skins = Arc::new(Mutex::new(SkinLibrary::load(skins_folder, &version)));
+            let state = AppState { session, skins, tone_busy: Arc::default() };
+            // the window of a fixed-size skin has its size before it shows anything
+            if let (Ok(skin), Some(window)) =
+                (commands::skins::active_skin(&state), app.get_webview_window("main"))
+            {
+                commands::skins::fit_window(&window, &skin);
+            }
+            app.manage(state);
             let package = app.package_info();
             log::info!(
                 "{} {} started on {} {}",
@@ -163,6 +192,12 @@ pub fn run() {
             commands::playlist::playlist_clear,
             commands::playlist::playlist_set_repeat,
             commands::playlist::playlist_set_shuffle,
+            commands::skins::skins_list,
+            commands::skins::skins_active,
+            commands::skins::skins_activate,
+            commands::skins::skins_import,
+            commands::skins::skins_remove,
+            commands::skins::skins_fit_viewport,
         ])
         .on_window_event(|window, event| {
             // files and folders dropped onto a window: Rust takes the paths, not the webview

@@ -1,17 +1,33 @@
 :host {
+  display: block;
+  height: 100vh;
+}
+
+.flow {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  height: 100vh;
+  height: 100%;
   max-width: 720px;
   margin: 0 auto;
   padding: 16px;
 }
 
+header button {
+  margin-left: auto;
+  font: inherit;
+  font-size: 12px;
+  color: var(--player-foreground);
+  background: var(--player-surface-raised);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
 header {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 12px;
 }
 

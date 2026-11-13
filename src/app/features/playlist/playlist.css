@@ -122,3 +122,39 @@ button {
   margin: 6px 0 0;
   color: var(--player-danger);
 }
+
+/* inside a skin's fixed box: no frame of its own, small footer */
+:host(.compact) {
+  .playlist {
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  .entries,
+  .empty {
+    border: none;
+    background: none;
+    font-size: 11px;
+  }
+
+  li {
+    grid-template-columns: 3ch 1fr auto;
+    gap: 4px;
+    padding: 1px 4px;
+  }
+
+  .footer {
+    margin-top: 4px;
+    gap: 4px;
+  }
+
+  button {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .summary {
+    font-size: 10px;
+  }
+}

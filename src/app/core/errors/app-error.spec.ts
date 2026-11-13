@@ -16,6 +16,7 @@ describe('AppError', () => {
       'no_output_device',
       'audio_device',
       'output_busy',
+      'invalid_skin',
       'internal',
     ]);
   });

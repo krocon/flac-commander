@@ -1,0 +1,81 @@
+<dialog #dialog aria-labelledby="skin-chooser-title" (close)="store.closeChooser()">
+  <header>
+    <h2 id="skin-chooser-title">{{ t.chooseSkin }}</h2>
+    <button type="button" class="plain" [attr.aria-label]="t.close" (click)="store.closeChooser()">
+      ✕
+    </button>
+  </header>
+
+  <ul class="skins">
+    @for (skin of store.list(); track skin.id) {
+      <li [class.active]="skin.id === store.activeId()">
+        @if (store.previewUrl(skin); as preview) {
+          <img [src]="preview" [alt]="t.previewOf(skin.name)" width="64" height="88" />
+        } @else {
+          <div class="no-preview" aria-hidden="true"></div>
+        }
+        <div class="about">
+          <p class="name">
+            {{ skin.name }}
+            @if (skin.id === store.activeId()) {
+              <span class="badge">{{ t.active }}</span>
+            }
+          </p>
+          <p class="meta">
+            {{ t.version(skin.version) }}
+            @if (skin.author) {
+              · {{ t.by(skin.author) }}
+            }
+            @if (skin.builtIn) {
+              · {{ t.builtIn }}
+            }
+          </p>
+          @if (skin.description) {
+            <p class="description">{{ skin.description }}</p>
+          }
+        </div>
+        <div class="buttons">
+          <button
+            type="button"
+            class="primary"
+            [disabled]="skin.id === store.activeId()"
+            [attr.aria-label]="t.activate + ': ' + skin.name"
+            (click)="store.activate(skin.id)"
+          >
+            {{ t.activate }}
+          </button>
+          @if (!skin.builtIn) {
+            <button
+              type="button"
+              [attr.aria-label]="t.remove + ': ' + skin.name"
+              (click)="store.remove(skin.id)"
+            >
+              {{ t.remove }}
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  @if (store.notice(); as notice) {
+    <p class="notice" role="status">{{ notice }}</p>
+  }
+  @if (errorText(); as error) {
+    <div class="error" role="alert">
+      <p>{{ error }}</p>
+      @if (errorLines().length > 0) {
+        <ul>
+          @for (line of errorLines(); track $index) {
+            <li>{{ line }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <footer>
+    <button type="button" (click)="store.import()">{{ t.import }}</button>
+    <button type="button" (click)="store.closeChooser()">{{ t.close }}</button>
+  </footer>
+</dialog>

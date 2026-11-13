@@ -120,6 +120,23 @@ describe('ActionService', () => {
     expect(service.hint('unknown')).toBe('');
   });
 
+  it('tells label, enabled and active state of an action', () => {
+    let on = false;
+    service.register([
+      { id: 'switch', label: () => 'Switch', active: () => on, run: () => (on = !on) },
+    ]);
+    expect(service.label('switch')).toBe('Switch');
+    expect(service.label('unknown')).toBe('');
+    expect(service.isActive('switch')).toBe(false);
+    service.run('switch');
+    expect(service.isActive('switch')).toBe(true);
+    expect(service.isActive('plain')).toBe(false);
+    expect(service.isEnabled('plain')).toBe(true);
+    expect(service.isEnabled('unknown')).toBe(false);
+    enabled = false;
+    expect(service.isEnabled('stop')).toBe(false);
+  });
+
   it('removes actions again and refuses a second registration of an id', () => {
     const remove = service.register([{ id: 'temp', label: () => 'T', run: () => ran.push('t') }]);
     expect(() => service.register([{ id: 'temp', label: () => 'T', run: () => 0 }])).toThrow();

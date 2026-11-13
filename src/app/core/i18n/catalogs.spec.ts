@@ -2,6 +2,7 @@ import '../../app-texts';
 import '../../features/diagnostics/diagnostics-texts';
 import '../../features/player/player-texts';
 import '../../features/playlist/playlist-texts';
+import '../../features/skins/skins-texts';
 import '../errors/error-texts';
 import { CATALOGS, LANGUAGES } from './i18n';
 
@@ -16,6 +17,7 @@ describe('text catalogs', () => {
       'errors',
       'player',
       'playlist',
+      'skins',
     ]);
   });
 
