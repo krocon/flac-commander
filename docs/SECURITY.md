@@ -1,10 +1,12 @@
 # Sicherheit
 
-## Stand heute (Phase 4)
+## Stand heute (Phase 5)
 
 - **Keine Netzwerkzugriffe.** Die App verbindet sich mit nichts.
 - **Minimale Rechte der WebView** (`src-tauri/capabilities/default.json`): `core:default` (eigene Commands, Events)
   und `log:default` (Logzeilen anhängen). Kein Dateisystem-, Shell-, Dialog- oder HTTP-Plugin.
+- **Feste Fensterliste.** Die App kennt genau ihre eigenen Fenster (`main`, `playlist`); ein Command kann kein
+  anderes öffnen, und jedes Fenster lädt nur das eigene Frontend. Alle Fenster haben dieselben minimalen Rechte.
 - **Strikte CSP** (`tauri.conf.json`): `default-src 'self'`, Skripte nur aus dem Bundle, Verbindungen nur zur IPC.
   Einzige Ausnahme: `style-src 'unsafe-inline'`, weil Angular Komponenten-Styles zur Laufzeit einfügt.
 - **Jede Fähigkeit ist ein eigener, schmaler Command.** `system_info` liest; `start_test_tone` spielt einen festen,

@@ -8,12 +8,14 @@ import { PlayerApi } from './core/player/player-api';
 import { PlaylistApi } from './core/playlist/playlist-api';
 import { SkinApi } from './core/skins/skin-api';
 import { SystemApi } from './core/system/system-api';
+import { WindowApi } from './core/windows/window-api';
 import {
   FakeLogApi,
   FakePlayerApi,
   FakePlaylistApi,
   FakeSkinApi,
   FakeSystemApi,
+  FakeWindowApi,
   MODERN_SKIN,
   RETRO_SKIN,
 } from '../testing/fake-apis';
@@ -22,6 +24,7 @@ describe('App', () => {
   let skins: FakeSkinApi;
   let playlist: FakePlaylistApi;
   let player: FakePlayerApi;
+  let windows: FakeWindowApi;
   let el: HTMLElement;
 
   function create(): void {
@@ -30,6 +33,7 @@ describe('App', () => {
         { provide: PlayerApi, useValue: player },
         { provide: PlaylistApi, useValue: playlist },
         { provide: SkinApi, useValue: skins },
+        { provide: WindowApi, useValue: windows },
         { provide: SystemApi, useValue: new FakeSystemApi() },
         { provide: LogApi, useValue: new FakeLogApi() },
       ],
@@ -51,6 +55,7 @@ describe('App', () => {
     skins = new FakeSkinApi();
     playlist = new FakePlaylistApi();
     player = new FakePlayerApi();
+    windows = new FakeWindowApi();
   });
 
   afterEach(() => setLanguage('en'));
@@ -78,8 +83,10 @@ describe('App', () => {
   it('opens the skin chooser by button and by key', async () => {
     create();
     // `.flow header`: the chooser dialog has a header with a button of its own
-    await vi.waitFor(() => expect(el.querySelector('.flow header button')).not.toBeNull());
-    el.querySelector<HTMLButtonElement>('.flow header button')?.click();
+    await vi.waitFor(() =>
+      expect(el.querySelector('.flow header button:not(.first)')).not.toBeNull(),
+    );
+    el.querySelector<HTMLButtonElement>('.flow header button:not(.first)')?.click();
     await vi.waitFor(() => expect(el.querySelectorAll('.skins > li')).toHaveLength(2));
 
     // jsdom has no `showModal`: whether the chooser is open is asked of the store
@@ -114,6 +121,47 @@ describe('App', () => {
     await vi.waitFor(() =>
       expect(TestBed.inject(ActionService).label('player.stop')).toBe('Stopp'),
     );
+    press('ArrowUp');
+    await vi.waitFor(() => expect(player.commands).toEqual(['volume 1.00']));
+  });
+
+  it('moves the playlist to its own window and back', async () => {
+    create();
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).not.toBeNull());
+    const toggle = el.querySelector<HTMLButtonElement>('.flow header button.first');
+    expect(toggle?.getAttribute('aria-pressed')).toBe('false');
+
+    toggle?.click();
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).toBeNull());
+    expect(windows.commands).toEqual(['toggle playlist']);
+    expect(toggle?.getAttribute('aria-pressed')).toBe('true');
+    expect(el.querySelector('app-player')).not.toBeNull();
+
+    press('l', mod);
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).not.toBeNull());
+    expect(windows.commands).toEqual(['toggle playlist', 'toggle playlist']);
+  });
+
+  it('starts without the embedded playlist when its window is open already', async () => {
+    windows.open = ['playlist'];
+    create();
+    await vi.waitFor(() => expect(el.querySelector('app-player')).not.toBeNull());
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).toBeNull());
+  });
+
+  it('is the playlist alone in the playlist window, whatever the skin', async () => {
+    windows.current = 'playlist';
+    skins.snapshot = RETRO_SKIN;
+    create();
+    await vi.waitFor(() => expect(el.querySelector('.solo app-playlist')).not.toBeNull());
+    expect(el.querySelector('app-player')).toBeNull();
+    expect(el.querySelector('app-skinned-player')).toBeNull();
+    // the skin's colours apply here too, but its window size is the main window's business
+    await vi.waitFor(() =>
+      expect(document.documentElement.style.getPropertyValue('--player-accent')).toBe('#5dff7a'),
+    );
+    expect(skins.commands).toEqual([]);
+    // shortcuts work in every window
     press('ArrowUp');
     await vi.waitFor(() => expect(player.commands).toEqual(['volume 1.00']));
   });

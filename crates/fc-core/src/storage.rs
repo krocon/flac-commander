@@ -7,6 +7,7 @@
 use crate::error::{AppError, AppResult};
 use crate::playlist::RepeatMode;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, RecvTimeoutError, Sender};
@@ -32,6 +33,31 @@ pub struct SavedState {
     pub position_ms: u64,
     /// Id of the active skin; `None`: the default skin.
     pub skin: Option<String>,
+    /// Place, size and visibility of the windows, by window label.
+    pub windows: BTreeMap<String, WindowPlace>,
+}
+
+/// Where a window was, in logical pixels of the desktop.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowPlace {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+    pub visible: bool,
+}
+
+impl WindowPlace {
+    /// Numbers a window can really have (a damaged file must not create a monster).
+    fn is_sane(&self) -> bool {
+        let finite = [self.x, self.y, self.width, self.height].iter().all(|v| v.is_finite());
+        finite
+            && (100.0..=10_000.0).contains(&self.width)
+            && (60.0..=10_000.0).contains(&self.height)
+            && self.x.abs() <= 100_000.0
+            && self.y.abs() <= 100_000.0
+    }
 }
 
 impl Default for SavedState {
@@ -45,6 +71,7 @@ impl Default for SavedState {
             current: None,
             position_ms: 0,
             skin: None,
+            windows: BTreeMap::new(),
         }
     }
 }
@@ -60,6 +87,12 @@ impl SavedState {
         }
         // an id is used as a folder name: only what a skin id may look like
         self.skin = self.skin.filter(|id| crate::skins::manifest::is_valid_id(id));
+        self.windows.retain(|label, place| {
+            label.len() <= 40 && label.chars().all(|c| c.is_ascii_lowercase()) && place.is_sane()
+        });
+        while self.windows.len() > 16 {
+            self.windows.pop_last();
+        }
         self
     }
 }
@@ -217,6 +250,10 @@ mod tests {
             current: Some(1),
             position_ms: 61_500,
             skin: Some("io.github.krocon.retro".to_owned()),
+            windows: BTreeMap::from([(
+                "playlist".to_owned(),
+                WindowPlace { x: 700.0, y: 120.0, width: 420.0, height: 520.0, visible: true },
+            )]),
             ..SavedState::default()
         }
     }
@@ -257,6 +294,24 @@ mod tests {
         assert_eq!(state.current, None);
         assert_eq!(state.position_ms, 0);
         assert_eq!(state.tracks.len(), 1);
+    }
+
+    #[test]
+    fn window_places_that_no_window_can_have_are_dropped() {
+        let path = folder("windows").join("state.json");
+        fs::write(
+            &path,
+            r#"{"version":1,"windows":{
+                "playlist":{"x":10,"y":20,"width":400,"height":300,"visible":true},
+                "huge":{"x":0,"y":0,"width":1e9,"height":300,"visible":true},
+                "tiny":{"x":0,"y":0,"width":2,"height":2,"visible":true},
+                "Bad Label":{"x":0,"y":0,"width":400,"height":300,"visible":true}
+            }}"#,
+        )
+        .unwrap();
+        let Loaded::State(state) = load(&path) else { panic!("not loaded") };
+        assert_eq!(state.windows.keys().collect::<Vec<_>>(), ["playlist"]);
+        assert!(state.windows["playlist"].visible);
     }
 
     #[test]

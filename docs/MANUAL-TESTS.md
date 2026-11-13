@@ -77,6 +77,18 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | S8 | Nur Tastatur im Retro-Skin: Tab durch alle Bausteine | sichtbarer Fokus auf jedem Baustein, sinnvolle Reihenfolge |
 | S9 | Den aktiven importierten Skin entfernen | die App wechselt auf Modern |
 
+## Phase 5
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| W1 | Knopf „Playlist ⧉" (oder ⌘L / Strg+L) | eigenes Playlist-Fenster erscheint; im Hauptfenster verschwindet die Liste |
+| W2 | Im Playlist-Fenster: Doppelklick, Entf, Dateien fallen lassen, Leertaste | Wiedergabe und Liste ändern sich; das Hauptfenster zeigt Titel und Zeit dazu |
+| W3 | Im Hauptfenster Titel wechseln, Skin wechseln | Markierung im Playlist-Fenster wandert mit; Farben wechseln in beiden Fenstern |
+| W4 | Playlist-Fenster über seinen Schließen-Knopf schließen | Fenster weg, Liste wieder im Hauptfenster; die Musik läuft weiter |
+| W5 | Beide Fenster verschieben, App beenden, neu starten | beide Fenster an ihrem Platz und in ihrer Größe |
+| W6 | Das Playlist-Fenster auf einen zweiten Bildschirm legen, App beenden, Bildschirm abziehen, starten | das Fenster erscheint auf dem verbliebenen Bildschirm |
+| W7 | Hauptfenster schließen, während das Playlist-Fenster offen ist | die App endet und speichert ihren Zustand |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
@@ -85,6 +97,7 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | 2026-11-13 | macOS 27, Apple Silicon, CoreAudio, eingebaute Lautsprecher, 48 kHz | Phase 2 in der gebündelten App: P1 (FLAC 16/44,1), P3 (Klick auf die Leiste), P2 (nur Pause: Zeit steht), P7 (nur →). Engine ohne App: FLAC ab Minute 1, MP3, DTS-WAV abgelehnt | bestanden, 0 Unterläufe. Nicht mit dem Ohr geprüft (4 % Lautstärke, niemand hat zugehört): belegt sind laufende Position, Zustände und fehlende Unterläufe. |
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 3 in der gebündelten App: L1 (Ordner mit 12 MP3), L4 (Sprung ans Ende → nächster Titel), L5 (nur „Nächster"), L10 (Neustart) | bestanden: Tags und Dauern erscheinen, Titelwechsel, Liste, Titel, Position 0:06 und Lautstärke 4 % nach dem Neustart wiederhergestellt. |
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 4 in der gebündelten App: S1, S2, S7 | bestanden nach zwei Korrekturen (Fensterhöhe ohne Titelleiste, Regler und Playlist-Knöpfe im schmalen Skin). |
+| 2026-11-13 | macOS 27, Apple Silicon | Phase 5: Neustart mit gespeichertem Playlist-Fenster (W5 teilweise) | bestanden laut Fensterliste und Protokoll: beide Fenster an ihrem Platz, beide Frontends melden „ready". **Nicht gesehen:** der Bildschirm war gesperrt, Aufnahmen der Fenster waren leer; W1–W4, W6, W7 offen. |
 | – | Windows 10/11, WASAPI | – | **offen** |
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 

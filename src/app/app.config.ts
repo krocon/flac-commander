@@ -5,6 +5,7 @@ import { PlayerApi, TauriPlayerApi } from './core/player/player-api';
 import { PlaylistApi, TauriPlaylistApi } from './core/playlist/playlist-api';
 import { SkinApi, TauriSkinApi } from './core/skins/skin-api';
 import { SystemApi, TauriSystemApi } from './core/system/system-api';
+import { TauriWindowApi, WindowApi } from './core/windows/window-api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,5 +16,6 @@ export const appConfig: ApplicationConfig = {
     { provide: PlayerApi, useClass: TauriPlayerApi },
     { provide: PlaylistApi, useClass: TauriPlaylistApi },
     { provide: SkinApi, useClass: TauriSkinApi },
+    { provide: WindowApi, useClass: TauriWindowApi },
   ],
 };

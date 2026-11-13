@@ -13,8 +13,11 @@
   padding: 16px;
 }
 
-header button {
+header button.first {
   margin-left: auto;
+}
+
+header button {
   font: inherit;
   font-size: 12px;
   color: var(--player-foreground);
@@ -23,6 +26,22 @@ header button {
   border-radius: var(--player-radius);
   padding: 3px 10px;
   cursor: pointer;
+
+  &[aria-pressed='true'] {
+    color: var(--player-accent);
+    border-color: var(--player-accent);
+  }
+}
+
+.solo {
+  display: flex;
+  box-sizing: border-box;
+  height: 100%;
+  padding: 8px;
+
+  app-playlist {
+    flex: 1;
+  }
 }
 
 header {
