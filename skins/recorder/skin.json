@@ -1,0 +1,236 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.recorder",
+  "name": "Recorder",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "A pocket recorder: matt black body, a glowing display and a ring of keys around play.",
+  "preview": "preview.png",
+  "theme": {
+    "background": "#18191b",
+    "surface": "#0b0e10",
+    "surfaceRaised": "#2a2c30",
+    "foreground": "#e9eef0",
+    "muted": "#9aa4a8",
+    "accent": "#ff6156",
+    "accentContrast": "#1c0200",
+    "border": "#34373b",
+    "ok": "#7fdca0",
+    "danger": "#ff9d94",
+    "focus": "#7fc4ff",
+    "fontFamily": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "fontMono": "Menlo, Consolas, monospace",
+    "radius": 3
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 340,
+      "height": 600,
+      "background": "assets/background.png",
+      "components": [
+        {
+          "type": "spectrum",
+          "x": 42,
+          "y": 70,
+          "width": 256,
+          "height": 30,
+          "color": "#e9eef0"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 42,
+          "y": 112,
+          "width": 90,
+          "height": 16,
+          "fontSize": 10,
+          "color": "#ff6156"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 42,
+          "y": 132,
+          "width": 90,
+          "height": 16,
+          "fontSize": 11,
+          "color": "#9aa4a8"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 134,
+          "y": 110,
+          "width": 164,
+          "height": 50,
+          "fontSize": 36,
+          "align": "right",
+          "color": "#e9eef0"
+        },
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 42,
+          "y": 170,
+          "width": 256,
+          "height": 20,
+          "fontSize": 13,
+          "color": "#e9eef0"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 42,
+          "y": 190,
+          "width": 256,
+          "height": 16,
+          "fontSize": 11,
+          "color": "#9aa4a8"
+        },
+        {
+          "type": "seekbar",
+          "x": 30,
+          "y": 224,
+          "width": 280,
+          "height": 8
+        },
+        {
+          "type": "volume",
+          "x": 212,
+          "y": 390,
+          "width": 98,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 90,
+          "y": 242,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 32,
+          "y": 300,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 79,
+          "y": 289,
+          "width": 66,
+          "height": 66,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 148,
+          "y": 300,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 90,
+          "y": 358,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 210,
+          "y": 250,
+          "width": 50,
+          "height": 50,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 262,
+          "y": 250,
+          "width": 50,
+          "height": 50,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 210,
+          "y": 306,
+          "width": 50,
+          "height": 50,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 262,
+          "y": 306,
+          "width": 50,
+          "height": 50,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 34,
+          "y": 424,
+          "width": 272,
+          "height": 156
+        }
+      ]
+    }
+  }
+}

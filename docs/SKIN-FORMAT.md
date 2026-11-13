@@ -99,6 +99,8 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `playlist` | – | Die Playlist mit ihren Knöpfen. |
 | `image` | `states.normal` (Pflicht) | Ein Bild ohne Funktion. |
 | `spectrum` | `color` | Balken, die der Musik folgen (ohne `color` in der Akzentfarbe). |
+| `needle` | `states.normal`, `pivotX`, `pivotY`, `from`, `to` (alle Pflicht), `rest` | Ein Bild, das sich um einen Drehpunkt dreht: bei Titelbeginn um `from` Grad, am Ende um `to` Grad (im Uhrzeigersinn, −360 bis 360), ohne Titel um `rest`. Ziehen spult; per Tastatur ein Regler (Pfeiltasten ±5 s). Beispiel: Tonarm. |
+| `spinner` | `states.normal`, `period` (Pflicht, 500–120000 ms je Umdrehung) | Ein Bild, das sich um seine Mitte dreht, solange Musik läuft. Beispiel: Spule, Plattenetikett. |
 
 **Aktionen** (`action`): `player.togglePlay`, `player.play`, `player.pause`, `player.stop`, `player.next`, `player.previous`, `player.open`,
 `player.repeat`, `player.shuffle`, `app.skins`, `window.playlist`, `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
@@ -123,7 +125,7 @@ Bildpfade sind relativ zum Paket, mit `/`, ohne `..`, ohne führenden `/`, ohne 
 
 ## Importieren und Entfernen
 
-„Skins" → „Skin importieren …" (oder ⌘K / Strg+K). Angenommen werden `.fcskin`, `.zip` und klassische
+„Skins" (oder ⌘K / Strg+K) öffnet die Auswahl als eigenes Fenster; „Verwenden" schaltet um und schließt es. Dort „Skin importieren …". Angenommen werden `.fcskin`, `.zip` und klassische
 Winamp-Skins (`.wsz`), die dabei in dieses Format umgewandelt werden. „Exportieren" speichert jeden Skin als
 `.fcskin` zum Weitergeben. Die Prüfung meldet jeden Verstoß mit Stelle und Klartext, zum
 Beispiel:
@@ -141,8 +143,21 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 
 | Skin | Layout | Was er zeigt |
 | --- | --- | --- |
-| **Modern** (`io.github.krocon.modern`) | `flow` | dunkel, ruhig, in der Größe veränderbar – der Standard |
 | **Retro** (`io.github.krocon.retro`) | `absolute`, 320 × 440 | Pixel-Tasten mit Kanten, grünes Display, feste Größe. Alle Grafiken erzeugt `scripts/make-retro-skin.mjs`; es ist keine Kopie eines fremden Skins. |
+| **Hi-Fi** (`io.github.krocon.hifi`) | `absolute`, 400 × 528 | gebürstetes Aluminium, gedrehte Knöpfe, bernsteinfarbenes Display |
+| **Neon** (`io.github.krocon.neon`) | `absolute`, 380 × 540 | leuchtende Röhren in Cyan und Magenta über einem Gitter, Sonne im Display |
+| **Tape** (`io.github.krocon.tape`) | `absolute`, 400 × 540 | heller Skin: Kassette mit Papieretikett, Klaviertasten, Creme und Orange |
+| **Vinyl** (`io.github.krocon.vinyl`) | `absolute`, 640 × 400 | **der Standard.** Weicher dunkler Plattenspieler im Querformat; der Tonarm zeigt die Position und lässt sich ziehen, das Etikett dreht sich |
+| **Panel** (`io.github.krocon.panel`) | `absolute`, 340 × 560 | heller Skin: matte Frontplatte, runde Drucktasten, eine einzige rote |
+| **Reel** (`io.github.krocon.reel`) | `absolute`, 640 × 430 | heller Skin: Tonbandgerät mit weißer Front, zwei Spulen, die sich drehen |
+| **Recorder** (`io.github.krocon.recorder`) | `absolute`, 340 × 600 | Taschenrekorder: schwarzes Gehäuse, leuchtendes Display, Tastenring um Play |
+| **Deck** (`io.github.krocon.deck`) | `absolute`, 380 × 600 | Kassette auf dunklem gebürstetem Metall, geriffelte Silbertasten |
+| **Walk** (`io.github.krocon.walk`) | `absolute`, 360 × 580 | tragbarer Kassettenspieler in Orange und Schwarz |
+
+Die Grafiken aller Skins außer Retro beschreibt `scripts/make-designer-skins.mjs` als HTML und CSS; ein
+Headless-Chrome rendert sie in doppelter Auflösung, das Skript schneidet die Tasten je Zustand aus. Es sind eigene
+Entwürfe, keine Kopien fremder Skins oder Geräte. Nach einer Änderung: `node scripts/make-designer-skins.mjs`, dann
+die Dateiliste in `crates/fc-core/src/skins/mod.rs` (`BUILT_IN`) angleichen.
 
 ## Einen eigenen Skin bauen
 

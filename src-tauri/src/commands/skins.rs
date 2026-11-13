@@ -368,7 +368,20 @@ mod tests {
             fixed_size(&library.get("io.github.krocon.retro").unwrap()),
             Some((320.0, 440.0))
         );
-        assert_eq!(fixed_size(&library.get(DEFAULT_SKIN).unwrap()), None);
+        // a skin that only brings colours leaves the window to the user
+        let flow = Skin::from_files(
+            [(
+                "skin.json".to_owned(),
+                br#"{"formatVersion":1,"id":"org.example.flow","name":"Flow","version":"1.0.0"}"#
+                    .to_vec(),
+            )]
+            .into(),
+            false,
+            "0.1.0",
+        )
+        .unwrap();
+        assert_eq!(fixed_size(&flow), None);
+        assert!(fixed_size(&library.get(DEFAULT_SKIN).unwrap()).is_some());
     }
 
     #[test]
@@ -399,9 +412,13 @@ mod tests {
         assert_eq!(play["states"]["active"], "assets/play-active.png");
         assert_eq!(json["player"]["components"][0]["fontSize"], 14);
 
-        let modern = library.get(DEFAULT_SKIN).unwrap();
-        let json = serde_json::to_value(ActiveSkin::of(&modern)).unwrap();
-        assert_eq!(json["player"]["layout"], "flow");
-        assert_eq!(json["player"]["components"], serde_json::json!([]));
+        // the default skin has a tonearm: its fields arrive under their camelCase names
+        let vinyl = library.get(DEFAULT_SKIN).unwrap();
+        let json = serde_json::to_value(ActiveSkin::of(&vinyl)).unwrap();
+        let components = json["player"]["components"].as_array().unwrap();
+        let arm = components.iter().find(|c| c["type"] == "needle").unwrap();
+        assert_eq!((arm["pivotX"].as_u64(), arm["from"].as_i64()), (Some(15), Some(8)));
+        let label = components.iter().find(|c| c["type"] == "spinner").unwrap();
+        assert_eq!(label["period"], 1800);
     }
 }

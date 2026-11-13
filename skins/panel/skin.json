@@ -1,0 +1,237 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.panel",
+  "name": "Panel",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "Less, but better: a matt light panel, round push buttons and a single red one.",
+  "preview": "preview.png",
+  "theme": {
+    "background": "#e8e7e3",
+    "surface": "#f5f4f0",
+    "surfaceRaised": "#ffffff",
+    "foreground": "#1c1c1a",
+    "muted": "#595854",
+    "accent": "#b83216",
+    "accentContrast": "#ffffff",
+    "border": "#a3a29d",
+    "ok": "#1f6b3a",
+    "danger": "#a3231b",
+    "focus": "#1f5fbf",
+    "fontFamily": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "fontMono": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "radius": 2
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 340,
+      "height": 560,
+      "background": "assets/background.png",
+      "components": [
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 24,
+          "y": 22,
+          "width": 232,
+          "height": 24,
+          "fontSize": 17,
+          "color": "#1c1c1a"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 24,
+          "y": 48,
+          "width": 232,
+          "height": 18,
+          "fontSize": 12,
+          "color": "#595854"
+        },
+        {
+          "type": "spectrum",
+          "x": 34,
+          "y": 92,
+          "width": 170,
+          "height": 28,
+          "color": "#b83216"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 214,
+          "y": 90,
+          "width": 92,
+          "height": 32,
+          "fontSize": 22,
+          "align": "right",
+          "color": "#1c1c1a"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 24,
+          "y": 136,
+          "width": 200,
+          "height": 14,
+          "fontSize": 10,
+          "color": "#595854"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 236,
+          "y": 136,
+          "width": 80,
+          "height": 14,
+          "fontSize": 10,
+          "align": "right",
+          "color": "#595854"
+        },
+        {
+          "type": "seekbar",
+          "x": 24,
+          "y": 160,
+          "width": 292,
+          "height": 8
+        },
+        {
+          "type": "volume",
+          "x": 164,
+          "y": 284,
+          "width": 100,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 30,
+          "y": 182,
+          "width": 56,
+          "height": 56,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 86,
+          "y": 182,
+          "width": 56,
+          "height": 56,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 142,
+          "y": 182,
+          "width": 56,
+          "height": 56,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 198,
+          "y": 182,
+          "width": 56,
+          "height": 56,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 254,
+          "y": 182,
+          "width": 56,
+          "height": 56,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 22,
+          "y": 266,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 66,
+          "y": 266,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 110,
+          "y": 266,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 274,
+          "y": 266,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 28,
+          "y": 336,
+          "width": 284,
+          "height": 200
+        }
+      ]
+    }
+  }
+}

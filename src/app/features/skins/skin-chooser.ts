@@ -1,16 +1,29 @@
-import { Component, computed, effect, ElementRef, inject, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, viewChild } from '@angular/core';
 import { describeError } from '../../core/errors/app-error';
+import { WindowsStore } from '../windows/windows.store';
 import { SkinStore } from './skin.store';
 import { SKINS_TEXTS } from './skins-texts';
 
-/** The dialog to choose, import and remove skins. Looks the same in every skin's colours. */
+/**
+ * Where skins are chosen, imported and removed. In the main window it is a dialog; with `page`
+ * it fills a window of its own. Looks the same in every skin's colours.
+ */
 @Component({
   selector: 'app-skin-chooser',
   templateUrl: './skin-chooser.html',
   styleUrl: './skin-chooser.css',
+  host: {
+    '[class.page]': 'page()',
+    // the window is only hidden between uses: what it shows may be old
+    '(window:focus)': 'page() && store.refresh()',
+  },
 })
 export class SkinChooser {
+  /** Fills its window instead of lying over the player. */
+  readonly page = input(false);
+
   protected readonly store = inject(SkinStore);
+  private readonly windows = inject(WindowsStore);
   protected readonly t = SKINS_TEXTS;
 
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
@@ -32,6 +45,14 @@ export class SkinChooser {
     // the native dialog is opened and closed to follow the store
     effect(() => {
       const dialog = this.dialog().nativeElement;
+      if (this.page()) {
+        // always there, and not modal: the window is the frame
+        if (!dialog.open) {
+          dialog.show?.();
+          void this.store.openChooser();
+        }
+        return;
+      }
       const open = this.store.chooserOpen();
       if (open && !dialog.open) {
         dialog.showModal?.();
@@ -39,5 +60,23 @@ export class SkinChooser {
         dialog.close();
       }
     });
+  }
+
+  /** Choosing a skin is the end of choosing: the chooser goes away, unless it failed. */
+  protected async use(id: string): Promise<void> {
+    await this.store.activate(id);
+    if (!this.store.error()) {
+      this.close();
+    }
+  }
+
+  protected close(): void {
+    if (this.page()) {
+      if (this.windows.skinsOpen()) {
+        void this.windows.toggle('skins');
+      }
+    } else {
+      this.store.closeChooser();
+    }
   }
 }

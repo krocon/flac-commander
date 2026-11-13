@@ -1,0 +1,237 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.hifi",
+  "name": "Hi-Fi",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "Brushed aluminium, turned knobs and an amber display: a receiver from the rack.",
+  "preview": "preview.png",
+  "theme": {
+    "background": "#191612",
+    "surface": "#0e0c09",
+    "surfaceRaised": "#27221a",
+    "foreground": "#f3e8d2",
+    "muted": "#b3a385",
+    "accent": "#ffb000",
+    "accentContrast": "#1a1200",
+    "border": "#4a4132",
+    "ok": "#8fd98a",
+    "danger": "#ff9b85",
+    "focus": "#7fc4ff",
+    "fontFamily": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "fontMono": "Menlo, Consolas, monospace",
+    "radius": 2
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 400,
+      "height": 528,
+      "background": "assets/background.png",
+      "components": [
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 28,
+          "y": 22,
+          "width": 344,
+          "height": 22,
+          "fontSize": 15,
+          "color": "#ffb000"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 28,
+          "y": 44,
+          "width": 344,
+          "height": 16,
+          "fontSize": 12,
+          "color": "#d09324"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 28,
+          "y": 70,
+          "width": 112,
+          "height": 44,
+          "fontSize": 32,
+          "color": "#ffb000"
+        },
+        {
+          "type": "spectrum",
+          "x": 150,
+          "y": 76,
+          "width": 140,
+          "height": 34,
+          "color": "#ffb000"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 296,
+          "y": 78,
+          "width": 76,
+          "height": 14,
+          "fontSize": 10,
+          "align": "right",
+          "color": "#d09324"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 296,
+          "y": 96,
+          "width": 76,
+          "height": 14,
+          "fontSize": 11,
+          "align": "right",
+          "color": "#d09324"
+        },
+        {
+          "type": "seekbar",
+          "x": 14,
+          "y": 138,
+          "width": 372,
+          "height": 10
+        },
+        {
+          "type": "volume",
+          "x": 282,
+          "y": 184,
+          "width": 104,
+          "height": 10
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 14,
+          "y": 166,
+          "width": 48,
+          "height": 48,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 64,
+          "y": 160,
+          "width": 60,
+          "height": 60,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 126,
+          "y": 166,
+          "width": 48,
+          "height": 48,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 176,
+          "y": 166,
+          "width": 48,
+          "height": 48,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 226,
+          "y": 166,
+          "width": 48,
+          "height": 48,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 14,
+          "y": 222,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 66,
+          "y": 222,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 118,
+          "y": 222,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 338,
+          "y": 222,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 18,
+          "y": 266,
+          "width": 364,
+          "height": 244
+        }
+      ]
+    }
+  }
+}

@@ -31,6 +31,9 @@ import { WindowsStore } from './features/windows/windows.store';
       <div class="solo">
         <app-playlist />
       </div>
+    } @else if (windows.label === 'skins') {
+      <!-- the skin chooser as a window of its own: room to look at the skins -->
+      <app-skin-chooser [page]="true" />
     } @else if (skins.absolutePlayer(); as layout) {
       <!-- a skin that places everything itself: nothing of the app's own layout around it -->
       <app-skinned-player [layout]="layout" />
@@ -38,6 +41,9 @@ import { WindowsStore } from './features/windows/windows.store';
       <div class="flow">
         <header>
           <h1>{{ t.title }}</h1>
+          @if (version(); as v) {
+            <span class="version">{{ t.version(v) }}</span>
+          }
           <button
             type="button"
             class="first"
@@ -45,7 +51,10 @@ import { WindowsStore } from './features/windows/windows.store';
             [title]="actions.hint('window.playlist')"
             (click)="windows.toggle('playlist')"
           >
-            {{ p.playlist }} ⧉
+            {{ p.playlist }}
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M4.5 1.5h6v6M10.5 1.5 5.5 6.5M8 9v1.5H1.5V4H3" />
+            </svg>
           </button>
           <button
             type="button"
@@ -53,14 +62,14 @@ import { WindowsStore } from './features/windows/windows.store';
             [title]="actions.hint('window.equalizer')"
             (click)="windows.toggle('equalizer')"
           >
-            {{ e.equalizer }} ⧉
+            {{ e.equalizer }}
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M4.5 1.5h6v6M10.5 1.5 5.5 6.5M8 9v1.5H1.5V4H3" />
+            </svg>
           </button>
-          <button type="button" [title]="actions.hint('app.skins')" (click)="skins.openChooser()">
+          <button type="button" [title]="actions.hint('app.skins')" (click)="openSkins()">
             {{ s.skins }}
           </button>
-          @if (version(); as v) {
-            <span class="version">{{ t.version(v) }}</span>
-          }
         </header>
         <main>
           <app-player />
@@ -74,7 +83,9 @@ import { WindowsStore } from './features/windows/windows.store';
         </main>
       </div>
     }
-    <app-skin-chooser />
+    @if (windows.label !== 'skins') {
+      <app-skin-chooser />
+    }
     @if (playlist.dragOver()) {
       <div class="drop" aria-hidden="true">{{ p.dropHere }}</div>
     }
@@ -106,7 +117,8 @@ export class App {
         id: 'app.skins',
         label: () => this.s.chooseSkin,
         shortcut: { key: 'k', mod: true },
-        run: () => void this.skins.openChooser(),
+        active: () => this.windows.skinsOpen(),
+        run: () => void this.openSkins(),
       },
       {
         id: 'window.playlist',
@@ -140,6 +152,14 @@ export class App {
         this.fitWindow();
       }
     });
+  }
+
+  /** The skin chooser has a window of its own; without one (no desktop backend) it is a dialog. */
+  protected async openSkins(): Promise<void> {
+    await this.windows.toggle('skins');
+    if (this.windows.error()) {
+      await this.skins.openChooser();
+    }
   }
 
   protected fitWindow(): void {

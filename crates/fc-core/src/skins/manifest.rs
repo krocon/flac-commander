@@ -124,6 +124,11 @@ pub enum ComponentType {
     Image,
     /// Bars that follow the music.
     Spectrum,
+    /// A picture that turns around a pivot with the position of the track and can be dragged
+    /// to seek: a tonearm, a pointer.
+    Needle,
+    /// A picture that turns round and round while music plays: a reel, the label of a record.
+    Spinner,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -159,6 +164,22 @@ pub struct Component {
     pub font_size: Option<u32>,
     #[serde(default)]
     pub color: Option<String>,
+    /// The point a `needle` turns around, in CSS pixels from the top left of its box.
+    #[serde(default)]
+    pub pivot_x: Option<u32>,
+    #[serde(default)]
+    pub pivot_y: Option<u32>,
+    /// Rotation of a `needle` in degrees (clockwise) at the start and at the end of the track.
+    #[serde(default)]
+    pub from: Option<i32>,
+    #[serde(default)]
+    pub to: Option<i32>,
+    /// Rotation of a `needle` while nothing is loaded; `from` if left out.
+    #[serde(default)]
+    pub rest: Option<i32>,
+    /// Milliseconds a `spinner` takes for one turn.
+    #[serde(default)]
+    pub period: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -390,6 +411,34 @@ fn check_component(
                 r.add(format!("{at}.states.normal"), "an image needs its file here");
             }
         }
+        ComponentType::Needle => {
+            if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
+                r.add(format!("{at}.states.normal"), "a needle needs its picture here");
+            }
+            let pivot_inside =
+                c.pivot_x.is_some_and(|x| x <= c.width) && c.pivot_y.is_some_and(|y| y <= c.height);
+            if !pivot_inside {
+                r.add(at, "a needle needs pivotX and pivotY inside its box");
+            }
+            let angle = |a: Option<i32>| a.is_some_and(|a| (-360..=360).contains(&a));
+            if !angle(c.from) || !angle(c.to) || c.from == c.to {
+                r.add(at, "a needle needs two different angles from and to, between -360 and 360");
+            }
+            if c.rest.is_some() && !angle(c.rest) {
+                r.add(format!("{at}.rest"), "must be between -360 and 360");
+            }
+        }
+        ComponentType::Spinner => {
+            if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
+                r.add(format!("{at}.states.normal"), "a spinner needs its picture here");
+            }
+            if !c.period.is_some_and(|ms| (500..=120_000).contains(&ms)) {
+                r.add(
+                    format!("{at}.period"),
+                    "a spinner needs the time of one turn, 500 to 120000 ms",
+                );
+            }
+        }
         ComponentType::Seekbar
         | ComponentType::Volume
         | ComponentType::Playlist
@@ -398,9 +447,25 @@ fn check_component(
     if c.kind != ComponentType::Button && c.action.is_some() {
         r.add(format!("{at}.action"), "only buttons have an action");
     }
+    let turning = [c.pivot_x.map(i64::from), c.pivot_y.map(i64::from)]
+        .into_iter()
+        .chain([c.from, c.to, c.rest].map(|a| a.map(i64::from)))
+        .any(|field| field.is_some());
+    if c.kind != ComponentType::Needle && turning {
+        r.add(at, "only a needle has pivotX, pivotY, from, to and rest");
+    }
+    if c.kind != ComponentType::Spinner && c.period.is_some() {
+        r.add(format!("{at}.period"), "only a spinner has a period");
+    }
     if let Some(states) = &c.states {
-        if !matches!(c.kind, ComponentType::Button | ComponentType::Image) {
-            r.add(format!("{at}.states"), "only buttons and images have images");
+        if !matches!(
+            c.kind,
+            ComponentType::Button
+                | ComponentType::Image
+                | ComponentType::Needle
+                | ComponentType::Spinner
+        ) {
+            r.add(format!("{at}.states"), "only buttons, images, needles and spinners have images");
         }
         for (state, path) in states.all() {
             if let Some(path) = path {

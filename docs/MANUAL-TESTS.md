@@ -67,15 +67,15 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 
 | # | Schritt | Erwartet |
 | --- | --- | --- |
-| S1 | „Skins" (oder ⌘K / Strg+K) | Dialog mit Modern (aktiv) und Retro samt Vorschau |
+| S1 | „Skins" (oder ⌘K / Strg+K) | eigenes Fenster mit allen Skins samt Vorschau, Vinyl aktiv |
 | S2 | Retro „Verwenden" | Fenster wird 320 × 440 (Inhalt), grünes Display, Pixel-Tasten, Playlist im Skin; nichts ist abgeschnitten, keine Rollbalken am Fenster; Musik läuft dabei weiter |
 | S3 | Im Retro-Skin alles bedienen: Tasten, beide Regler, Playlist, Tastenkürzel | wie im Standard-Skin; gedrückte und aktive Tasten sehen anders aus; Tooltips mit Kürzel |
 | S4 | Einen eigenen Skin importieren (Kopie von `skins/retro` mit anderer `id`, als ZIP) | „… wurde installiert", erscheint in der Liste, lässt sich verwenden und entfernen |
 | S5 | Ein ZIP importieren, dessen `skin.json` einen Fehler hat (z. B. `"accent": "red"`) | Ablehnung mit Liste der Verstöße; der aktive Skin bleibt |
-| S6 | ⌘0 / Strg+0 im Retro-Skin | zurück zu Modern, Fenster wieder in der Größe veränderbar |
+| S6 | ⌘0 / Strg+0 im Retro-Skin | zurück zu Vinyl (Standard) |
 | S7 | App mit aktivem Retro-Skin beenden und neu starten | startet im Retro-Skin in der richtigen Größe |
 | S8 | Nur Tastatur im Retro-Skin: Tab durch alle Bausteine | sichtbarer Fokus auf jedem Baustein, sinnvolle Reihenfolge |
-| S9 | Den aktiven importierten Skin entfernen | die App wechselt auf Modern |
+| S9 | Den aktiven importierten Skin entfernen | die App wechselt auf Vinyl |
 
 ## Phase 5
 

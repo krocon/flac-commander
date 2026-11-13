@@ -30,7 +30,16 @@ export interface SkinTheme {
 }
 
 export type SkinComponentType =
-  'button' | 'seekbar' | 'volume' | 'text' | 'time' | 'playlist' | 'image' | 'spectrum';
+  | 'button'
+  | 'seekbar'
+  | 'volume'
+  | 'text'
+  | 'time'
+  | 'playlist'
+  | 'image'
+  | 'spectrum'
+  | 'needle'
+  | 'spinner';
 
 export interface SkinStates {
   readonly normal: string | null;
@@ -52,6 +61,15 @@ export interface SkinComponent {
   readonly align: 'left' | 'center' | 'right' | null;
   readonly fontSize: number | null;
   readonly color: string | null;
+  /** A `needle` only: the point it turns around, from the top left of its box. */
+  readonly pivotX?: number | null;
+  readonly pivotY?: number | null;
+  /** A `needle` only: degrees (clockwise) at the start and the end of the track, and at rest. */
+  readonly from?: number | null;
+  readonly to?: number | null;
+  readonly rest?: number | null;
+  /** A `spinner` only: milliseconds for one turn. */
+  readonly period?: number | null;
 }
 
 export interface SkinPlayerWindow {
