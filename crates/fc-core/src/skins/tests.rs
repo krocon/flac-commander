@@ -77,7 +77,7 @@ fn a_correct_package_is_accepted() {
 fn the_built_in_skins_are_valid() {
     let library = SkinLibrary::load(None, APP);
     let names: Vec<String> = library.list().into_iter().map(|s| s.name).collect();
-    assert_eq!(names, ["Modern", "Retro"]);
+    assert_eq!(names, ["Hi-Fi", "Modern", "Neon", "Panel", "Retro", "Tape", "Vinyl"]);
     assert!(library.get(DEFAULT_SKIN).is_some());
     let retro = library.get("io.github.krocon.retro").unwrap();
     assert!(retro.built_in);
@@ -135,7 +135,9 @@ fn every_file_of_the_built_in_skins_is_embedded() {
         }
     }
     let skins = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../skins");
-    for (folder, embedded) in ["modern", "retro"].iter().zip(BUILT_IN) {
+    for (folder, embedded) in
+        ["modern", "retro", "hifi", "neon", "panel", "tape", "vinyl"].iter().zip(BUILT_IN)
+    {
         let mut on_disk = Vec::new();
         files_of(&skins.join(folder), &skins.join(folder), &mut on_disk);
         on_disk.sort();
@@ -450,7 +452,7 @@ fn an_imported_skin_is_installed_listed_and_there_after_a_restart() {
     assert_eq!(info.id, "org.example.test");
     assert!(folder.join("org.example.test/skin.json").is_file());
     let names: Vec<String> = library.list().into_iter().map(|s| s.name).collect();
-    assert_eq!(names, ["Modern", "Retro", "Test"]);
+    assert_eq!(names, ["Hi-Fi", "Modern", "Neon", "Panel", "Retro", "Tape", "Vinyl", "Test"]);
 
     let restarted = SkinLibrary::load(Some(folder), APP);
     let skin = restarted.get("org.example.test").unwrap();
@@ -469,7 +471,7 @@ fn a_refused_archive_installs_nothing_and_says_why() {
     assert_eq!(error.code, ErrorCode::InvalidSkin);
     assert!(error.details.unwrap().starts_with("theme.accent: "));
     assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 0);
-    assert_eq!(library.list().len(), 2);
+    assert_eq!(library.list().len(), BUILT_IN.len());
 }
 
 #[test]
@@ -496,7 +498,7 @@ fn an_imported_skin_can_be_updated_and_removed() {
     let entries: Vec<(&str, &[u8])> =
         files.iter().map(|(k, v)| (k.as_str(), v.as_slice())).collect();
     assert_eq!(library.import_zip(&zip_of(&entries), "test.fcskin").unwrap().version, "2.0.0");
-    assert_eq!(library.list().len(), 3);
+    assert_eq!(library.list().len(), BUILT_IN.len() + 1);
 
     library.remove("org.example.test").unwrap();
     assert!(library.get("org.example.test").is_none());
@@ -510,7 +512,7 @@ fn a_damaged_installed_skin_is_left_out_and_the_default_is_used() {
     std::fs::create_dir_all(folder.join("broken")).unwrap();
     std::fs::write(folder.join("broken/skin.json"), "{ nope").unwrap();
     let library = SkinLibrary::load(Some(folder), APP);
-    assert_eq!(library.list().len(), 2);
+    assert_eq!(library.list().len(), BUILT_IN.len());
     assert_eq!(library.get_or_default(Some("org.gone.skin")).unwrap().id(), DEFAULT_SKIN);
     assert_eq!(library.get_or_default(None).unwrap().id(), DEFAULT_SKIN);
     assert_eq!(
@@ -547,7 +549,7 @@ fn a_classic_skin_that_cannot_be_converted_is_refused_like_any_other() {
     let error = library.import_zip(&archive, "broken.wsz").unwrap_err();
     assert_eq!(error.code, ErrorCode::InvalidSkin);
     assert!(error.details.unwrap().starts_with("main.bmp: "));
-    assert_eq!(library.list().len(), 2);
+    assert_eq!(library.list().len(), BUILT_IN.len());
 }
 
 #[test]

@@ -9,6 +9,12 @@ dialog {
   font-family: var(--player-font-family);
   font-size: 13px;
 
+  /* header and footer stay in view, only the list scrolls */
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
   &::backdrop {
     background: rgb(0 0 0 / 55%);
   }
@@ -16,6 +22,7 @@ dialog {
 
 header,
 footer {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -38,8 +45,11 @@ p {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
 
   > li {
+    flex: none;
     display: grid;
     grid-template-columns: 64px 1fr auto;
     gap: 10px;
@@ -89,10 +99,42 @@ img,
   margin-top: 4px;
 }
 
+.about {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .buttons {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+/* small fixed-size skins (the retro window is 320px wide): the buttons go below the text */
+@media (max-width: 460px) {
+  dialog {
+    padding: 10px;
+  }
+
+  .skins > li {
+    grid-template-columns: 48px 1fr;
+    align-items: start;
+  }
+
+  img,
+  .no-preview {
+    width: 48px;
+    height: 66px;
+  }
+
+  .buttons {
+    grid-column: 1 / -1;
+    flex-flow: row wrap;
+
+    > button {
+      flex: 1 1 auto;
+    }
+  }
 }
 
 button {

@@ -143,6 +143,16 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 | --- | --- | --- |
 | **Modern** (`io.github.krocon.modern`) | `flow` | dunkel, ruhig, in der Größe veränderbar – der Standard |
 | **Retro** (`io.github.krocon.retro`) | `absolute`, 320 × 440 | Pixel-Tasten mit Kanten, grünes Display, feste Größe. Alle Grafiken erzeugt `scripts/make-retro-skin.mjs`; es ist keine Kopie eines fremden Skins. |
+| **Hi-Fi** (`io.github.krocon.hifi`) | `absolute`, 400 × 528 | gebürstetes Aluminium, gedrehte Knöpfe, bernsteinfarbenes Display |
+| **Neon** (`io.github.krocon.neon`) | `absolute`, 380 × 540 | leuchtende Röhren in Cyan und Magenta über einem Gitter, Sonne im Display |
+| **Tape** (`io.github.krocon.tape`) | `absolute`, 400 × 540 | heller Skin: Kassette mit Papieretikett, Klaviertasten, Creme und Orange |
+| **Vinyl** (`io.github.krocon.vinyl`) | `absolute`, 640 × 400 | weicher dunkler Plattenspieler im Querformat, Bedienung aus der Fläche gedrückt |
+| **Panel** (`io.github.krocon.panel`) | `absolute`, 340 × 560 | heller Skin: matte Frontplatte, runde Drucktasten, eine einzige rote |
+
+Die Grafiken von Hi-Fi, Neon, Tape, Vinyl und Panel beschreibt `scripts/make-designer-skins.mjs` als HTML und CSS; ein
+Headless-Chrome rendert sie in doppelter Auflösung, das Skript schneidet die Tasten je Zustand aus. Es sind eigene
+Entwürfe, keine Kopien fremder Skins oder Geräte. Nach einer Änderung: `node scripts/make-designer-skins.mjs`, dann
+die Dateiliste in `crates/fc-core/src/skins/mod.rs` (`BUILT_IN`) angleichen.
 
 ## Einen eigenen Skin bauen
 

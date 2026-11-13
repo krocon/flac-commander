@@ -1,0 +1,238 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.tape",
+  "name": "Tape",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "A cassette deck in cream and orange: paper label, piano keys and two reels.",
+  "preview": "preview.png",
+  "theme": {
+    "background": "#e7dbc0",
+    "surface": "#f7f0df",
+    "surfaceRaised": "#fffaf0",
+    "foreground": "#2a2018",
+    "muted": "#655440",
+    "accent": "#a83410",
+    "accentContrast": "#fff8ec",
+    "border": "#b6a583",
+    "ok": "#1f6b3a",
+    "danger": "#a3231b",
+    "focus": "#1f5fbf",
+    "fontFamily": "\"American Typewriter\", \"Courier New\", Courier, serif",
+    "fontMono": "\"American Typewriter\", \"Courier New\", Courier, monospace",
+    "radius": 3
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 400,
+      "height": 540,
+      "background": "assets/background.png",
+      "components": [
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 60,
+          "y": 35,
+          "width": 280,
+          "height": 22,
+          "fontSize": 15,
+          "color": "#2a2018"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 60,
+          "y": 57,
+          "width": 200,
+          "height": 18,
+          "fontSize": 12,
+          "color": "#655440"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 32,
+          "y": 191,
+          "width": 94,
+          "height": 28,
+          "fontSize": 20,
+          "align": "center",
+          "color": "#2a2018"
+        },
+        {
+          "type": "spectrum",
+          "x": 144,
+          "y": 195,
+          "width": 116,
+          "height": 21,
+          "color": "#a83410"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 276,
+          "y": 190,
+          "width": 94,
+          "height": 14,
+          "fontSize": 10,
+          "align": "right",
+          "color": "#655440"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 276,
+          "y": 206,
+          "width": 94,
+          "height": 14,
+          "fontSize": 11,
+          "align": "right",
+          "color": "#655440"
+        },
+        {
+          "type": "seekbar",
+          "x": 30,
+          "y": 228,
+          "width": 340,
+          "height": 10
+        },
+        {
+          "type": "volume",
+          "x": 180,
+          "y": 316,
+          "width": 136,
+          "height": 10
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 30,
+          "y": 246,
+          "width": 68,
+          "height": 50,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 98,
+          "y": 246,
+          "width": 68,
+          "height": 50,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 166,
+          "y": 246,
+          "width": 68,
+          "height": 50,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 234,
+          "y": 246,
+          "width": 68,
+          "height": 50,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 302,
+          "y": 246,
+          "width": 68,
+          "height": 50,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 28,
+          "y": 304,
+          "width": 48,
+          "height": 34,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 76,
+          "y": 304,
+          "width": 48,
+          "height": 34,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 124,
+          "y": 304,
+          "width": 48,
+          "height": 34,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 324,
+          "y": 304,
+          "width": 48,
+          "height": 34,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 34,
+          "y": 350,
+          "width": 332,
+          "height": 172
+        }
+      ]
+    }
+  }
+}

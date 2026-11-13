@@ -38,6 +38,9 @@ import { WindowsStore } from './features/windows/windows.store';
       <div class="flow">
         <header>
           <h1>{{ t.title }}</h1>
+          @if (version(); as v) {
+            <span class="version">{{ t.version(v) }}</span>
+          }
           <button
             type="button"
             class="first"
@@ -45,7 +48,10 @@ import { WindowsStore } from './features/windows/windows.store';
             [title]="actions.hint('window.playlist')"
             (click)="windows.toggle('playlist')"
           >
-            {{ p.playlist }} ⧉
+            {{ p.playlist }}
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M4.5 1.5h6v6M10.5 1.5 5.5 6.5M8 9v1.5H1.5V4H3" />
+            </svg>
           </button>
           <button
             type="button"
@@ -53,14 +59,14 @@ import { WindowsStore } from './features/windows/windows.store';
             [title]="actions.hint('window.equalizer')"
             (click)="windows.toggle('equalizer')"
           >
-            {{ e.equalizer }} ⧉
+            {{ e.equalizer }}
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M4.5 1.5h6v6M10.5 1.5 5.5 6.5M8 9v1.5H1.5V4H3" />
+            </svg>
           </button>
           <button type="button" [title]="actions.hint('app.skins')" (click)="skins.openChooser()">
             {{ s.skins }}
           </button>
-          @if (version(); as v) {
-            <span class="version">{{ t.version(v) }}</span>
-          }
         </header>
         <main>
           <app-player />
