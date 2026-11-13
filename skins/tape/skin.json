@@ -30,6 +30,28 @@
       "background": "assets/background.png",
       "components": [
         {
+          "type": "spinner",
+          "x": 131,
+          "y": 112,
+          "width": 30,
+          "height": 30,
+          "period": 2600,
+          "states": {
+            "normal": "assets/hub-left.png"
+          }
+        },
+        {
+          "type": "spinner",
+          "x": 239,
+          "y": 112,
+          "width": 30,
+          "height": 30,
+          "period": 2600,
+          "states": {
+            "normal": "assets/hub-right.png"
+          }
+        },
+        {
           "type": "text",
           "source": "track.title",
           "x": 60,

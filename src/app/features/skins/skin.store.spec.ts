@@ -59,7 +59,7 @@ describe('SkinStore', () => {
     await store.reset();
     expect(api.commands).toEqual([
       'activate io.github.krocon.retro',
-      'activate io.github.krocon.modern',
+      'activate io.github.krocon.vinyl',
     ]);
     expect(store.activeId()).toBe('io.github.krocon.modern');
   });

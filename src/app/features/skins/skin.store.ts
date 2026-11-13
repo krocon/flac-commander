@@ -11,7 +11,7 @@ import { applyTheme } from './theme';
 const MAX_FIT_ATTEMPTS = 3;
 
 /** Id of the skin every installation has (`DEFAULT_SKIN` in fc-core). */
-export const DEFAULT_SKIN_ID = 'io.github.krocon.modern';
+export const DEFAULT_SKIN_ID = 'io.github.krocon.vinyl';
 
 /**
  * The active skin of this window and the list to choose from. The backend decides which skin is

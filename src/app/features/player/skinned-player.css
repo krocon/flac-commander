@@ -150,8 +150,30 @@ input[type='range'] {
   }
 }
 
+/* a picture that turns while music plays (a reel) */
+.spinner {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+  animation: turn 2s linear infinite paused;
+
+  &.turning {
+    animation-play-state: running;
+  }
+}
+
+@keyframes turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .needle {
     transition: none;
+  }
+
+  .spinner {
+    animation: none;
   }
 }

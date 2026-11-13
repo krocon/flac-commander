@@ -30,7 +30,16 @@ export interface SkinTheme {
 }
 
 export type SkinComponentType =
-  'button' | 'seekbar' | 'volume' | 'text' | 'time' | 'playlist' | 'image' | 'spectrum' | 'needle';
+  | 'button'
+  | 'seekbar'
+  | 'volume'
+  | 'text'
+  | 'time'
+  | 'playlist'
+  | 'image'
+  | 'spectrum'
+  | 'needle'
+  | 'spinner';
 
 export interface SkinStates {
   readonly normal: string | null;
@@ -59,6 +68,8 @@ export interface SkinComponent {
   readonly from?: number | null;
   readonly to?: number | null;
   readonly rest?: number | null;
+  /** A `spinner` only: milliseconds for one turn. */
+  readonly period?: number | null;
 }
 
 export interface SkinPlayerWindow {

@@ -266,9 +266,16 @@ const neon = {
   ],
 };
 
-const reel = (cx) => `
-  <div class="pack" style="left:${cx - 44}px"></div>
-  <div class="hub" style="left:${cx - 15}px"><i></i><i></i><i></i></div>`;
+const reel = (cx) => `<div class="pack" style="left:${cx - 44}px"></div>`;
+const hub = (name, x, y) => ({
+  name,
+  x,
+  y,
+  width: 30,
+  height: 30,
+  period: 2600,
+  html: '<div class="hub" style="left:0;top:0"><i></i><i></i><i></i></div>',
+});
 
 const tape = {
   folder: 'tape',
@@ -322,7 +329,7 @@ const tape = {
     .window::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,.13) 0 30%, transparent 30.5%); }
     .pack { position: absolute; top: -19px; width: 88px; height: 88px; border-radius: 50%;
       background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); box-shadow: 0 0 0 1px #1c120c; }
-    .hub { position: absolute; top: 10px; width: 30px; height: 30px; border-radius: 50%; background: #efe7d6;
+    .hub { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: #efe7d6;
       box-shadow: inset 0 0 0 3px #efe7d6, inset 0 0 0 9px #17120e, 0 0 0 1px #17120e; }
     .hub i { position: absolute; left: 13px; top: 2px; width: 4px; height: 26px; background: linear-gradient(#efe7d6 0 7px, transparent 7px 19px, #efe7d6 19px); }
     .hub i:nth-child(2) { transform: rotate(60deg); } .hub i:nth-child(3) { transform: rotate(120deg); }
@@ -398,6 +405,7 @@ const tape = {
     { type: 'volume', x: 180, y: 316, width: 136, height: 10 },
     { type: 'playlist', x: 34, y: 350, width: 332, height: 172 },
   ],
+  spinners: [hub('hub-left', 131, 112), hub('hub-right', 239, 112)],
 };
 
 const vinyl = {
@@ -432,7 +440,7 @@ const vinyl = {
       box-shadow: inset 5px 5px 10px rgba(0,0,0,.6), inset -4px -4px 9px rgba(255,255,255,.05); }
     .record { position: absolute; left: 20px; top: 42px; width: 280px; height: 280px; border-radius: 50%;
       background:
-        radial-gradient(circle, #0b0c0d 0 4px, #dfe5ea 4px 6px, #66b5f5 6px 26px, #3f8fd8 26px 27px, #4a9be3 27px 46px, #101113 46px 48px, #0d0e10 48px 60px, transparent 60px),
+        radial-gradient(circle, #0d0e10 0 60px, transparent 60px),
         conic-gradient(from 35deg, rgba(255,255,255,.13), transparent 11%, transparent 39%, rgba(255,255,255,.13) 50%, transparent 61%, transparent 89%, rgba(255,255,255,.13)),
         repeating-radial-gradient(circle, #0b0c0d 0 1.2px, #18191c 1.2px 2.7px);
       box-shadow: 0 5px 12px rgba(0,0,0,.6), 0 0 0 1px #050506; }
@@ -450,6 +458,14 @@ const vinyl = {
       background: radial-gradient(circle at 35% 30%, #f1f3f5, #8b9299 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
     .arm .shell { left: 6px; top: 208px; width: 18px; height: 30px; border-radius: 3px;
       background: linear-gradient(90deg, #2b2e33, #4a4f56 50%, #2b2e33); box-shadow: inset 0 -4px 0 #66b5f5; }
+    .disc-label { position: absolute; inset: 2px; border-radius: 50%;
+      background:
+        radial-gradient(circle, #0b0c0d 0 4px, #dfe5ea 4px 6px, transparent 6px),
+        radial-gradient(circle, transparent 0 25px, #3f8fd8 25px 26px, transparent 26px),
+        conic-gradient(from 20deg, #66b5f5 0 62%, #9ad0fb 62% 70%, #66b5f5 70% 82%, #4a9be3 82% 90%, #66b5f5 90%);
+      box-shadow: 0 0 0 1px #050506; }
+    .disc-label::after { content: 'FLAC · 33'; position: absolute; left: 0; right: 0; top: 9px; text-align: center;
+      font: 700 7px "Helvetica Neue", Arial, sans-serif; letter-spacing: .14em; color: #0a2540; }
     .well { position: absolute; border-radius: 12px; background: #1c1f23;
       box-shadow: inset 3px 3px 7px rgba(0,0,0,.6), inset -2px -2px 6px rgba(255,255,255,.05); }
     .face { color: #a9cdee; }
@@ -498,6 +514,7 @@ const vinyl = {
     { type: 'spectrum', x: 60, y: 350, width: 200, height: 30, color: '#66b5f5' },
     { type: 'playlist', x: 346, y: 264, width: 276, height: 118 },
   ],
+  spinners: [{ name: 'label', x: 112, y: 134, width: 96, height: 96, period: 1800, html: '<div class="disc-label"></div>' }],
   // the tonearm: turns from the first groove to the last with the track, and is dragged to seek
   needles: [
     {
@@ -610,7 +627,419 @@ const panel = {
   ],
 };
 
-const DESIGNS = [hifi, neon, tape, vinyl, panel];
+// ---- "Reel": a tape machine, white front, two reels that turn
+
+const reelHtml = (pack) => `
+  <div class="reel">
+    <div class="tape" style="inset:${112 - pack}px"></div>
+    <b></b><b style="transform:rotate(120deg)"></b><b style="transform:rotate(240deg)"></b>
+    <div class="core"></div><div class="tag"></div>
+  </div>`;
+
+const reelDeck = {
+  folder: 'reel',
+  manifest: {
+    id: 'io.github.krocon.reel',
+    name: 'Reel',
+    description: 'A tape machine with a white front: two reels that turn, square keys and black knobs.',
+    theme: {
+      background: '#e9e9e5',
+      surface: '#f6f6f2',
+      surfaceRaised: '#ffffff',
+      foreground: '#1d1d1b',
+      muted: '#5a5a56',
+      accent: '#b73e0e',
+      accentContrast: '#ffffff',
+      border: '#a6a6a1',
+      ok: '#1f6b3a',
+      danger: '#a3231b',
+      focus: '#1f5fbf',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      fontMono: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      radius: 2,
+    },
+  },
+  width: 640,
+  height: 430,
+  pad: 4,
+  css: `
+    body { background: linear-gradient(170deg, #f1f1ee, #e2e2de); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      box-shadow: inset 0 0 0 1px #b9b9b4, inset 0 2px 0 #fff; }
+    .screw { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d8d8d4, #84847f 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+    .seat { position: absolute; width: 232px; height: 232px; border-radius: 50%; background: #dcdcd8;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,.22), 0 1px 0 #fff; }
+    .path { position: absolute; left: 150px; top: 236px; width: 340px; height: 14px; border: 2px solid #3b2a20; border-top: none; border-radius: 0 0 14px 14px; opacity: .8; }
+    .head { position: absolute; left: 252px; top: 196px; width: 136px; height: 50px; border-radius: 8px; background: linear-gradient(#fafaf7, #e4e4e0);
+      box-shadow: 0 0 0 1px #9a9a95, 0 3px 5px rgba(0,0,0,.25); }
+    .head::before { content: ''; position: absolute; left: 10px; right: 10px; top: 9px; bottom: 9px; border-radius: 2px; background: #f6f6f2; box-shadow: inset 0 1px 3px rgba(0,0,0,.45); }
+    .sheet { position: absolute; border-radius: 2px; background: #f6f6f2; box-shadow: inset 0 0 0 1px #a6a6a1; }
+    .slot { position: absolute; border-radius: 7px; background: #cfcfca; box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 #fff; }
+    .cap { position: absolute; font-size: 7.5px; letter-spacing: .06em; color: #3c3c39; white-space: nowrap; }
+    .reel { position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle, transparent 0 104px, rgba(150,150,144,.55) 104px 106px, rgba(255,255,255,.5) 106px 110px, rgba(120,120,115,.8) 110px 112px);
+      box-shadow: inset 0 0 0 112px rgba(255,255,255,.2); filter: drop-shadow(0 3px 4px rgba(0,0,0,.28)); }
+    .reel .tape { position: absolute; border-radius: 50%; background: repeating-radial-gradient(circle, #40302a 0 1.5px, #32251f 1.5px 3px); box-shadow: 0 0 0 1px #1d1512; }
+    .reel b { position: absolute; left: 50%; top: 50%; width: 40px; height: 108px; margin-left: -20px; transform-origin: 50% 0;
+      background: linear-gradient(90deg, rgba(225,225,220,.88), rgba(248,248,245,.92) 50%, rgba(215,215,210,.88)); border-radius: 0 0 14px 14px; box-shadow: 0 0 0 1px rgba(0,0,0,.14); }
+    .reel .core { position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px; border-radius: 50%;
+      background: radial-gradient(circle, #8a8a85 0 4px, #e9e9e5 4px 9px, #b5b5b0 9px 10px, #fbfbf8 10px);
+      box-shadow: 0 0 0 1px #9a9a95, 0 1px 3px rgba(0,0,0,.3); }
+    .reel .tag { position: absolute; left: 50%; top: 152px; width: 26px; height: 44px; margin-left: -13px; border-radius: 3px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25);
+      background-image: linear-gradient(#b73e0e 0 8px, transparent 8px); }
+    .face { color: #1d1d1b; }
+    .face svg { width: 20px; height: 20px; }
+    .sq { border-radius: 4px; background: linear-gradient(#fcfcf9, #dcdcd7); box-shadow: 0 0 0 1px #8c8c87, 0 2px 2px rgba(0,0,0,.25), inset 0 1px 0 #fff; }
+    .sq.go::after { content: ''; position: absolute; left: 50%; bottom: 4px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #c9c9c4; }
+    .sq.go svg { margin-top: -6px; }
+    .knob { border-radius: 50%; color: #f6f6f2; background: radial-gradient(circle at 35% 28%, #5a5a55, #151513 72%); box-shadow: 0 2px 3px rgba(0,0,0,.4), 0 0 0 1px #000; }
+    .knob svg { width: 16px; height: 16px; }
+    .hover .sq { background: linear-gradient(#fff, #e8e8e3); }
+    .hover .knob { background: radial-gradient(circle at 35% 28%, #74746e, #232320 72%); }
+    .pressed .sq { background: linear-gradient(#d5d5d0, #e9e9e4); box-shadow: 0 0 0 1px #8c8c87, inset 0 2px 3px rgba(0,0,0,.3); }
+    .pressed .knob { box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.8); }
+    .pressed .face svg { transform: translateY(1px); }
+    .active .sq.go { color: #b73e0e; }
+    .active .sq.go::after { background: #f2581c; box-shadow: 0 0 4px rgba(242,88,28,.9); }
+    .active .knob { color: #ff9a62; box-shadow: 0 2px 3px rgba(0,0,0,.4), 0 0 0 1px #000, 0 0 0 3px #f2581c; }
+  `,
+  art: `
+    <div class="screw" style="left:8px;top:8px"></div><div class="screw" style="right:8px;top:8px"></div>
+    <div class="screw" style="left:8px;bottom:8px"></div><div class="screw" style="right:8px;bottom:8px"></div>
+    <div class="seat" style="left:34px;top:14px"></div><div class="seat" style="left:374px;top:14px"></div>
+    <div class="path"></div><div class="head"></div>
+    <div class="slot" style="left:22px;top:343px;width:284px;height:14px"></div>
+    <div class="cap" style="left:332px;top:262px">volume</div>
+    <div class="slot" style="left:376px;top:259px;width:242px;height:14px"></div>
+    <div class="sheet" style="left:330px;top:282px;width:288px;height:134px"></div>
+  `,
+  buttons: [
+    button('player.previous', 'previous', 22, 372, 52, 46, 'sq'),
+    button('player.togglePlay', 'play', 74, 372, 52, 46, 'sq go', PLAY),
+    button('player.stop', 'stop', 126, 372, 52, 46, 'sq'),
+    button('player.next', 'next', 178, 372, 52, 46, 'sq'),
+    button('player.open', 'open', 230, 372, 52, 46, 'sq'),
+    button('player.repeat', 'repeat', 298, 16, 44, 44, 'knob', TOGGLE),
+    button('player.shuffle', 'shuffle', 298, 60, 44, 44, 'knob', TOGGLE),
+    button('window.equalizer', 'equalizer', 298, 104, 44, 44, 'knob', TOGGLE),
+    button('app.skins', 'skins', 298, 148, 44, 44, 'knob'),
+  ],
+  components: [
+    { type: 'spectrum', x: 266, y: 208, width: 108, height: 26, color: '#b73e0e' },
+    { type: 'text', source: 'track.title', x: 24, y: 276, width: 282, height: 24, fontSize: 17, color: '#1d1d1b' },
+    { type: 'text', source: 'track.artist', x: 24, y: 300, width: 282, height: 18, fontSize: 12, color: '#5a5a56' },
+    { type: 'time', source: 'position', x: 24, y: 324, width: 80, height: 16, fontSize: 12, color: '#1d1d1b' },
+    { type: 'text', source: 'player.status', x: 104, y: 324, width: 122, height: 16, fontSize: 10, align: 'center', color: '#5a5a56' },
+    { type: 'time', source: 'duration', x: 226, y: 324, width: 80, height: 16, fontSize: 12, align: 'right', color: '#5a5a56' },
+    { type: 'seekbar', x: 24, y: 346, width: 280, height: 8 },
+    { type: 'volume', x: 378, y: 262, width: 238, height: 8 },
+    { type: 'playlist', x: 334, y: 286, width: 280, height: 126 },
+  ],
+  spinners: [
+    { name: 'reel-left', x: 38, y: 18, width: 224, height: 224, period: 3200, html: reelHtml(96) },
+    { name: 'reel-right', x: 378, y: 18, width: 224, height: 224, period: 3200, html: reelHtml(48) },
+  ],
+};
+
+// ---- "Recorder": a pocket recorder, black body, a display that glows, a ring of keys
+
+const recorder = {
+  folder: 'recorder',
+  manifest: {
+    id: 'io.github.krocon.recorder',
+    name: 'Recorder',
+    description: 'A pocket recorder: matt black body, a glowing display and a ring of keys around play.',
+    theme: {
+      background: '#18191b',
+      surface: '#0b0e10',
+      surfaceRaised: '#2a2c30',
+      foreground: '#e9eef0',
+      muted: '#9aa4a8',
+      accent: '#ff6156',
+      accentContrast: '#1c0200',
+      border: '#34373b',
+      ok: '#7fdca0',
+      danger: '#ff9d94',
+      focus: '#7fc4ff',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      fontMono: 'Menlo, Consolas, monospace',
+      radius: 3,
+    },
+  },
+  width: 340,
+  height: 600,
+  pad: 5,
+  css: `
+    body { background: linear-gradient(90deg, rgba(255,255,255,.05), transparent 8%, transparent 92%, rgba(255,255,255,.05)), linear-gradient(#202124, #141516);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .top { position: absolute; left: 0; top: 0; width: 100%; height: 44px;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.18) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2.5px), linear-gradient(#e3e5e7, #a9adb1);
+      box-shadow: 0 2px 4px rgba(0,0,0,.6), inset 0 1px 0 #fff; }
+    .led { position: absolute; top: 18px; width: 8px; height: 8px; border-radius: 50%; box-shadow: inset 0 1px 1px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.7); }
+    .mark { position: absolute; top: 15px; font-size: 8px; font-weight: 700; letter-spacing: .12em; color: #3b3e42; }
+    .lcd { position: absolute; border-radius: 4px; background: linear-gradient(#0b0e10, #0e1215);
+      box-shadow: inset 0 0 0 1px #000, inset 0 2px 8px #000, 0 0 0 3px #2b2d30, 0 0 0 4px #000, 0 1px 0 4px rgba(255,255,255,.08); }
+    .hair { position: absolute; left: 12px; right: 12px; height: 1px; background: rgba(233,238,240,.22); }
+    .ring { position: absolute; left: 30px; top: 240px; width: 164px; height: 164px; border-radius: 50%; background: #111214;
+      box-shadow: inset 0 2px 6px #000, 0 1px 0 rgba(255,255,255,.1); }
+    .slot { position: absolute; border-radius: 7px; background: #0b0c0d; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.1); }
+    .tiny { position: absolute; font-size: 7px; font-weight: 700; letter-spacing: .16em; color: #7d858a; white-space: nowrap; }
+    .face { color: #e9eef0; }
+    .face svg { width: 18px; height: 18px; }
+    .cap { border-radius: 50%; background: linear-gradient(#3c3e42, #1d1e21); box-shadow: 0 0 0 1px #000, 0 2px 3px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.2); }
+    .cap.silver { color: #18191b; background: linear-gradient(#f4f5f6, #b4b8bc); box-shadow: 0 0 0 1px #000, 0 2px 3px rgba(0,0,0,.6), inset 0 1px 0 #fff; }
+    .cap.silver svg { width: 26px; height: 26px; }
+    .hover .cap { background: linear-gradient(#4b4e53, #26272b); }
+    .hover .cap.silver { background: linear-gradient(#fff, #c6cace); }
+    .pressed .cap { background: linear-gradient(#1d1e21, #2b2d30); box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.7); }
+    .pressed .cap.silver { background: linear-gradient(#b4b8bc, #d9dcdf); box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.45); }
+    .active .cap { color: #ff6156; box-shadow: 0 0 0 1px #000, 0 0 0 2.5px #ff6156, inset 0 1px 0 rgba(255,255,255,.2); }
+    .active .cap.silver { color: #c2241a; box-shadow: 0 0 0 1px #000, 0 0 0 3px #ff6156, 0 0 8px 2px rgba(255,97,86,.6), inset 0 1px 0 #fff; }
+  `,
+  art: `
+    <div class="top"></div>
+    <div class="led" style="left:120px;background:#8fd98a"></div><div class="mark" style="left:134px">L</div>
+    <div class="led" style="left:196px;background:#d7d9db"></div><div class="mark" style="left:210px">R</div>
+    <div class="lcd" style="left:30px;top:62px;width:280px;height:150px"><div class="hair" style="top:44px"></div><div class="hair" style="top:104px"></div></div>
+    <div class="slot" style="left:28px;top:221px;width:284px;height:14px"></div>
+    <div class="ring"></div>
+    <div class="tiny" style="left:214px;top:376px">VOLUME</div>
+    <div class="slot" style="left:210px;top:387px;width:102px;height:14px"></div>
+    <div class="lcd" style="left:30px;top:420px;width:280px;height:164px"></div>
+  `,
+  buttons: [
+    button('player.open', 'open', 90, 242, 44, 44, 'cap'),
+    button('player.previous', 'previous', 32, 300, 44, 44, 'cap'),
+    button('player.togglePlay', 'play', 79, 289, 66, 66, 'cap silver', PLAY),
+    button('player.next', 'next', 148, 300, 44, 44, 'cap'),
+    button('player.stop', 'stop', 90, 358, 44, 44, 'cap'),
+    button('player.repeat', 'repeat', 210, 250, 50, 50, 'cap', TOGGLE),
+    button('player.shuffle', 'shuffle', 262, 250, 50, 50, 'cap', TOGGLE),
+    button('window.equalizer', 'equalizer', 210, 306, 50, 50, 'cap', TOGGLE),
+    button('app.skins', 'skins', 262, 306, 50, 50, 'cap'),
+  ],
+  components: [
+    { type: 'spectrum', x: 42, y: 70, width: 256, height: 30, color: '#e9eef0' },
+    { type: 'text', source: 'player.status', x: 42, y: 112, width: 90, height: 16, fontSize: 10, color: '#ff6156' },
+    { type: 'time', source: 'duration', x: 42, y: 132, width: 90, height: 16, fontSize: 11, color: '#9aa4a8' },
+    { type: 'time', source: 'position', x: 134, y: 110, width: 164, height: 50, fontSize: 36, align: 'right', color: '#e9eef0' },
+    { type: 'text', source: 'track.title', x: 42, y: 170, width: 256, height: 20, fontSize: 13, color: '#e9eef0' },
+    { type: 'text', source: 'track.artist', x: 42, y: 190, width: 256, height: 16, fontSize: 11, color: '#9aa4a8' },
+    { type: 'seekbar', x: 30, y: 224, width: 280, height: 8 },
+    { type: 'volume', x: 212, y: 390, width: 98, height: 8 },
+    { type: 'playlist', x: 34, y: 424, width: 272, height: 156 },
+  ],
+};
+
+// ---- "Deck": a cassette lying on dark brushed metal, ridged silver keys
+
+const smallHub = (name, x, y) => ({
+  name,
+  x,
+  y,
+  width: 28,
+  height: 28,
+  period: 2600,
+  html: '<div class="cog"><i></i><i></i><i></i></div>',
+});
+const COG_CSS = `
+    .cog { position: absolute; inset: 0; border-radius: 50%; background: #f1ece0; box-shadow: inset 0 0 0 3px #f1ece0, inset 0 0 0 8px #141312, 0 0 0 1px #141312; }
+    .cog i { position: absolute; left: 12px; top: 2px; width: 4px; height: 24px; background: linear-gradient(#f1ece0 0 6px, transparent 6px 18px, #f1ece0 18px); }
+    .cog i:nth-child(2) { transform: rotate(60deg); } .cog i:nth-child(3) { transform: rotate(120deg); }`;
+
+const deck = {
+  folder: 'deck',
+  manifest: {
+    id: 'io.github.krocon.deck',
+    name: 'Deck',
+    description: 'A cassette on dark brushed metal, ridged silver keys and an orange stripe.',
+    theme: {
+      background: '#2b2c2e',
+      surface: '#18191a',
+      surfaceRaised: '#3a3b3e',
+      foreground: '#f1f1ee',
+      muted: '#b2b2ad',
+      accent: '#ff8136',
+      accentContrast: '#1c0c00',
+      border: '#111213',
+      ok: '#7fdca0',
+      danger: '#ff9d94',
+      focus: '#7fc4ff',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      fontMono: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      radius: 3,
+    },
+  },
+  width: 380,
+  height: 600,
+  pad: 3,
+  css: `
+    body { background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 .5px, rgba(0,0,0,.06) .5px 1px, transparent 1px 2.5px),
+        linear-gradient(#3a3b3d, #252628 55%, #2c2d2f);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .bay { position: absolute; left: 30px; top: 16px; width: 320px; height: 204px; border-radius: 8px; background: #151617;
+      box-shadow: inset 0 3px 8px #000, 0 1px 0 rgba(255,255,255,.12); }
+    .shell { position: absolute; left: 40px; top: 24px; width: 300px; height: 188px; border-radius: 7px; background: linear-gradient(#f1ece0, #ddd6c6);
+      box-shadow: 0 4px 8px rgba(0,0,0,.6), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.25); }
+    .band { position: absolute; left: 14px; top: 12px; width: 272px; height: 58px; border-radius: 3px; background: #18191a; }
+    .stripe { position: absolute; left: 14px; top: 74px; width: 272px; height: 9px; background: linear-gradient(90deg, #ff8136 0 70%, #f1ece0 70% 72%, #ff8136 72% 80%, #f1ece0 80% 82%, #ff8136 82%); }
+    .glass { position: absolute; left: 66px; top: 92px; width: 168px; height: 46px; border-radius: 6px; background: linear-gradient(#211a15, #100d0b); box-shadow: inset 0 2px 5px #000; overflow: hidden; }
+    .glass::before, .glass::after { content: ''; position: absolute; top: -18px; width: 82px; height: 82px; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
+    .glass::before { left: -7px; } .glass::after { right: -19px; width: 70px; height: 70px; top: -12px; }
+    .foot { position: absolute; left: 60px; bottom: 0; width: 180px; height: 34px; background: #cfc8b8; clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%); }
+    .foot::after { content: ''; position: absolute; left: 30px; top: 12px; width: 120px; height: 10px; background: radial-gradient(circle, #18191a 3.5px, transparent 4px) 0 0 / 30px 10px; }
+    .well { position: absolute; border-radius: 4px; background: #18191a; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.1); }
+    .slot { position: absolute; border-radius: 7px; background: #121314; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.1); }
+    .block { position: absolute; left: 30px; top: 228px; width: 320px; height: 54px; border-radius: 5px; background: #121314; box-shadow: inset 0 2px 4px #000, 0 1px 0 rgba(255,255,255,.1); }
+    ${COG_CSS}
+    .face { color: #2b2c2e; }
+    .face svg { width: 20px; height: 20px; }
+    .ridge { border-radius: 3px;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 1px, transparent 1px 4px), linear-gradient(#f6f6f4, #c4c4c0);
+      box-shadow: 0 0 0 1px #0c0c0c, 0 3px 3px rgba(0,0,0,.55), inset 0 1px 0 #fff; }
+    .flat { color: #b2b2ad; border-radius: 4px; }
+    .flat svg { width: 18px; height: 18px; }
+    .hover .ridge { background: repeating-linear-gradient(0deg, rgba(0,0,0,.06) 0 1px, transparent 1px 4px), linear-gradient(#fff, #d4d4d0); }
+    .hover .flat { color: #fff; background: rgba(255,255,255,.07); }
+    .pressed .ridge { transform: translateY(2px); background: repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 4px), linear-gradient(#cfcfcb, #b9b9b5);
+      box-shadow: 0 0 0 1px #0c0c0c, 0 1px 1px rgba(0,0,0,.55); }
+    .pressed .flat { color: #fff; background: rgba(0,0,0,.35); }
+    .active .ridge { transform: translateY(2px); color: #d4520a; box-shadow: 0 0 0 1px #0c0c0c, 0 1px 1px rgba(0,0,0,.55), inset 0 -3px 0 #ff8136; }
+    .active .flat { color: #ff8136; box-shadow: inset 0 -2px 0 #ff8136; }
+  `,
+  art: `
+    <div class="bay"></div>
+    <div class="shell"><div class="band"></div><div class="stripe"></div><div class="glass"></div><div class="foot"></div></div>
+    <div class="block"></div>
+    <div class="slot" style="left:164px;top:299px;width:140px;height:14px"></div>
+    <div class="slot" style="left:22px;top:355px;width:336px;height:14px"></div>
+    <div class="well" style="left:24px;top:394px;width:332px;height:192px"></div>
+  `,
+  buttons: [
+    button('player.open', 'open', 34, 231, 56, 48, 'ridge'),
+    button('player.previous', 'previous', 90, 231, 62, 48, 'ridge'),
+    button('player.togglePlay', 'play', 152, 231, 76, 48, 'ridge', PLAY),
+    button('player.next', 'next', 228, 231, 62, 48, 'ridge'),
+    button('player.stop', 'stop', 290, 231, 56, 48, 'ridge'),
+    button('player.repeat', 'repeat', 24, 288, 44, 36, 'flat', TOGGLE),
+    button('player.shuffle', 'shuffle', 68, 288, 44, 36, 'flat', TOGGLE),
+    button('window.equalizer', 'equalizer', 112, 288, 44, 36, 'flat', TOGGLE),
+    button('app.skins', 'skins', 312, 288, 44, 36, 'flat'),
+  ],
+  components: [
+    { type: 'text', source: 'track.title', x: 64, y: 42, width: 252, height: 24, fontSize: 16, color: '#f1f1ee' },
+    { type: 'text', source: 'track.artist', x: 64, y: 66, width: 252, height: 18, fontSize: 12, color: '#ff8136' },
+    { type: 'volume', x: 166, y: 302, width: 136, height: 8 },
+    { type: 'time', source: 'position', x: 24, y: 334, width: 70, height: 16, fontSize: 12, color: '#f1f1ee' },
+    { type: 'text', source: 'player.status', x: 94, y: 334, width: 90, height: 16, fontSize: 10, color: '#b2b2ad' },
+    { type: 'spectrum', x: 190, y: 332, width: 100, height: 18, color: '#ff8136' },
+    { type: 'time', source: 'duration', x: 292, y: 334, width: 64, height: 16, fontSize: 12, align: 'right', color: '#b2b2ad' },
+    { type: 'seekbar', x: 24, y: 358, width: 332, height: 8 },
+    { type: 'playlist', x: 28, y: 398, width: 324, height: 184 },
+  ],
+  spinners: [smallHub('hub-left', 136, 125), smallHub('hub-right', 232, 125)],
+};
+
+// ---- "Walk": a pocket cassette player in orange and black
+
+const bigHub = (name, x, y) => ({ ...smallHub(name, x, y), width: 36, height: 36, html: '<div class="cog big"><i></i><i></i><i></i></div>' });
+
+const walk = {
+  folder: 'walk',
+  manifest: {
+    id: 'io.github.krocon.walk',
+    name: 'Walk',
+    description: 'A pocket cassette player in orange and black, for music on the way.',
+    theme: {
+      background: '#1b1a19',
+      surface: '#121110',
+      surfaceRaised: '#2e2b28',
+      foreground: '#f5efe4',
+      muted: '#b9b0a1',
+      accent: '#ff7a2a',
+      accentContrast: '#1c0a00',
+      border: '#0a0908',
+      ok: '#7fdca0',
+      danger: '#ff9d94',
+      focus: '#7fc4ff',
+      fontFamily: '"Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", sans-serif',
+      fontMono: '"Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", sans-serif',
+      radius: 3,
+    },
+  },
+  width: 360,
+  height: 580,
+  pad: 2,
+  css: `
+    body { background:
+        radial-gradient(circle, rgba(0,0,0,.10) .6px, transparent .9px) 0 0 / 5px 5px,
+        radial-gradient(circle, rgba(255,255,255,.10) .6px, transparent .9px) 2px 3px / 7px 7px,
+        linear-gradient(160deg, #f7742a, #e55a12);
+      font-family: "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", sans-serif; }
+    .edge { position: absolute; left: 0; top: 0; width: 12px; height: 100%; background: linear-gradient(90deg, #8d8d8a, #b9b9b5 50%, #777774); box-shadow: 1px 0 2px rgba(0,0,0,.35); }
+    .panel { position: absolute; left: 24px; top: 18px; width: 320px; height: 222px; background: #121110; clip-path: polygon(0 0, 100% 0, 100% 100%, 40% 100%, 0 52%); }
+    .rim { position: absolute; left: 24px; top: 18px; width: 320px; height: 222px; }
+    .rim::after { content: ''; position: absolute; left: 148px; top: 130px; width: 160px; height: 76px; border-radius: 5px; background: linear-gradient(#f5efe4, #dcd4c4); box-shadow: 0 0 0 1px #000; }
+    .word { position: absolute; left: 44px; top: 150px; font-size: 19px; font-weight: 800; letter-spacing: .08em; color: #7a2a05; transform: rotate(49deg); transform-origin: 0 0; white-space: nowrap; opacity: .85; }
+    .hole { position: absolute; top: 148px; width: 40px; height: 40px; border-radius: 50%; background: #121110; box-shadow: inset 0 2px 4px #000; }
+    .hatch { position: absolute; left: 250px; top: 154px; width: 32px; height: 28px; background: repeating-linear-gradient(45deg, #121110 0 2px, transparent 2px 5px); opacity: .7; }
+    .slot { position: absolute; border-radius: 7px; background: #3a1503; box-shadow: inset 0 1px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.25); }
+    .bar { position: absolute; left: 24px; top: 278px; width: 320px; height: 58px; border-radius: 6px; background: #121110; box-shadow: 0 2px 3px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12); }
+    .box { position: absolute; border-radius: 5px; background: #121110; box-shadow: 0 2px 3px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12); }
+    .tiny { position: absolute; font-size: 8px; font-weight: 800; letter-spacing: .14em; color: #5a1f04; white-space: nowrap; }
+    ${COG_CSS}
+    .cog.big i { left: 16px; top: 3px; height: 30px; background: linear-gradient(#f1ece0 0 8px, transparent 8px 22px, #f1ece0 22px); }
+    .face { color: #f5efe4; }
+    .face svg { width: 20px; height: 20px; }
+    .slab { border-radius: 3px; background: linear-gradient(#4a4744, #2a2826); box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.22), inset 0 -3px 0 rgba(0,0,0,.35); }
+    .chip { border-radius: 4px; background: #121110; box-shadow: 0 2px 3px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.14); }
+    .chip svg { width: 17px; height: 17px; }
+    .hover .slab { background: linear-gradient(#5d5a56, #353230); }
+    .hover .chip { background: #2a2826; }
+    .pressed .slab { background: linear-gradient(#2a2826, #353230); box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.6); }
+    .pressed .chip { background: #000; box-shadow: inset 0 2px 4px #000; }
+    .pressed .face svg { transform: translateY(1px); }
+    .active .slab { color: #ff9a55; background: linear-gradient(#3a2416, #2a1a10); box-shadow: 0 0 0 1px #000, inset 0 2px 4px rgba(0,0,0,.6), inset 0 -3px 0 #ff7a2a; }
+    .active .chip { color: #1c0a00; background: linear-gradient(#fff3e6, #ffd9b8); box-shadow: 0 2px 3px rgba(0,0,0,.4), inset 0 0 0 1px #fff; }
+  `,
+  art: `
+    <div class="edge"></div>
+    <div class="panel"></div><div class="rim"></div>
+    <div class="word">STEREO</div>
+    <div class="hole" style="left:182px"></div><div class="hole" style="left:286px"></div>
+    <div class="hatch"></div>
+    <div class="slot" style="left:22px;top:253px;width:324px;height:14px"></div>
+    <div class="bar"></div>
+    <div class="tiny" style="left:172px;top:346px">VOLUME</div>
+    <div class="slot" style="left:170px;top:358px;width:124px;height:14px"></div>
+    <div class="box" style="left:24px;top:392px;width:320px;height:174px"></div>
+  `,
+  buttons: [
+    button('player.previous', 'previous', 28, 282, 58, 50, 'slab'),
+    button('player.togglePlay', 'play', 86, 282, 82, 50, 'slab', PLAY),
+    button('player.stop', 'stop', 168, 282, 58, 50, 'slab'),
+    button('player.next', 'next', 226, 282, 58, 50, 'slab'),
+    button('player.open', 'open', 284, 282, 56, 50, 'slab'),
+    button('player.repeat', 'repeat', 22, 344, 46, 36, 'chip', TOGGLE),
+    button('player.shuffle', 'shuffle', 68, 344, 46, 36, 'chip', TOGGLE),
+    button('window.equalizer', 'equalizer', 114, 344, 46, 36, 'chip', TOGGLE),
+    button('app.skins', 'skins', 300, 344, 46, 36, 'chip'),
+  ],
+  components: [
+    { type: 'text', source: 'track.title', x: 40, y: 28, width: 290, height: 26, fontSize: 19, color: '#f5efe4' },
+    { type: 'text', source: 'track.artist', x: 40, y: 54, width: 290, height: 18, fontSize: 13, color: '#ff7a2a' },
+    { type: 'time', source: 'position', x: 40, y: 78, width: 110, height: 40, fontSize: 30, color: '#f5efe4' },
+    { type: 'spectrum', x: 176, y: 84, width: 154, height: 30, color: '#ff7a2a' },
+    { type: 'text', source: 'player.status', x: 176, y: 118, width: 90, height: 14, fontSize: 10, color: '#b9b0a1' },
+    { type: 'time', source: 'duration', x: 266, y: 118, width: 64, height: 14, fontSize: 11, align: 'right', color: '#b9b0a1' },
+    { type: 'seekbar', x: 24, y: 256, width: 320, height: 8 },
+    { type: 'volume', x: 172, y: 361, width: 120, height: 8 },
+    { type: 'playlist', x: 28, y: 396, width: 312, height: 166 },
+  ],
+  spinners: [bigHub('hub-left', 184, 150), bigHub('hub-right', 288, 150)],
+};
+
+const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk];
 
 // ---------------------------------------------------------------- rendering
 
@@ -683,7 +1112,8 @@ function inUse(design) {
 
 /** A needle as it lies in the window, turned by `angle` degrees around its pivot. */
 function needleHtml(n, angle) {
-  return `<div style="position:absolute;left:${n.x}px;top:${n.y}px;width:${n.width}px;height:${n.height}px;transform-origin:${n.pivotX}px ${n.pivotY}px;transform:rotate(${angle}deg)">${n.html}</div>`;
+  const origin = n.pivotX === undefined ? '50% 50%' : `${n.pivotX}px ${n.pivotY}px`;
+  return `<div style="position:absolute;left:${n.x}px;top:${n.y}px;width:${n.width}px;height:${n.height}px;transform-origin:${origin};transform:rotate(${angle}deg)">${n.html}</div>`;
 }
 
 function screenshot(html, width, height, scale, work, transparent = false) {
@@ -842,19 +1272,24 @@ function build(design, mockDir) {
     return { type: 'button', action: b.action, x: b.x, y: b.y, width: b.width, height: b.height, states: files };
   });
 
-  // needles: drawn alone on nothing, upright, and cut out with their transparency
-  const needles = (design.needles ?? []).map((n) => {
-    const html = `${page(design, 'none').replace(design.art, '')}<style>html, body { background: none !important; box-shadow: none !important; }</style>${needleHtml(n, 0)}`;
-    const image = decodePng(screenshot(html, design.width, design.height, SCALE, work, true));
-    const file = `assets/${n.name}.png`;
-    writeFileSync(join(out, file), cut(image, n.x * SCALE, n.y * SCALE, n.width * SCALE, n.height * SCALE, true));
-    const { name, html: _, ...placed } = n;
-    return { type: 'needle', ...placed, states: { normal: file } };
-  });
-  const turned = (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');
+  // needles and spinners move: drawn alone on nothing, upright, and cut out with transparency
+  const loose = (kind) => (list) =>
+    (list ?? []).map((n) => {
+      const html = `${page(design, 'none').replace(design.art, '')}<style>html, body { background: none !important; box-shadow: none !important; }</style>${needleHtml(n, 0)}`;
+      const image = decodePng(screenshot(html, design.width, design.height, SCALE, work, true));
+      const file = `assets/${n.name}.png`;
+      writeFileSync(join(out, file), cut(image, n.x * SCALE, n.y * SCALE, n.width * SCALE, n.height * SCALE, true));
+      const { name, html: _, ...placed } = n;
+      return { type: kind, ...placed, states: { normal: file } };
+    });
+  const spinners = loose('spinner')(design.spinners);
+  const needles = loose('needle')(design.needles);
+  const turned =
+    (design.spinners ?? []).map((n) => needleHtml(n, 25)).join('') +
+    (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');
 
   // the preview and the mock show the skin in use; one button is "on" to show that state too
-  writeFileSync(join(out, 'preview.png'), whole(shot('normal', inUse(design) + turned, 1)));
+  writeFileSync(join(out, 'preview.png'), whole(shot('normal', inUse(design) + turned)));
   if (mockDir) {
     mkdirSync(mockDir, { recursive: true });
     writeFileSync(join(mockDir, `${design.folder}.png`), whole(shot('active', inUse(design) + turned)));
@@ -872,7 +1307,7 @@ function build(design, mockDir) {
         width: design.width,
         height: design.height,
         background: 'assets/background.png',
-        components: [...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
+        components: [...spinners, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
       },
     },
   };

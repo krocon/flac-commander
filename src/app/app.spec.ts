@@ -118,7 +118,7 @@ describe('App', () => {
     create();
     await vi.waitFor(() => expect(el.querySelector('app-skinned-player')).not.toBeNull());
     press('0', mod);
-    await vi.waitFor(() => expect(skins.commands).toContain('activate io.github.krocon.modern'));
+    await vi.waitFor(() => expect(skins.commands).toContain('activate io.github.krocon.vinyl'));
   });
 
   it('tells the backend when the window does not give a fixed-size skin its room', async () => {

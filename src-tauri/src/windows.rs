@@ -46,7 +46,7 @@ pub const SECONDARY: &[Secondary] = &[
     Secondary {
         label: "skins",
         title: "Skins – FLAC Commander",
-        size: (860.0, 640.0),
+        size: (1040.0, 760.0),
         min_size: (420.0, 360.0),
         restored: false,
     },

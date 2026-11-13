@@ -77,7 +77,10 @@ fn a_correct_package_is_accepted() {
 fn the_built_in_skins_are_valid() {
     let library = SkinLibrary::load(None, APP);
     let names: Vec<String> = library.list().into_iter().map(|s| s.name).collect();
-    assert_eq!(names, ["Hi-Fi", "Modern", "Neon", "Panel", "Retro", "Tape", "Vinyl"]);
+    assert_eq!(
+        names,
+        ["Deck", "Hi-Fi", "Neon", "Panel", "Recorder", "Reel", "Retro", "Tape", "Vinyl", "Walk"]
+    );
     assert!(library.get(DEFAULT_SKIN).is_some());
     let retro = library.get("io.github.krocon.retro").unwrap();
     assert!(retro.built_in);
@@ -148,6 +151,26 @@ fn a_needle_needs_a_picture_a_pivot_and_two_angles() {
 }
 
 #[test]
+fn a_spinner_needs_a_picture_and_the_time_of_a_turn() {
+    let spinner = |edit: fn(&mut serde_json::Value)| {
+        problems_of(|j| {
+            let c = component(j, 3);
+            *c = serde_json::json!({
+                "type": "spinner", "x": 10, "y": 80, "width": 30, "height": 30,
+                "states": { "normal": "play.png" }, "period": 2000
+            });
+            edit(c);
+        })
+    };
+    let at = "windows.player.components[3]";
+    assert_eq!(spinner(|_| {}), [""; 0]);
+    assert_eq!(spinner(|c| c["states"] = serde_json::Value::Null), [format!("{at}.states.normal")]);
+    assert_eq!(spinner(|c| c["period"] = 10.into()), [format!("{at}.period")]);
+    assert_eq!(spinner(|c| c["period"] = serde_json::Value::Null), [format!("{at}.period")]);
+    assert_eq!(problems_of(|j| component(j, 3)["period"] = 2000.into()), [format!("{at}.period")]);
+}
+
+#[test]
 fn every_file_of_the_built_in_skins_is_embedded() {
     fn files_of(folder: &Path, root: &Path, found: &mut Vec<String>) {
         for entry in std::fs::read_dir(folder).unwrap().map(Result::unwrap) {
@@ -161,7 +184,9 @@ fn every_file_of_the_built_in_skins_is_embedded() {
     }
     let skins = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../skins");
     for (folder, embedded) in
-        ["modern", "retro", "hifi", "neon", "panel", "tape", "vinyl"].iter().zip(BUILT_IN)
+        ["retro", "hifi", "neon", "panel", "tape", "vinyl", "reel", "recorder", "deck", "walk"]
+            .iter()
+            .zip(BUILT_IN)
     {
         let mut on_disk = Vec::new();
         files_of(&skins.join(folder), &skins.join(folder), &mut on_disk);
@@ -477,7 +502,13 @@ fn an_imported_skin_is_installed_listed_and_there_after_a_restart() {
     assert_eq!(info.id, "org.example.test");
     assert!(folder.join("org.example.test/skin.json").is_file());
     let names: Vec<String> = library.list().into_iter().map(|s| s.name).collect();
-    assert_eq!(names, ["Hi-Fi", "Modern", "Neon", "Panel", "Retro", "Tape", "Vinyl", "Test"]);
+    assert_eq!(
+        names,
+        [
+            "Deck", "Hi-Fi", "Neon", "Panel", "Recorder", "Reel", "Retro", "Tape", "Vinyl", "Walk",
+            "Test"
+        ]
+    );
 
     let restarted = SkinLibrary::load(Some(folder), APP);
     let skin = restarted.get("org.example.test").unwrap();

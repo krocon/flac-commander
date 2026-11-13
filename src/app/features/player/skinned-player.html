@@ -126,6 +126,19 @@
           [style.height.px]="c.height"
         />
       }
+      @case ('spinner') {
+        <div
+          class="placed spinner"
+          aria-hidden="true"
+          [class.turning]="store.isPlaying()"
+          [style.left.px]="c.x"
+          [style.top.px]="c.y"
+          [style.width.px]="c.width"
+          [style.height.px]="c.height"
+          [style.background-image]="item.normal"
+          [style.animation-duration.ms]="c.period ?? 2000"
+        ></div>
+      }
       @case ('needle') {
         <div
           class="placed needle"

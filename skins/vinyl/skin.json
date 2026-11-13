@@ -30,6 +30,17 @@
       "background": "assets/background.png",
       "components": [
         {
+          "type": "spinner",
+          "x": 112,
+          "y": 134,
+          "width": 96,
+          "height": 96,
+          "period": 1800,
+          "states": {
+            "normal": "assets/label.png"
+          }
+        },
+        {
           "type": "text",
           "source": "track.title",
           "x": 344,

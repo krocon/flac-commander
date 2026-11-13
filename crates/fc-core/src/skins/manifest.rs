@@ -127,6 +127,8 @@ pub enum ComponentType {
     /// A picture that turns around a pivot with the position of the track and can be dragged
     /// to seek: a tonearm, a pointer.
     Needle,
+    /// A picture that turns round and round while music plays: a reel, the label of a record.
+    Spinner,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -175,6 +177,9 @@ pub struct Component {
     /// Rotation of a `needle` while nothing is loaded; `from` if left out.
     #[serde(default)]
     pub rest: Option<i32>,
+    /// Milliseconds a `spinner` takes for one turn.
+    #[serde(default)]
+    pub period: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -423,6 +428,17 @@ fn check_component(
                 r.add(format!("{at}.rest"), "must be between -360 and 360");
             }
         }
+        ComponentType::Spinner => {
+            if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
+                r.add(format!("{at}.states.normal"), "a spinner needs its picture here");
+            }
+            if !c.period.is_some_and(|ms| (500..=120_000).contains(&ms)) {
+                r.add(
+                    format!("{at}.period"),
+                    "a spinner needs the time of one turn, 500 to 120000 ms",
+                );
+            }
+        }
         ComponentType::Seekbar
         | ComponentType::Volume
         | ComponentType::Playlist
@@ -438,9 +454,18 @@ fn check_component(
     if c.kind != ComponentType::Needle && turning {
         r.add(at, "only a needle has pivotX, pivotY, from, to and rest");
     }
+    if c.kind != ComponentType::Spinner && c.period.is_some() {
+        r.add(format!("{at}.period"), "only a spinner has a period");
+    }
     if let Some(states) = &c.states {
-        if !matches!(c.kind, ComponentType::Button | ComponentType::Image | ComponentType::Needle) {
-            r.add(format!("{at}.states"), "only buttons, images and needles have images");
+        if !matches!(
+            c.kind,
+            ComponentType::Button
+                | ComponentType::Image
+                | ComponentType::Needle
+                | ComponentType::Spinner
+        ) {
+            r.add(format!("{at}.states"), "only buttons, images, needles and spinners have images");
         }
         for (state, path) in states.all() {
             if let Some(path) = path {
