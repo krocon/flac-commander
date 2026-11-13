@@ -1,0 +1,57 @@
+{
+  "name": "flac-commander",
+  "version": "0.1.0",
+  "description": "Skinnable cross-platform music player – Tauri 2 desktop app with a native Rust audio engine",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": "^22.22.0 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "dev": "tauri dev",
+    "build": "ng build",
+    "test": "ng test --watch=false",
+    "test:watch": "ng test",
+    "lint": "ng lint",
+    "format": "prettier --write \"src/**/*.{ts,html,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,css}\"",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build:mac": "tauri build --target universal-apple-darwin --bundles app,dmg",
+    "tauri:build:mac:local": "tauri build --bundles app,dmg",
+    "tauri:build:linux": "tauri build --bundles deb,rpm,appimage",
+    "tauri:build:windows": "tauri build --bundles msi,nsis",
+    "rust:fmt": "cargo fmt --all --check",
+    "rust:lint": "cargo clippy --workspace --all-targets -- -D warnings",
+    "rust:test": "cargo test --workspace",
+    "fixtures": "bash scripts/make-fixtures.sh",
+    "check": "pnpm format:check && pnpm lint && pnpm test && pnpm build && pnpm rust:fmt && pnpm rust:lint && pnpm rust:test"
+  },
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/plugin-log": "2.10.2",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular-eslint/builder": "22.6.0",
+    "@angular/build": "^22.2.5",
+    "@angular/cli": "^22.2.5",
+    "@angular/compiler-cli": "^22.2.0",
+    "@eslint/js": "^10.0.1",
+    "@tauri-apps/cli": "2.12.4",
+    "angular-eslint": "22.6.0",
+    "eslint": "^10.14.0",
+    "jsdom": "^30.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "8.72.1",
+    "vitest": "^5.0.0"
+  }
+}

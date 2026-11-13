@@ -1,0 +1,103 @@
+@if (errorText(); as error) {
+  <p class="error" role="alert">{{ error }}</p>
+}
+
+@if (store.info(); as info) {
+  <section aria-labelledby="diag-system">
+    <h2 id="diag-system">{{ t.system }}</h2>
+    <dl>
+      <dt>{{ t.platform }}</dt>
+      <dd>{{ info.app.os }} · {{ info.app.arch }}</dd>
+      <dt>{{ t.audioBackend }}</dt>
+      <dd>{{ info.output.host }}</dd>
+      <dt>{{ t.logFolder }}</dt>
+      <dd class="path">{{ info.app.logDir ?? t.none }}</dd>
+    </dl>
+  </section>
+
+  <section aria-labelledby="diag-output">
+    <h2 id="diag-output">{{ t.output }}</h2>
+    @if (info.output.devices.length === 0) {
+      <p class="hint">{{ t.noDevices }}</p>
+    } @else {
+      <dl>
+        <dt>{{ t.defaultFormat }}</dt>
+        <dd>
+          @if (info.output.defaultFormat; as format) {
+            {{ formatText(format) }}
+          } @else {
+            {{ t.none }}
+          }
+        </dd>
+        <dt>{{ t.devices }}</dt>
+        <dd>
+          <ul class="devices">
+            @for (device of info.output.devices; track device.id) {
+              <li>
+                {{ device.name }}
+                @if (device.isDefault) {
+                  <span class="badge">{{ t.defaultDevice }}</span>
+                }
+              </li>
+            }
+          </ul>
+        </dd>
+      </dl>
+    }
+
+    <div class="tone">
+      <button
+        type="button"
+        class="primary"
+        aria-describedby="diag-tone-hint"
+        [disabled]="!store.canPlayTone()"
+        (click)="store.playTestTone()"
+      >
+        {{ t.testTone }}
+      </button>
+      <span id="diag-tone-hint" class="hint">{{ t.testToneHint }}</span>
+    </div>
+    <p class="status" role="status">{{ toneText() }}</p>
+    @if (toneErrorText(); as error) {
+      <p class="error" role="alert">{{ error }}</p>
+    }
+  </section>
+
+  <section aria-labelledby="diag-formats">
+    <h2 id="diag-formats">{{ t.formats }}</h2>
+    <table>
+      <caption>
+        {{
+          t.formatsCaption
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t.formatName }}</th>
+          <th scope="col">{{ t.extensions }}</th>
+          <th scope="col">{{ t.status }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (format of info.formats; track format.id) {
+          <tr>
+            <th scope="row">{{ format.name }}</th>
+            <td class="mono">{{ format.extensions.join(', ') }}</td>
+            <td
+              [class.ok]="format.support === 'supported'"
+              [class.missing]="format.support !== 'supported'"
+            >
+              {{ format.support === 'supported' ? t.supported : t.unsupported }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+} @else if (store.loading()) {
+  <p class="status" role="status">{{ t.loading }}</p>
+}
+
+<div class="actions">
+  <button type="button" [disabled]="store.loading()" (click)="store.load()">{{ t.reload }}</button>
+</div>

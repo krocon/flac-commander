@@ -1,0 +1,11 @@
+# Audio fixtures and icons are binary: no line-ending conversion, no text diff.
+*.flac binary
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.opus binary
+*.m4a binary
+*.aiff binary
+*.png binary
+*.icns binary
+*.ico binary

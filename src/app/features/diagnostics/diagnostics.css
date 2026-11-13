@@ -1,0 +1,146 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+section {
+  background: var(--player-surface);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 12px 14px;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--player-muted);
+}
+
+dl {
+  display: grid;
+  grid-template-columns: minmax(110px, max-content) 1fr;
+  gap: 4px 16px;
+  margin: 0;
+}
+
+dt {
+  color: var(--player-muted);
+}
+
+dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.path,
+.mono {
+  font-family: var(--player-font-mono);
+  font-size: 12px;
+}
+
+.devices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.badge {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  font-size: 11px;
+  color: var(--player-muted);
+}
+
+.tone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.hint {
+  color: var(--player-muted);
+  margin: 0;
+}
+
+.status {
+  min-height: 1.45em;
+  margin: 8px 0 0;
+}
+
+.error {
+  margin: 8px 0 0;
+  color: var(--player-danger);
+}
+
+:host > .error {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: var(--player-foreground);
+  background: var(--player-surface-raised);
+  border: 1px solid var(--player-border);
+  border-radius: var(--player-radius);
+  padding: 6px 14px;
+  cursor: pointer;
+
+  &.primary {
+    background: var(--player-accent);
+    border-color: var(--player-accent);
+    color: var(--player-accent-contrast);
+    font-weight: 600;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+caption {
+  caption-side: top;
+  text-align: left;
+  color: var(--player-muted);
+  padding-bottom: 6px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 4px 8px 4px 0;
+  border-top: 1px solid var(--player-border);
+  font-weight: normal;
+}
+
+thead th {
+  border-top: 0;
+  color: var(--player-muted);
+}
+
+.ok {
+  color: var(--player-ok);
+}
+
+.missing {
+  color: var(--player-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

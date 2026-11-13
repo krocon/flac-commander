@@ -1,0 +1,28 @@
+[package]
+name = "flac-commander"
+description = "FLAC Commander – skinnable music player (Tauri 2 + Angular) with a native Rust audio engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+# Distinct lib name avoids the bin/lib name clash on Windows (cargo issue #8519).
+name = "flac_commander_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+fc-core.workspace = true
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2.12.5", features = [] }
+# Log file in the app's log folder, also for the frontend (`core/log/log-api.ts`).
+tauri-plugin-log = "2.10.2"
+
+[lints]
+workspace = true
