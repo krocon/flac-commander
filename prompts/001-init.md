@@ -31,6 +31,12 @@ Lokal: /Users/marckronberg/WebstormProjects/video/flac-commander
 - /Users/marckronberg/WebstormProjects/files-and-folders-tauri
 - /Users/marckronberg/WebstormProjects/talk-typer
 
+## Musik Samples
+
+diverse Fomate:
+
+/Users/marckronberg/WebstormProjects/video/flac-commander/samples/**
+
 ## Beachte
 
 - docs/angular-best-practices.upstream.md
