@@ -1,6 +1,6 @@
 # Architektur
 
-Stand: Phase 6. Was hier als „geplant" markiert ist, existiert noch nicht.
+Stand: Phase 7. Was hier als „geplant" markiert ist, existiert noch nicht.
 
 ## Schichten
 
@@ -168,7 +168,8 @@ crates/fc-core/          Rust-Kern (kein Tauri)
   src/audio/             player, decode, resample, equalizer, spectrum, dts, formats, output, tone
   src/session.rs         Player + Playlist + Persistenz
   src/playlist.rs, metadata.rs, storage.rs, error.rs
-  src/skins/             manifest (Schema, Prüfung), Bibliothek, ZIP-Import
+  src/skins/             manifest (Schema, Prüfung), Bibliothek, ZIP-Import/-Export,
+                         wsz (Import klassischer Skins), image (BMP lesen, PNG schreiben)
   tests/formats.rs       Dekodieren und Seek an echten Dateien
   tests/player.rs        die Engine gegen ein simuliertes Ausgabegerät
   tests/session.rs       Titelwechsel, defekte Dateien, Speichern/Wiederherstellen

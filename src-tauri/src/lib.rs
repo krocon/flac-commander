@@ -217,6 +217,7 @@ pub fn run() {
             commands::skins::skins_activate,
             commands::skins::skins_import,
             commands::skins::skins_remove,
+            commands::skins::skins_export,
             commands::skins::skins_fit_viewport,
             commands::windows::windows_state,
             commands::windows::windows_toggle,

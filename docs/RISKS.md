@@ -1,6 +1,6 @@
 # Technische Risiken und offene Entscheidungen
 
-Stand: Ende Phase 6.
+Stand: Ende Phase 7.
 
 ## Risiken
 
@@ -20,7 +20,7 @@ Stand: Ende Phase 6.
 | R10 | **AAC-Varianten** | Geprüft ist nur AAC-LC. HE-AAC/HE-AACv2 und geschützte Dateien sind ungeprüft. | Testdateien ergänzen; nicht Unterstütztes ablehnen. | 2 |
 | R11 | **Symphonia ist MPL-2.0** | Dateibezogenes Copyleft: Änderungen an Symphonia-Dateien müssten offengelegt werden; die Nutzung als Bibliothek ist unkritisch. | In der Lizenzentscheidung und in den Drittlizenzen des Bundles berücksichtigen. | vor Release |
 | R12 | **Unsignierte Builds** | Ohne Signatur/Notarisierung warnen macOS und Windows beim Start. | Zertifikate und Release-Workflow vor dem ersten öffentlichen Build. | vor Release |
-| R13 | **Winamp-Skins (`.wsz`)** | Bitmaps mit festen Sprite-Positionen, Regionen, Bitmap-Schriften; Rechte an fremden Skins liegen bei deren Autoren. | Erst Analyse und Mapping (Phase 7), kein fremder Skin im Repo, kein Code aus Webamp ohne Lizenzprüfung. | 7 |
+| R13 | **Winamp-Skins (`.wsz`)** | Bitmaps mit festen Sprite-Positionen, Regionen, Bitmap-Schriften; Rechte an fremden Skins liegen bei deren Autoren. | Analyse und erster Importer liegen vor; kein fremder Skin im Repo, kein fremder Code. **Offen:** Die Sprite-Koordinaten sind nicht an echten Skins nachgemessen – ein Fehler dort zeigt sich als verschobene oder falsche Tastenbilder. | nachmessen |
 | R15 | **Symphonia-Fehler: FLAC-Rückwärts-Seek** | Nach einem Seek zurück liefert der FLAC-Leser ein Paket der neuen Stelle und fährt dann an der alten fort. | Umgangen: Strom je Seek neu öffnen, nur vorwärts suchen; durch Tests abgesichert. Upstream melden. | umgangen |
 | R16 | ~~Volle Lautstärke beim Start~~ | **Gelöst:** Die Lautstärke wird gespeichert. | – | erledigt |
 | R17 | **Ganze Playlist je Änderung** | Jede Änderung (auch jedes 25. gelesene Tag) schickt die ganze Liste an alle Fenster. Bei einigen Tausend Titeln ist das spürbar. | Vor der Bibliothek auf Änderungs-Events oder seitenweises Holen umstellen; Liste virtualisieren. | 5 |

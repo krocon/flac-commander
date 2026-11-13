@@ -102,6 +102,19 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | A7 | Ein Live-Album oder ein durchgehendes Werk in FLAC abspielen | die Titel gehen ohne Pause und ohne Knacken ineinander über; die Anzeige wechselt genau am Übergang |
 | A8 | Dasselbe mit MP3; mit Zufall; „Titel wiederholen" | keine hörbare Pause (bei MP3 je nach Datei ein winziger Absatz möglich) |
 
+## Phase 7
+
+Dafür braucht es klassische `.wsz`-Dateien, die Sie besitzen dürfen; im Repository liegt keine.
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| K1 | Drei bis fünf verschiedene `.wsz` importieren | jeder erscheint mit seinem Dateinamen in der Liste; Vorschau zeigt das Hauptfenster |
+| K2 | Einen davon verwenden und jede Taste mit dem Original vergleichen | Gesicht 275 × 116 stimmt; **jede Taste zeigt ihr eigenes Bild, normal und gedrückt, an der richtigen Stelle** – Abweichungen sind Fehler in der Koordinatentabelle ([WINAMP-SKINS.md](WINAMP-SKINS.md) Abschnitt 2) |
+| K3 | Zufall und Wiederholen einschalten; EQ- und PL-Taste | „an"-Bild erscheint; die Fenster öffnen sich |
+| K4 | Titel, Zeit, Regler, Visualizer im Display | an plausibler Stelle, lesbar (bei hellen Displays evtl. schlecht – bekannt) |
+| K5 | Einen Skin exportieren, in der Liste entfernen, die exportierte Datei importieren | identischer Skin ist wieder da |
+| K6 | Ein beliebiges ZIP ohne `main.bmp` und ohne `skin.json` importieren | Ablehnung mit Grund, nichts wird installiert |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
@@ -115,5 +128,5 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 
 Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7; Phase 3 L2, L3,
-L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9; Phase 5 W1–W4, W6, W7; Phase 6 A1–A8 (nichts davon
-wurde gesehen oder gehört – nur durch Tests belegt).
+L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9; Phase 5 W1–W4, W6, W7; Phase 6 A1–A8; Phase 7 K1–K6. Ab Phase 5
+wurde nichts davon gesehen oder gehört – der Bildschirm war gesperrt; belegt ist es nur durch Tests.

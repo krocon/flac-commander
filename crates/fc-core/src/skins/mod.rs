@@ -4,7 +4,9 @@
 //! breaks a rule is refused as a whole and the app keeps the skin it has. Built-in skins are
 //! compiled into the binary, imported ones live in the app's data folder.
 
+pub mod image;
 pub mod manifest;
+pub mod wsz;
 
 use crate::error::{AppError, AppResult, ErrorCode};
 use manifest::{
@@ -319,8 +321,14 @@ impl SkinLibrary {
 
     /// Validates a skin archive and installs it. An imported skin with the same id is replaced;
     /// a built-in one cannot be.
-    pub fn import_zip(&mut self, archive: &[u8]) -> AppResult<SkinInfo> {
-        let files = read_zip(archive).map_err(|d| invalid_skin(&d))?;
+    ///
+    /// A classic Winamp skin (`.wsz`) is converted first ([`wsz`]); `file_name` then names it.
+    pub fn import_zip(&mut self, archive: &[u8], file_name: &str) -> AppResult<SkinInfo> {
+        let mut files = read_zip(archive).map_err(|d| invalid_skin(&d))?;
+        if wsz::is_classic_skin(&files) {
+            files = wsz::convert(&files, file_name).map_err(|d| invalid_skin(&d))?;
+            log::info!("classic skin {file_name} converted");
+        }
         let skin =
             Skin::from_files(files, false, &self.app_version).map_err(|d| invalid_skin(&d))?;
         if self.skins.get(skin.id()).is_some_and(|existing| existing.built_in) {
@@ -346,6 +354,23 @@ impl SkinLibrary {
         log::info!("skin {} {} installed", info.id, info.version);
         self.skins.insert(info.id.clone(), Arc::new(skin));
         Ok(info)
+    }
+
+    /// The skin `id` as an archive in our format, ready to be passed on and imported elsewhere.
+    pub fn export_zip(&self, id: &str) -> AppResult<Vec<u8>> {
+        use std::io::Write;
+        let skin =
+            self.get(id).ok_or_else(|| AppError::internal(format!("there is no skin \"{id}\"")))?;
+        let failed =
+            |e: String| AppError::internal("skin archive could not be written").with_details(e);
+        let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        let options = zip::write::SimpleFileOptions::default()
+            .compression_method(zip::CompressionMethod::Deflated);
+        for (path, bytes) in &skin.files {
+            writer.start_file(path.as_str(), options).map_err(|e| failed(e.to_string()))?;
+            writer.write_all(bytes).map_err(|e| failed(e.to_string()))?;
+        }
+        writer.finish().map(Cursor::into_inner).map_err(|e| failed(e.to_string()))
     }
 
     /// Removes an imported skin. Built-in skins stay.

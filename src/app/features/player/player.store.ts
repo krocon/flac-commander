@@ -74,6 +74,18 @@ export class PlayerStore {
       : this.send('player_play', () => this.api.play());
   }
 
+  /** Play; without anything to play: choose files. */
+  play(): Promise<void> {
+    if (!this.hasTrack() && this.playlist.isEmpty()) {
+      return this.playlist.open();
+    }
+    return this.send('player_play', () => this.api.play());
+  }
+
+  pause(): Promise<void> {
+    return this.send('player_pause', () => this.api.pause());
+  }
+
   stop(): Promise<void> {
     return this.send('player_stop', () => this.api.stop());
   }

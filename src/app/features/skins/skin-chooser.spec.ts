@@ -84,6 +84,18 @@ describe('SkinChooser', () => {
     expect(api.commands).toEqual(['remove org.example.neon']);
   });
 
+  it('exports any skin and says so', async () => {
+    await open();
+    button('Exportieren: Retro').click();
+    await vi.waitFor(() =>
+      expect(api.commands).toEqual(['export io.github.krocon.retro "Skin exportieren"']),
+    );
+    await vi.waitFor(() =>
+      expect(el.querySelector('[role=status]')?.textContent).toBe('„Retro“ wurde gespeichert.'),
+    );
+    expect(el.querySelector('.hint')?.textContent).toContain('.wsz');
+  });
+
   it('reports an installed skin', async () => {
     api.skins = api.skins.filter((s) => s.id !== IMPORTED_INFO.id);
     await store.openChooser();

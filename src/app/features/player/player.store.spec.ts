@@ -112,6 +112,14 @@ describe('PlayerStore', () => {
     expect(playlistApi.commands).toEqual([]);
   });
 
+  it('plays and pauses on their own too, for skins with two buttons', async () => {
+    api.snapshot = { ...TRACK_STATE, status: 'paused' };
+    const store = await createStore();
+    await store.play();
+    await store.pause();
+    expect(api.commands).toEqual(['play', 'pause']);
+  });
+
   it('seeks relative to the reported position and stays inside the track', async () => {
     api.snapshot = TRACK_STATE;
     const store = await createStore();

@@ -14,6 +14,8 @@ export abstract class SkinApi {
   /** Shows the file dialog and installs the chosen archive; `null` if the user cancelled. */
   abstract import(dialogTitle: string): Promise<SkinInfo | null>;
   abstract remove(id: string): Promise<void>;
+  /** Shows the save dialog and writes the skin as an archive; `false` if the user cancelled. */
+  abstract export(id: string, dialogTitle: string): Promise<boolean>;
   abstract onActive(handler: (skin: ActiveSkin) => void): Promise<Unsubscribe>;
   /**
    * Tells the backend how large the window's content really is, so that it can give a
@@ -43,6 +45,10 @@ export class TauriSkinApi extends SkinApi {
 
   override remove(id: string): Promise<void> {
     return call<void>('skins_remove', { id });
+  }
+
+  override export(id: string, dialogTitle: string): Promise<boolean> {
+    return call<boolean>('skins_export', { id, title: dialogTitle });
   }
 
   override onActive(handler: (skin: ActiveSkin) => void): Promise<Unsubscribe> {

@@ -4,9 +4,11 @@ Plattformübergreifender Musikplayer für lokale Musikbibliotheken: vollständig
 unabhängige Fenster und eine native Audio-Engine in Rust. Die Bedienung greift die Winamp-Tradition auf, Code,
 Architektur und Skin-Format sind eigenständig.
 
-**Stand: Phase 6 abgeschlossen (Equalizer, Visualizer, Gapless).** Die App spielt Playlists aus lokalen Dateien, merkt sich ihren
+**Stand: alle sieben Phasen des ersten Plans umgesetzt.** Die App spielt Playlists aus lokalen Dateien, merkt sich ihren
 Zustand und lässt sich mit Skins umgestalten – mitgeliefert sind „Modern" und „Retro", eigene Skins lassen sich als
-ZIP importieren. Playlist und Equalizer haben eigene Fenster; Titel gehen lückenlos ineinander über. Der Winamp-Skin-Import folgt ([Roadmap](docs/ROADMAP.md)).
+ZIP importieren. Playlist und Equalizer haben eigene Fenster; Titel gehen lückenlos ineinander über. Klassische
+Winamp-Skins lassen sich importieren (erster Schritt: Hauptfenster). Was offen ist und was noch niemand gehört oder
+gesehen hat, steht in der [Roadmap](docs/ROADMAP.md) und in den [manuellen Tests](docs/MANUAL-TESTS.md).
 
 ## Was heute funktioniert
 
@@ -20,13 +22,14 @@ ZIP importieren. Playlist und Equalizer haben eigene Fenster; Titel gehen lücke
 | Klang | 10-Band-Equalizer mit Vorverstärkung und Voreinstellungen, wirkt sofort |
 | Visualizer | Spektrum-Balken im Player und als Skin-Baustein; aus bei „Bewegung reduzieren" |
 | Robustheit | nicht abspielbare Dateien werden markiert und übersprungen; fehlende Dateien nach dem Neustart markiert; Geräteverlust pausiert |
-| Skins | zur Laufzeit wechselbar; eigenes, rein deklaratives Format mit vollständiger Prüfung; sicherer ZIP-Import ([SKIN-FORMAT.md](docs/SKIN-FORMAT.md)) |
+| Skins | zur Laufzeit wechselbar; eigenes, rein deklaratives Format mit vollständiger Prüfung; sicherer ZIP-Import und Export ([SKIN-FORMAT.md](docs/SKIN-FORMAT.md)) |
+| Winamp-Skins | Import klassischer `.wsz` als Konvertierung: Hauptfenster, Tasten, Farben – nicht pixelgenau, an echten Skins noch ungeprüft ([WINAMP-SKINS.md](docs/WINAMP-SKINS.md)) |
 | Fenster | Playlist und Equalizer als eigene Fenster; alle Fenster bleiben über das Backend synchron |
 | Gemerkt wird | Playlist, aktueller Titel mit Position, Lautstärke, Wiederholen, Zufall, Skin, Fensterplätze |
 | Tastatur | zentrales Aktionssystem, Playlist als Listbox bedienbar |
 | Fehler und Protokoll | einheitliche Fehlercodes, Texte in Deutsch und Englisch, Logdatei |
 
-Noch nicht vorhanden: Bibliothek, Albumcover, Winamp-Skins, Umsortieren der Playlist, Mehrfachauswahl.
+Noch nicht vorhanden: Bibliothek, Albumcover, Umsortieren der Playlist, Mehrfachauswahl.
 Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft.
 
 ### Tastatur
@@ -88,6 +91,7 @@ Mehr dazu in [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) – Schichten, Datenflüsse, Abhängigkeiten
 - [AUDIO-ENGINE.md](docs/AUDIO-ENGINE.md) – Audio-Architektur und Threading
 - [SKIN-FORMAT.md](docs/SKIN-FORMAT.md) – das Skin-Format und wie man einen Skin baut
+- [WINAMP-SKINS.md](docs/WINAMP-SKINS.md) – klassische Skins: Analyse und Stand des Imports
 - [SECURITY.md](docs/SECURITY.md) – Sicherheitsmodell, Skin-Import
 - [ROADMAP.md](docs/ROADMAP.md) – Phasen und Meilensteine
 - [RISKS.md](docs/RISKS.md) – technische Risiken und offene Entscheidungen

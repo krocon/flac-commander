@@ -1,6 +1,6 @@
 # Skin-Format (Version 1)
 
-Stand: Phase 4 – implementiert. Maßgeblich ist der Code in `crates/fc-core/src/skins/manifest.rs`; jede Regel hier hat
+Stand: Phase 7 – implementiert. Maßgeblich ist der Code in `crates/fc-core/src/skins/manifest.rs`; jede Regel hier hat
 dort einen Test (`skins/tests.rs`). Die mitgelieferten Skins unter [`skins/`](../skins) sind zugleich die Beispiele.
 
 ## Grundsätze
@@ -100,7 +100,7 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `image` | `states.normal` (Pflicht) | Ein Bild ohne Funktion. |
 | `spectrum` | `color` | Balken, die der Musik folgen (ohne `color` in der Akzentfarbe). |
 
-**Aktionen** (`action`): `player.togglePlay`, `player.stop`, `player.next`, `player.previous`, `player.open`,
+**Aktionen** (`action`): `player.togglePlay`, `player.play`, `player.pause`, `player.stop`, `player.next`, `player.previous`, `player.open`,
 `player.repeat`, `player.shuffle`, `app.skins`, `window.playlist`, `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
 
 **Textquellen** (`source` bei `text`): `track.title`, `track.artist`, `track.details`, `player.status` (zeigt auch
@@ -109,7 +109,7 @@ Fehlermeldungen).
 **Zustandsbilder** (`states` bei `button`): `normal`, `hover`, `pressed`, `active` (solange die Funktion an ist:
 Wiedergabe läuft, Wiederholen, Zufall), `disabled`. Fehlt ein Zustand, gilt `normal`.
 
-**Pflicht bei `absolute`:** eine Taste mit `player.togglePlay` und eine mit `app.skins`.
+**Pflicht bei `absolute`:** eine Taste mit `player.togglePlay` oder `player.play` und eine mit `app.skins`.
 
 Bildpfade sind relativ zum Paket, mit `/`, ohne `..`, ohne führenden `/`, ohne Laufwerk.
 
@@ -123,7 +123,9 @@ Bildpfade sind relativ zum Paket, mit `/`, ohne `..`, ohne führenden `/`, ohne 
 
 ## Importieren und Entfernen
 
-„Skins" → „Skin importieren …" (oder ⌘K / Strg+K). Die Prüfung meldet jeden Verstoß mit Stelle und Klartext, zum
+„Skins" → „Skin importieren …" (oder ⌘K / Strg+K). Angenommen werden `.fcskin`, `.zip` und klassische
+Winamp-Skins (`.wsz`), die dabei in dieses Format umgewandelt werden. „Exportieren" speichert jeden Skin als
+`.fcskin` zum Weitergeben. Die Prüfung meldet jeden Verstoß mit Stelle und Klartext, zum
 Beispiel:
 
 ```text
@@ -159,5 +161,5 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 
 ## Winamp-Skins (`.wsz`)
 
-Analyse und Importer sind Phase 7, siehe [WINAMP-SKINS.md](WINAMP-SKINS.md), sobald vorhanden. Es werden weder fremde
-Skins mitgeliefert noch Code aus Webamp übernommen.
+Analyse, Abbildung und Grenzen des Imports: [WINAMP-SKINS.md](WINAMP-SKINS.md). Es werden weder fremde Skins
+mitgeliefert noch Code aus Webamp übernommen.

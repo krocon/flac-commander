@@ -184,7 +184,7 @@ pub async fn skins_import(
             .file()
             .set_parent(&window)
             .set_title(title)
-            .add_filter("Skin", &["fcskin", "zip"])
+            .add_filter("Skin", &["fcskin", "zip", "wsz"])
             .blocking_pick_file();
         let Some(file) = picked else {
             return Ok(None);
@@ -202,7 +202,44 @@ pub async fn skins_import(
         }
         let archive = std::fs::read(&path).map_err(|e| AppError::from_io(&e, &path))?;
         let mut library = skins.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        library.import_zip(&archive).map(Some)
+        let file_name = path.file_name().map(|n| n.to_string_lossy().into_owned());
+        library.import_zip(&archive, file_name.as_deref().unwrap_or("skin")).map(Some)
+    })
+    .await
+}
+
+/// Lets the user choose where to save the skin `id` as an archive. Returns `false` if the
+/// dialog was cancelled.
+#[tauri::command]
+pub async fn skins_export(
+    app: AppHandle,
+    window: WebviewWindow,
+    state: State<'_, AppState>,
+    id: String,
+    title: String,
+) -> AppResult<bool> {
+    let title: String = title.chars().filter(|c| !c.is_control()).take(MAX_TITLE_CHARS).collect();
+    let archive = library(&state).export_zip(&id)?;
+    blocking("skins_export", move || {
+        // the id was validated when the skin was loaded: safe as a file name
+        let picked = app
+            .dialog()
+            .file()
+            .set_parent(&window)
+            .set_title(title)
+            .set_file_name(format!("{id}.fcskin"))
+            .add_filter("Skin", &["fcskin"])
+            .blocking_save_file();
+        let Some(file) = picked else {
+            return Ok(false);
+        };
+        let path = file.into_path().map_err(|e| {
+            AppError::internal("the chosen place has no path on this system")
+                .with_details(e.to_string())
+        })?;
+        std::fs::write(&path, archive).map_err(|e| AppError::from_io(&e, &path))?;
+        log::info!("skin {id} exported");
+        Ok(true)
     })
     .await
 }

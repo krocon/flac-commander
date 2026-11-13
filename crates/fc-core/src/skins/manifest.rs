@@ -187,6 +187,8 @@ impl States {
 /// Everything a skin button can do. There are no freely defined actions.
 pub const ACTIONS: &[&str] = &[
     "player.togglePlay",
+    "player.play",
+    "player.pause",
     "player.stop",
     "player.next",
     "player.previous",
@@ -322,8 +324,11 @@ fn check_player(r: &mut Report, player: &PlayerWindow, file: &dyn Fn(&str) -> Op
     // what a player cannot do without, whatever it looks like
     let has_action =
         |action: &str| player.components.iter().any(|c| c.action.as_deref() == Some(action));
-    if !has_action("player.togglePlay") {
-        r.add(format!("{at}.components"), "a button with the action player.togglePlay is required");
+    if !has_action("player.togglePlay") && !has_action("player.play") {
+        r.add(
+            format!("{at}.components"),
+            "a button with the action player.togglePlay or player.play is required",
+        );
     }
     if !has_action("app.skins") {
         r.add(
