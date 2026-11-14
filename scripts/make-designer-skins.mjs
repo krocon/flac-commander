@@ -2739,6 +2739,70 @@ const needleSkin = skin('needle', 'Needle', 'Black leather and one wide white me
   needles: [{ name: 'pointer', x: 186, y: 54, width: 8, height: 106, pivotX: 4, pivotY: 106, from: -38, to: 38, rest: -38, html: '<div class="pointer"></div>' }],
 });
 
+// ---- "Dub": two white meters in black leather, a turned steel knob in a lime arc
+//
+// Both needles and the knob show where the track is; pulling a needle or turning the knob seeks.
+
+const dubLow = lower({ width: 380, y: 352, look: 'lug', playLook: 'lug steel', toggleLook: 'lug small', big: 72, mid: 56, toggle: [46, 46], list: 150, seek: false });
+const dubMeter = (x, side) => `<div class="frame" style="left:${x}px"><div class="dialw"><div class="vu">VU</div><div class="side">${side}</div><div class="humph"></div></div></div>`;
+const dubNeedle = (name, x) => ({ name, x: x + 79, y: 44, width: 6, height: 92, pivotX: 3, pivotY: 92, from: -40, to: 40, rest: -40, html: '<div class="pointer"></div>' });
+const dub = skin('dub', 'Dub', 'Two white meters side by side in black leather, a large turned steel knob in a lime arc and round keys below.', ['meter', 'leather', 'dark', 'knob', 'lime', 'steel', 'skeuomorphic'], {
+  theme: theme({ background: '#1d1e20', surface: '#0c0c0d', surfaceRaised: '#33353a', foreground: '#f4f4f1', muted: '#b4b5b1', accent: '#cfe84a', accentContrast: '#1a1f00', border: '#000000', ok: '#9fd96a', danger: '#ff9d94', focus: '#7fc4ff' }, HELVETICA, 2, '"Menlo", "Consolas", "Courier New", monospace'),
+  width: 380,
+  height: dubLow.height,
+  resize: dubLow.resize,
+  pad: 5,
+  css: `
+    body { background: radial-gradient(circle, rgba(255,255,255,.05) .7px, transparent 1px) 0 0 / 4px 4px, radial-gradient(circle, rgba(0,0,0,.5) .7px, transparent 1px) 2px 2px / 4px 4px, linear-gradient(#2a2b2e, #17181a); font-family: ${HELVETICA}; }
+    .stitch { position: absolute; left: 8px; top: 8px; right: 8px; height: 330px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.16); }
+    .frame { position: absolute; top: 18px; width: 164px; height: 110px; border-radius: 7px; background: linear-gradient(#e9eaeb, #8d9094 45%, #c9cbcd); box-shadow: 0 0 0 1px #000, 0 3px 6px rgba(0,0,0,.6); }
+    .dialw { position: absolute; left: 5px; top: 5px; width: 154px; height: 100px; border-radius: 3px; background: linear-gradient(#ffffff, #eceae0); box-shadow: inset 0 2px 6px rgba(0,0,0,.4), 0 0 0 1px #3a3c40; overflow: hidden; }
+    .dialw::before { content: ''; position: absolute; inset: 0; background: repeating-conic-gradient(from -42.4deg at 50% 121%, #17181a 0 .8deg, transparent .8deg 7deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 121%, transparent 0 82px, #000 82px 92px, transparent 92px), conic-gradient(from -44deg at 50% 121%, #000 0 88deg, transparent 88deg); -webkit-mask-composite: source-in; }
+    .dialw::after { content: ''; position: absolute; inset: 0; background: conic-gradient(from 16deg at 50% 121%, #d2372b 0 26deg, transparent 26deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 121%, transparent 0 74px, #000 74px 79px, transparent 79px); }
+    .humph { position: absolute; left: 55px; top: 80px; width: 44px; height: 44px; border-radius: 50%; background: #17181a; }
+    .vu { position: absolute; left: 0; right: 0; top: 50px; text-align: center; font: 700 12px ${HELVETICA}; color: #17181a; }
+    .side { position: absolute; left: 9px; top: 7px; font: 700 8px ${HELVETICA}; letter-spacing: .1em; color: #55585c; }
+    .pointer { position: absolute; left: 2px; top: 0; width: 1.6px; height: calc(100% - 14px); background: #17181a; border-radius: 1px; }
+    .arc { position: absolute; left: 108px; top: 188px; width: 164px; height: 164px; border-radius: 50%; background: conic-gradient(from 220deg, #cfe84a 0 280deg, transparent 280deg);
+      -webkit-mask-image: radial-gradient(circle, transparent 0 76px, #000 76.5px 80px, transparent 80.5px); filter: drop-shadow(0 0 4px rgba(207,232,74,.55)); }
+    .seat { position: absolute; left: 122px; top: 202px; width: 136px; height: 136px; border-radius: 50%; background: #0c0c0d; box-shadow: 0 0 0 1px #000, 0 1px 0 1px rgba(255,255,255,.12), 0 10px 14px rgba(0,0,0,.6); }
+    .mini { position: absolute; top: 322px; font: 700 8px ${HELVETICA}; letter-spacing: .12em; color: #b4b5b1; }
+    .turn { position: absolute; inset: 0; border-radius: 50%;
+      background: repeating-conic-gradient(from 0deg, rgba(0,0,0,.28) 0 2deg, rgba(255,255,255,.2) 2deg 4deg), linear-gradient(#d9dbdd, #7d8185);
+      box-shadow: inset 0 0 0 1px #2a2b2e; }
+    .turn::before { content: ''; position: absolute; inset: 9px; border-radius: 50%;
+      background: conic-gradient(from 0deg, #fdfdfd, #9da0a4 12%, #f1f2f3 25%, #8f9296 37%, #fdfdfd 50%, #9da0a4 62%, #f1f2f3 75%, #8f9296 87%, #fdfdfd);
+      box-shadow: 0 0 0 1px #55585c, inset 0 0 0 1px rgba(255,255,255,.7), inset 0 0 0 16px rgba(255,255,255,.1), inset 0 0 0 17px rgba(0,0,0,.14); }
+    .turn::after { content: ''; position: absolute; left: 50%; top: 14px; width: 5px; height: 26px; margin-left: -2.5px; border-radius: 3px; background: #b6d42a; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    ${beds('#0c0c0d', '#0c0c0d', false)}
+    .face { color: #f4f4f1; } .face svg { width: 18px; height: 18px; }
+    .lug { border-radius: 50%; background: radial-gradient(circle at 50% 22%, #6a6d72, #26282b 75%); box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4px #000, 0 4px 6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.3); }
+    .lug.steel { background: conic-gradient(from 30deg, #e9ebed, #84888d, #dfe1e4, #7a7e83, #e9ebed, #84888d, #dfe1e4, #7a7e83, #e9ebed); }
+    .lug.steel svg { width: 28px; height: 28px; color: #2a2d31; }
+    .lug.small svg { width: 15px; height: 15px; }
+    ${STATES}
+    .pressed .lug { box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4px #000, inset 0 3px 6px rgba(0,0,0,.6); }
+    .active .lug.steel { box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4.5px #cfe84a, 0 0 12px 2px rgba(207,232,74,.45), inset 0 1px 0 rgba(255,255,255,.3); }
+    .active .lug.steel svg { color: #4a5a00; }
+    .active .lug.small { color: #cfe84a; box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4.5px #cfe84a, inset 0 1px 0 rgba(255,255,255,.3); }
+  `,
+  art: `<div class="stitch"></div>${dubMeter(20, 'L')}${dubMeter(196, 'R')}<div class="arc"></div><div class="seat"></div>
+    <div class="mini" style="left:100px">0</div><div class="mini" style="left:268px">END</div>${dubLow.art}`,
+  buttons: dubLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 24, y: 138, width: 332, height: 22, fontSize: 15, align: 'center', color: '#f4f4f1' },
+    { type: 'text', source: 'track.artist', x: 24, y: 160, width: 332, height: 16, fontSize: 11, align: 'center', color: '#b4b5b1' },
+    { type: 'time', source: 'position', x: 20, y: 252, width: 84, height: 30, fontSize: 22, align: 'center', color: '#f4f4f1' },
+    { type: 'text', source: 'player.status', x: 20, y: 284, width: 84, height: 14, fontSize: 10, align: 'center', color: '#cfe84a' },
+    { type: 'time', source: 'duration', x: 276, y: 252, width: 84, height: 30, fontSize: 22, align: 'center', color: '#b4b5b1' },
+    { type: 'spectrum', x: 286, y: 284, width: 64, height: 14, color: '#cfe84a' },
+    ...dubLow.components,
+  ],
+  needles: [dubNeedle('pointer-left', 20), dubNeedle('pointer-right', 196), { name: 'knob', x: 126, y: 206, width: 128, height: 128, pivotX: 64, pivotY: 64, from: -140, to: 140, rest: -140, html: '<div class="turn"></div>' }],
+});
+
 // What every skin says about itself beyond its looks: words to find it by, and the row of
 // its background that is drawn out when the window is made taller (it runs through the playlist).
 const MORE = {
@@ -2759,7 +2823,7 @@ const MORE = {
   dial: { keywords: ['dial', 'knob', 'aluminium', 'light', 'minimal', 'green'], resize: { stretchY: 590 } },
 };
 
-const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial, pocket, beat, stripe, amp, magnet, studio, crimson, mono, wheel, nano, silver, lever, keysSkin, split, patch, chromeSkin, switchSkin, gauge, ember, click, classic, radar, needleSkin];
+const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial, pocket, beat, stripe, amp, magnet, studio, crimson, mono, wheel, nano, silver, lever, keysSkin, split, patch, chromeSkin, switchSkin, gauge, ember, click, classic, radar, needleSkin, dub];
 
 // ---------------------------------------------------------------- rendering
 

@@ -182,10 +182,10 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 | **Console** (`io.github.krocon.console`) | `absolute`, 400 × 580 | heller Skin: mattes Grau, Mulden-Tasten, eine rote |
 | **Dial** (`io.github.krocon.dial`) | `absolute`, 360 × 680 | heller Skin: ein großer Drehknopf zeigt die Position und spult |
 
-Dazu kommen 23 weitere, alle `absolute` und aus demselben Generator: **Pocket**, **Keys** (Taschenrechner), **Beat**
+Dazu kommen 24 weitere, alle `absolute` und aus demselben Generator: **Pocket**, **Keys** (Taschenrechner), **Beat**
 (Drum-Machine), **Stripe** (flache Zeichnung), **Amp**, **Lever**, **Switch**, **Patch** (schlichte Fronten), **Magnet**,
-**Classic**, **Radar**, **Chrome** (Kassettengeräte), **Studio**, **Needle**, **Gauge** (Zeigerinstrumente; in Needle zeigt
-der Zeiger die Position und lässt sich ziehen), **Crimson**, **Nano**, **Silver** (Tonbandgeräte mit Bandwickel),
+**Classic**, **Radar**, **Chrome** (Kassettengeräte), **Studio**, **Needle**, **Dub**, **Gauge** (Zeigerinstrumente; in Needle zeigt
+der Zeiger die Position und lässt sich ziehen, in Dub tun das beide Zeiger und der große Drehknopf), **Crimson**, **Nano**, **Silver** (Tonbandgeräte mit Bandwickel),
 **Mono**, **Split** (grafisch), **Wheel**, **Click** (Taschenplayer mit Tastenring) und **Ember** (Bernstein auf Schwarz).
 Mono, Wheel und Classic zeigen das Cover des Titels.
 

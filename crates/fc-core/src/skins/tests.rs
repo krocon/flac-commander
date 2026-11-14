@@ -81,10 +81,10 @@ fn the_built_in_skins_are_valid() {
         names,
         [
             "Amp", "Beat", "Chrome", "Classic", "Click", "Console", "Crimson", "Deck", "Dial",
-            "Ember", "Ferro", "Gauge", "Hi-Fi", "Keys", "Lever", "Magnet", "Meter", "Mixtape",
-            "Mono", "Nano", "Needle", "Neon", "Panel", "Patch", "Pocket", "Radar", "Recorder",
-            "Reel", "Retro", "Silver", "Split", "Stripe", "Studio", "Switch", "System", "Tape",
-            "Vinyl", "Walk", "Wheel"
+            "Dub", "Ember", "Ferro", "Gauge", "Hi-Fi", "Keys", "Lever", "Magnet", "Meter",
+            "Mixtape", "Mono", "Nano", "Needle", "Neon", "Panel", "Patch", "Pocket", "Radar",
+            "Recorder", "Reel", "Retro", "Silver", "Split", "Stripe", "Studio", "Switch", "System",
+            "Tape", "Vinyl", "Walk", "Wheel"
         ]
     );
     assert!(library.get(DEFAULT_SKIN).is_some());
@@ -279,9 +279,9 @@ fn every_file_of_the_built_in_skins_is_embedded() {
     }
     let skins = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../skins");
     for (folder, embedded) in [
-        "amp", "beat", "chrome", "classic", "click", "console", "crimson", "deck", "dial", "ember",
-        "ferro", "gauge", "hifi", "keys", "lever", "magnet", "meter", "mixtape", "mono", "nano",
-        "needle", "neon", "panel", "patch", "pocket", "radar", "recorder", "reel", "retro",
+        "amp", "beat", "chrome", "classic", "click", "console", "crimson", "deck", "dial", "dub",
+        "ember", "ferro", "gauge", "hifi", "keys", "lever", "magnet", "meter", "mixtape", "mono",
+        "nano", "needle", "neon", "panel", "patch", "pocket", "radar", "recorder", "reel", "retro",
         "silver", "split", "stripe", "studio", "switch", "system", "tape", "vinyl", "walk",
         "wheel",
     ]
@@ -606,10 +606,10 @@ fn an_imported_skin_is_installed_listed_and_there_after_a_restart() {
         names,
         [
             "Amp", "Beat", "Chrome", "Classic", "Click", "Console", "Crimson", "Deck", "Dial",
-            "Ember", "Ferro", "Gauge", "Hi-Fi", "Keys", "Lever", "Magnet", "Meter", "Mixtape",
-            "Mono", "Nano", "Needle", "Neon", "Panel", "Patch", "Pocket", "Radar", "Recorder",
-            "Reel", "Retro", "Silver", "Split", "Stripe", "Studio", "Switch", "System", "Tape",
-            "Vinyl", "Walk", "Wheel", "Test"
+            "Dub", "Ember", "Ferro", "Gauge", "Hi-Fi", "Keys", "Lever", "Magnet", "Meter",
+            "Mixtape", "Mono", "Nano", "Needle", "Neon", "Panel", "Patch", "Pocket", "Radar",
+            "Recorder", "Reel", "Retro", "Silver", "Split", "Stripe", "Studio", "Switch", "System",
+            "Tape", "Vinyl", "Walk", "Wheel", "Test"
         ]
     );
 
