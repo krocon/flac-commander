@@ -53,3 +53,6 @@ Thumbs.db
 # Tool folders of other assistants
 .agents/
 .gemini/
+
+# skins made from pictures that are not ours to publish
+/local-skins/
