@@ -3280,8 +3280,8 @@ function photoSkin(photo, portrait) {
 //   node scripts/make-designer-skins.mjs --recorder PICTURE
 //
 // The photograph is the machine; its display is painted over and shows the track, the time,
-// the level and both sliders; its own keys are the keys. Built into local-skins/;
-// skins/recorder-pcm is a copy of the result that ships with the app.
+// the level and both sliders; its own keys are the keys. Built into local-skins/, never
+// committed.
 
 function recorderPhotoSkin(photo) {
   const PHOTO = [492, 800];
