@@ -124,7 +124,7 @@ Was nach den sieben Phasen offen ist, in der Reihenfolge des Nutzens:
 3. Playlist: Umsortieren, Mehrfachauswahl, Änderungs-Events statt ganzer Liste (R17).
 4. Medientasten und „Now Playing" stehen ([ADR 0012](decisions/0012-mediensteuerung-des-systems.md)); offen: unter
    Windows und Linux ausprobieren (R9), Tray, Auswahl des Ausgabegeräts.
-5. Lizenz festlegen, Signierung und Release-Workflow (E1, R12).
+5. Lizenz (MIT, E1) und Release-Workflow stehen; offen: Signierung (R12).
 
 ## Bewusst später
 

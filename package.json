@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Skinnable cross-platform music player – Tauri 2 desktop app with a native Rust audio engine",
   "private": true,
+  "license": "MIT",
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": "^22.22.0 || ^24.15.0 || >=26.0.0"
