@@ -32,6 +32,17 @@
 | `pnpm fixtures` | Testdateien neu erzeugen (`scripts/make-fixtures.sh`) |
 | `node scripts/make-retro-skin.mjs` | Grafiken des Retro-Skins neu zeichnen (`skins/retro`) |
 
+### Ein Release bauen
+
+Die Version steht in `package.json` und im `[workspace.package]` der `Cargo.toml`. Ein Tag
+`vX.Y.Z` auf `main` startet `.github/workflows/release.yml`: die CI baut die Pakete für macOS
+(universal), Linux und Windows und legt sie in einem **Entwurf** unter „Releases" ab – erst
+das Veröffentlichen des Entwurfs macht sie sichtbar. Die Pakete sind unsigniert (R12).
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+```
+
 ### Der Kern ohne App
 
 ```bash
