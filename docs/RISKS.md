@@ -31,7 +31,7 @@ Stand: Ende Phase 7.
 
 | # | Frage | Vorschlag | Braucht |
 | --- | --- | --- | --- |
-| E1 | **Lizenz des Projekts** | MIT wie die Vorgängerprojekte; verträgt sich mit allen heutigen Abhängigkeiten (Symphonia MPL-2.0 bleibt MPL). Bis zur Entscheidung gibt es keine `LICENSE`-Datei und keine Lizenzangabe in den Manifesten. | Entscheidung des Eigentümers |
+| E1 | **Lizenz des Projekts** | MIT wie die Vorgängerprojekte; verträgt sich mit allen heutigen Abhängigkeiten (Symphonia MPL-2.0 bleibt MPL). Entschieden: MIT – `LICENSE` im Wurzelordner, Lizenzangabe in den Manifesten. | erledigt |
 | E2 | ~~Resampler~~ | entschieden: `rubato` ([ADR 0006](decisions/0006-resampling-opus-seek.md)) | – |
 | E3 | ~~Opus~~ | entschieden: libopus-Adapter als Feature ([ADR 0006](decisions/0006-resampling-opus-seek.md)) | – |
 | E4 | ~~Persistenz~~ | umgesetzt: eine versionierte JSON-Datei (`state.json`); SQLite erst für die Bibliothek | – |

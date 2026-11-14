@@ -106,4 +106,4 @@ Mehr dazu in [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Lizenz
 
-Noch nicht festgelegt (siehe [RISKS.md](docs/RISKS.md), offene Entscheidungen). Bis dahin: alle Rechte vorbehalten.
+[MIT](LICENSE) © 2026 Marc Kronberg. Abhängigkeiten behalten ihre eigenen Lizenzen (Symphonia: MPL-2.0, siehe [RISKS.md](docs/RISKS.md) R11).

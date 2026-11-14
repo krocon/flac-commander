@@ -34,6 +34,7 @@
     "active": true,
     "publisher": "Marc Kronberg",
     "copyright": "© 2026 Marc Kronberg",
+    "license": "MIT",
     "targets": [
       "app",
       "dmg",
