@@ -1,0 +1,422 @@
+<!doctype html>
+<!--
+  FLAC Commander – product site. Static: site.css + site.js next to this file, pictures in img/
+  (built by `node site/build.mjs` from skins/). No web fonts, no trackers, no external requests.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLAC Commander – a skinnable music player for macOS, Windows and Linux</title>
+<meta name="description" content="FLAC Commander plays your local music with a native Rust audio engine: gapless, 10-band equalizer, FLAC, MP3, Opus and more. 40 skins from turntable to tape machine. Free and open source (MIT).">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#121418" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f1f0ec" media="(prefers-color-scheme: light)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="FLAC Commander – one player, forty faces">
+<meta property="og:description" content="A music player for local files with a native Rust audio engine and skins that change everything. Free and open source.">
+<meta property="og:image" content="img/skins/vinyl.webp">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="site.css">
+<script src="site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><img src="img/icon.png" width="30" height="30" alt=""><span>FLAC Commander</span></a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#skins">Skins</a>
+      <a href="#engine">Engine</a>
+      <a class="opt" href="#windows">Windows</a>
+      <a class="opt" href="#keyboard">Keyboard</a>
+      <a class="gh" href="https://github.com/krocon/flac-commander">GitHub</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/krocon/flac-commander/releases/latest">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top" data-title="FLAC Commander">
+    <div class="wrap hero-in">
+      <div>
+        <p class="eyebrow reveal"><b class="tr">A1</b> music player · macOS · Windows · Linux</p>
+        <h1 class="h1 split">One player, <span class="accent">forty faces.</span></h1>
+        <p class="lead reveal" style="--d:3">FLAC Commander plays the music on your disk through <b>its own audio engine written in Rust</b>, one track into the next without a gap. And it changes its whole look while the song keeps playing.</p>
+        <div class="actions reveal" style="--d:4">
+          <a class="btn btn-primary" href="https://github.com/krocon/flac-commander/releases/latest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+            Download 0.1.0
+          </a>
+          <a class="btn btn-ghost" href="#skins"><span>All <span data-skins>40</span> skins</span></a>
+        </div>
+        <p class="note reveal" style="--d:5">Free and open source (MIT). No account, no streaming, your files stay where they are.</p>
+      </div>
+
+      <div class="reveal" style="--d:2">
+        <div class="deck" tabindex="0" aria-label="Skins of FLAC Commander; the arrow keys change the skin">
+          <figure class="skin" data-skin="vinyl" data-accent="#66b5f5" data-name="Vinyl" data-text="the default: a record under the needle, controls pressed out of the surface."><img src="img/skins/vinyl.webp" width="1280" height="1124" alt="The skin Vinyl: a dark turntable with a playlist below"></figure>
+          <figure class="skin" data-skin="reel" data-accent="#ff7a45" data-name="Reel" data-text="a tape machine with a white front and two reels that turn."><img src="img/skins/reel.webp" width="1280" height="1060" loading="lazy" alt="The skin Reel: a white tape machine with two reels"></figure>
+          <figure class="skin" data-skin="neon" data-accent="#ff5fdc" data-name="Neon" data-text="glowing tubes over a night-time grid, cyan, magenta and a setting sun."><img src="img/skins/neon.webp" width="760" height="1080" loading="lazy" alt="The skin Neon: magenta and cyan tubes on a dark grid"></figure>
+          <figure class="skin" data-skin="tape" data-accent="#f59a3c" data-name="Tape" data-text="a cassette deck in cream and orange with piano keys."><img src="img/skins/tape.webp" width="800" height="1080" loading="lazy" alt="The skin Tape: a cream and orange cassette deck"></figure>
+          <figure class="skin" data-skin="gauge" data-accent="#5fd8ff" data-name="Gauge" data-text="two round instruments lit in cyan, as in a dashboard at night."><img src="img/skins/gauge.webp" width="760" height="1088" loading="lazy" alt="The skin Gauge: two cyan instruments on navy"></figure>
+          <figure class="skin" data-skin="hifi" data-accent="#ffb000" data-name="Hi-Fi" data-text="brushed aluminium, turned knobs and an amber display."><img src="img/skins/hifi.webp" width="800" height="1056" loading="lazy" alt="The skin Hi-Fi: an aluminium receiver with an amber display"></figure>
+          <figure class="skin" data-skin="nano" data-accent="#5fd3a6" data-name="Nano" data-text="a miniature tape recorder cut from steel, seen from above."><img src="img/skins/nano.webp" width="1280" height="1220" loading="lazy" alt="The skin Nano: a small steel tape recorder with a mint and a red reel"></figure>
+          <figure class="skin" data-skin="crimson" data-accent="#ff6257" data-name="Crimson" data-text="two steel reels full of red tape on black cloth."><img src="img/skins/crimson.webp" width="760" height="1168" loading="lazy" alt="The skin Crimson: two steel reels with red tape"></figure>
+        </div>
+        <p class="deck-cap"><b>Vinyl</b> – the default: a record under the needle, controls pressed out of the surface.</p>
+        <div class="chips" role="group" aria-label="Choose a skin">
+          <button class="chip" type="button" data-skin="vinyl" style="--c:#66b5f5" aria-pressed="true"><i></i>Vinyl</button>
+          <button class="chip" type="button" data-skin="reel" style="--c:#ff7a45" aria-pressed="false"><i></i>Reel</button>
+          <button class="chip" type="button" data-skin="neon" style="--c:#ff5fdc" aria-pressed="false"><i></i>Neon</button>
+          <button class="chip" type="button" data-skin="tape" style="--c:#f59a3c" aria-pressed="false"><i></i>Tape</button>
+          <button class="chip" type="button" data-skin="gauge" style="--c:#5fd8ff" aria-pressed="false"><i></i>Gauge</button>
+          <button class="chip" type="button" data-skin="hifi" style="--c:#ffb000" aria-pressed="false"><i></i>Hi-Fi</button>
+          <button class="chip" type="button" data-skin="nano" style="--c:#5fd3a6" aria-pressed="false"><i></i>Nano</button>
+          <button class="chip" type="button" data-skin="crimson" style="--c:#ff6257" aria-pressed="false"><i></i>Crimson</button>
+        </div>
+      </div>
+    </div>
+    <canvas class="hero-eq" aria-hidden="true"></canvas>
+  </section>
+
+  <div class="marquee" aria-label="Formats that play">
+    <ul>
+      <li>FLAC</li><li>MP3</li><li>WAV</li><li>Ogg Vorbis</li><li>Opus</li><li>AAC / M4A</li><li>ALAC</li><li>AIFF</li><li>gapless</li><li>10-band equalizer</li><li>drag &amp; drop</li><li>Winamp skins</li>
+      <li aria-hidden="true">FLAC</li><li aria-hidden="true">MP3</li><li aria-hidden="true">WAV</li><li aria-hidden="true">Ogg Vorbis</li><li aria-hidden="true">Opus</li><li aria-hidden="true">AAC / M4A</li><li aria-hidden="true">ALAC</li><li aria-hidden="true">AIFF</li><li aria-hidden="true">gapless</li><li aria-hidden="true">10-band equalizer</li><li aria-hidden="true">drag &amp; drop</li><li aria-hidden="true">Winamp skins</li>
+    </ul>
+  </div>
+
+  <section class="sec" id="engine" data-title="The engine">
+    <div class="wrap">
+      <p class="eyebrow reveal"><b class="tr">A2</b> the engine · Rust</p>
+      <h2 class="h2 split">The sound never waits for the window.</h2>
+      <p class="lead reveal">Decoding runs on its own thread and hands the samples over through a lock-free ring buffer. The audio callback takes no lock, allocates nothing and touches no file, so a busy window cannot make the music stutter.</p>
+
+      <div class="stats reveal">
+        <div class="stat"><b data-count="40" data-skins>40</b><span>skins come with the app, more as a ZIP</span></div>
+        <div class="stat"><b data-count="8">8</b><span>formats, each one proven by a test on a real file</span></div>
+        <div class="stat"><b data-count="10">10</b><span>equalizer bands, one per octave, plus a preamp</span></div>
+        <div class="stat"><b data-count="0">0<small>ms</small></b><span>between two tracks: an album plays as one piece</span></div>
+      </div>
+
+      <div class="flow reveal">
+        <svg viewBox="0 0 1200 230" role="img" aria-label="The way of the sound: file, decoder, resampler, ring buffer, equalizer and volume, audio device">
+          <rect class="brace" x="194" y="34" width="400" height="176" rx="14"/>
+          <text class="zone" x="206" y="24">ENGINE THREAD · may block, read files, allocate</text>
+          <rect class="brace" x="812" y="34" width="387" height="176" rx="14"/>
+          <text class="zone" x="824" y="24">AUDIO CALLBACK · no lock, no allocation, no I/O</text>
+
+          <path class="wire" d="M170 122H206"/><path class="pulse" d="M170 122H206"/>
+          <path class="wire" d="M376 122H412"/><path class="pulse" d="M376 122H412" style="--dl:-.3s"/>
+          <path class="wire" d="M582 122H618"/><path class="pulse" d="M582 122H618" style="--dl:-.6s"/>
+          <path class="wire" d="M788 122H824"/><path class="pulse" d="M788 122H824" style="--dl:-.9s"/>
+          <path class="wire" d="M994 122H1030"/><path class="pulse" d="M994 122H1030" style="--dl:-1.2s"/>
+
+          <g class="node"><rect x="0.5" y="82" width="170" height="80" rx="10"/><text x="18" y="116">File</text><text class="sub" x="18" y="140">FLAC, MP3, Opus …</text></g>
+          <g class="node"><rect x="206" y="82" width="170" height="80" rx="10"/><text x="224" y="116">Decode</text><text class="sub" x="224" y="140">seek to the frame</text></g>
+          <g class="node"><rect x="412" y="82" width="170" height="80" rx="10"/><text x="430" y="116">Resample</text><text class="sub" x="430" y="140">to the device rate</text></g>
+          <g class="node"><rect x="618" y="82" width="170" height="80" rx="10"/><text x="636" y="112">Ring buffer</text><text class="sub" x="636" y="134">lock-free · ~300 ms</text><rect x="636" y="145" width="134" height="5" rx="2.5" fill="var(--border)"/><rect class="fill" x="636" y="145" width="134" height="5" rx="2.5"/></g>
+          <g class="node"><rect x="824" y="82" width="170" height="80" rx="10"/><text x="842" y="116">Equalizer</text><text class="sub" x="842" y="140">+ volume, 8 ms ramp</text></g>
+          <g class="node out"><rect x="1030" y="82" width="169.5" height="80" rx="10"/><text x="1048" y="116">Your speakers</text><text class="sub" x="1048" y="140">the system's device</text></g>
+        </svg>
+        <ol class="flow-list">
+          <li><b>File</b><span>FLAC, MP3, WAV, Ogg Vorbis, Opus, AAC/M4A, ALAC, AIFF</span></li>
+          <li><b>Decode</b><span>engine thread · seek to the exact frame</span></li>
+          <li><b>Resample</b><span>engine thread · to the rate of the device</span></li>
+          <li><b>Ring buffer</b><span>lock-free · holds about 300 ms</span></li>
+          <li><b>Equalizer and volume</b><span>audio callback · no lock, no allocation, no I/O</span></li>
+          <li><b>Your speakers</b><span>the system's audio device</span></li>
+        </ol>
+      </div>
+
+      <div class="bento reveal">
+        <article class="card">
+          <span class="glyph">gapless</span>
+          <h3>An album is one piece</h3>
+          <p>The next track is decoded before the current one ends. Live albums and classical movements run into each other as they were recorded.</p>
+        </article>
+        <article class="card">
+          <span class="glyph">position</span>
+          <h3>The time you see is the time you hear</h3>
+          <p>The position counts what the callback has really put out, not what was decoded. It never runs ahead and it stands still in pause.</p>
+        </article>
+        <article class="card">
+          <span class="glyph">robust</span>
+          <h3>A broken file is not the end</h3>
+          <p>Files that cannot be played are marked and skipped. If the audio device disappears, playback pauses at its position and goes on with the new device.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec-line" id="skins" data-title="Skins">
+    <div class="wrap">
+      <div class="center">
+        <p class="eyebrow reveal"><b class="tr">A3</b> skins · <span data-skins>40</span> included</p>
+        <h2 class="h2 split">Pick the machine you grew up with.</h2>
+        <p class="lead reveal">Turntable, cassette deck, tape machine, pocket player, receiver, synthesiser. Every skin is a complete player with its own layout, and switching takes one key: <kbd>⌘K</kbd> or <kbd>Ctrl+K</kbd>.</p>
+        <input class="filter reveal" type="search" hidden placeholder="Search the skins … try “cassette” or “white”" aria-label="Search the skins" autocomplete="off" spellcheck="false">
+        <p class="filter-n" aria-live="polite"></p>
+      </div>
+      <div class="gallery">
+        <!-- skins:start -->
+        <figure class="sk" data-k="vinyl a soft, dark turntable: a record under the needle and controls pressed out of the surface. turntable record vinyl dark soft neumorphic landscape"><img src="img/skins/vinyl.webp" width="1280" height="1124" loading="lazy" decoding="async" alt="The skin Vinyl"><figcaption><b>Vinyl</b><span>A soft, dark turntable: a record under the needle and controls pressed out of the surface.</span></figcaption></figure>
+        <figure class="sk" data-k="reel a tape machine with a white front: two reels that turn, square keys and black knobs. reel tape machine light minimal landscape sixties"><img src="img/skins/reel.webp" width="1280" height="1060" loading="lazy" decoding="async" alt="The skin Reel"><figcaption><b>Reel</b><span>A tape machine with a white front: two reels that turn, square keys and black knobs.</span></figcaption></figure>
+        <figure class="sk" data-k="amp a matt black amplifier with white print, white oval keys and a green lamp for play. amplifier black dark minimal green sixties"><img src="img/skins/amp.webp" width="720" height="932" loading="lazy" decoding="async" alt="The skin Amp"><figcaption><b>Amp</b><span>A matt black amplifier with white print, white oval keys and a green lamp for play.</span></figcaption></figure>
+        <figure class="sk" data-k="beat a drum machine in warm dark rubber, with one pad that glows pink while the music plays. drum machine dark pink rubber glow"><img src="img/skins/beat.webp" width="760" height="940" loading="lazy" decoding="async" alt="The skin Beat"><figcaption><b>Beat</b><span>A drum machine in warm dark rubber, with one pad that glows pink while the music plays.</span></figcaption></figure>
+        <figure class="sk" data-k="chrome a smoke-grey cassette on black: the type in teal, hubs with fine teeth, two red eyes. cassette dark grey teal elegant skeuomorphic"><img src="img/skins/chrome.webp" width="800" height="1192" loading="lazy" decoding="async" alt="The skin Chrome"><figcaption><b>Chrome</b><span>A smoke-grey cassette on black: the type in teal, hubs with fine teeth, two red eyes.</span></figcaption></figure>
+        <figure class="sk" data-k="classic an olive-grey cassette player: the time large on its speaker, a cassette with the cover, an orange key. cassette player olive grey dark cover orange"><img src="img/skins/classic.webp" width="760" height="1176" loading="lazy" decoding="async" alt="The skin Classic"><figcaption><b>Classic</b><span>An olive-grey cassette player: the time large on its speaker, a cassette with the cover, an orange key.</span></figcaption></figure>
+        <figure class="sk" data-k="click an early pocket player: a grey-green display with black print, a ring of keys and a button in its middle. pocket player light monochrome ring display"><img src="img/skins/click.webp" width="680" height="1400" loading="lazy" decoding="async" alt="The skin Click"><figcaption><b>Click</b><span>An early pocket player: a grey-green display with black print, a ring of keys and a button in its middle.</span></figcaption></figure>
+        <figure class="sk" data-k="console matt grey with hollow keys you press into the surface, small lights and one red key. console grey light soft neumorphic keys"><img src="img/skins/console.webp" width="800" height="1160" loading="lazy" decoding="async" alt="The skin Console"><figcaption><b>Console</b><span>Matt grey with hollow keys you press into the surface, small lights and one red key.</span></figcaption></figure>
+        <figure class="sk" data-k="crimson two steel reels full of red tape on black cloth, and a thin red line between them. reel dark red steel minimal skeuomorphic"><img src="img/skins/crimson.webp" width="760" height="1168" loading="lazy" decoding="async" alt="The skin Crimson"><figcaption><b>Crimson</b><span>Two steel reels full of red tape on black cloth, and a thin red line between them.</span></figcaption></figure>
+        <figure class="sk" data-k="deck a cassette on dark brushed metal, ridged silver keys and an orange stripe. cassette deck metal dark orange skeuomorphic"><img src="img/skins/deck.webp" width="760" height="1200" loading="lazy" decoding="async" alt="The skin Deck"><figcaption><b>Deck</b><span>A cassette on dark brushed metal, ridged silver keys and an orange stripe.</span></figcaption></figure>
+        <figure class="sk" data-k="dial one big turned aluminium knob: its green mark shows the position, turning it seeks. dial knob aluminium light minimal green"><img src="img/skins/dial.webp" width="720" height="1360" loading="lazy" decoding="async" alt="The skin Dial"><figcaption><b>Dial</b><span>One big turned aluminium knob: its green mark shows the position, turning it seeks.</span></figcaption></figure>
+        <figure class="sk" data-k="dub two white meters side by side in black leather, a large turned steel knob in a lime arc and round keys below. meter leather dark knob lime steel skeuomorphic"><img src="img/skins/dub.webp" width="760" height="1304" loading="lazy" decoding="async" alt="The skin Dub"><figcaption><b>Dub</b><span>Two white meters side by side in black leather, a large turned steel knob in a lime arc and round keys below.</span></figcaption></figure>
+        <figure class="sk" data-k="ember amber on black: lines of glowing segments, small red keys and narrow print. dark amber segments compact nineties red"><img src="img/skins/ember.webp" width="640" height="836" loading="lazy" decoding="async" alt="The skin Ember"><figcaption><b>Ember</b><span>Amber on black: lines of glowing segments, small red keys and narrow print.</span></figcaption></figure>
+        <figure class="sk" data-k="ferro one big black cassette: ribbed shell, white hubs and a number in pale blue. cassette black dark blue skeuomorphic"><img src="img/skins/ferro.webp" width="800" height="1140" loading="lazy" decoding="async" alt="The skin Ferro"><figcaption><b>Ferro</b><span>One big black cassette: ribbed shell, white hubs and a number in pale blue.</span></figcaption></figure>
+        <figure class="sk" data-k="gauge two round instruments lit in cyan on navy, as in a dashboard at night. dashboard instruments dark navy cyan glow"><img src="img/skins/gauge.webp" width="760" height="1088" loading="lazy" decoding="async" alt="The skin Gauge"><figcaption><b>Gauge</b><span>Two round instruments lit in cyan on navy, as in a dashboard at night.</span></figcaption></figure>
+        <figure class="sk" data-k="hi-fi brushed aluminium, turned knobs and an amber display: a receiver from the rack. hi-fi receiver aluminium amber dark skeuomorphic"><img src="img/skins/hifi.webp" width="800" height="1056" loading="lazy" decoding="async" alt="The skin Hi-Fi"><figcaption><b>Hi-Fi</b><span>Brushed aluminium, turned knobs and an amber display: a receiver from the rack.</span></figcaption></figure>
+        <figure class="sk" data-k="keys a white keypad under a black display with green figures, and one orange key. calculator keypad white black green orange minimal"><img src="img/skins/keys.webp" width="680" height="920" loading="lazy" decoding="async" alt="The skin Keys"><figcaption><b>Keys</b><span>A white keypad under a black display with green figures, and one orange key.</span></figcaption></figure>
+        <figure class="sk" data-k="lever a grey front with white square keys, one marked red, a scale with a red pointer and vents. grey light minimal functional keys sixties"><img src="img/skins/lever.webp" width="760" height="904" loading="lazy" decoding="async" alt="The skin Lever"><figcaption><b>Lever</b><span>A grey front with white square keys, one marked red, a scale with a red pointer and vents.</span></figcaption></figure>
+        <figure class="sk" data-k="magnet a silver radio recorder: a speaker grille, chrome keys in a row and a pink cassette. radio recorder boombox silver light pink cassette eighties"><img src="img/skins/magnet.webp" width="720" height="1076" loading="lazy" decoding="async" alt="The skin Magnet"><figcaption><b>Magnet</b><span>A silver radio recorder: a speaker grille, chrome keys in a row and a pink cassette.</span></figcaption></figure>
+        <figure class="sk" data-k="meter dark steel with two meter windows, a cassette in its bay and a red ring around play. cassette meter steel dark red skeuomorphic"><img src="img/skins/meter.webp" width="760" height="1280" loading="lazy" decoding="async" alt="The skin Meter"><figcaption><b>Meter</b><span>Dark steel with two meter windows, a cassette in its bay and a red ring around play.</span></figcaption></figure>
+        <figure class="sk" data-k="mixtape a loud cassette label in sky blue, white and black, the titles written by hand. cassette mixtape light blue handwritten pop"><img src="img/skins/mixtape.webp" width="800" height="1160" loading="lazy" decoding="async" alt="The skin Mixtape"><figcaption><b>Mixtape</b><span>A loud cassette label in sky blue, white and black, the titles written by hand.</span></figcaption></figure>
+        <figure class="sk" data-k="mono black on white and nothing else: the cover large, a row of bars, plain signs. minimal black white light cover flat"><img src="img/skins/mono.webp" width="720" height="1332" loading="lazy" decoding="async" alt="The skin Mono"><figcaption><b>Mono</b><span>Black on white and nothing else: the cover large, a row of bars, plain signs.</span></figcaption></figure>
+        <figure class="sk" data-k="nano a miniature tape recorder cut from steel, seen from above: a mint and a red reel reach over its edge, and the heads, the roller and the pad are its keys. reel steel light miniature red mint landscape skeuomorphic"><img src="img/skins/nano.webp" width="1280" height="1220" loading="lazy" decoding="async" alt="The skin Nano"><figcaption><b>Nano</b><span>A miniature tape recorder cut from steel, seen from above: a mint and a red reel reach over its edge, and the heads, the roller and the pad are its keys.</span></figcaption></figure>
+        <figure class="sk" data-k="needle black leather and one wide white meter: its needle shows where the track is, and pulling it seeks. meter leather dark needle lime skeuomorphic"><img src="img/skins/needle.webp" width="760" height="952" loading="lazy" decoding="async" alt="The skin Needle"><figcaption><b>Needle</b><span>Black leather and one wide white meter: its needle shows where the track is, and pulling it seeks.</span></figcaption></figure>
+        <figure class="sk" data-k="neon glowing tubes over a night-time grid: cyan, magenta and a setting sun. neon synthwave retro dark glow eighties"><img src="img/skins/neon.webp" width="760" height="1080" loading="lazy" decoding="async" alt="The skin Neon"><figcaption><b>Neon</b><span>Glowing tubes over a night-time grid: cyan, magenta and a setting sun.</span></figcaption></figure>
+        <figure class="sk" data-k="panel less, but better: a matt light panel, round push buttons and a single red one. minimal light functional sixties red"><img src="img/skins/panel.webp" width="680" height="1120" loading="lazy" decoding="async" alt="The skin Panel"><figcaption><b>Panel</b><span>Less, but better: a matt light panel, round push buttons and a single red one.</span></figcaption></figure>
+        <figure class="sk" data-k="patch a white synthesiser: five keys in five colours, small white knobs, grilles and dotted wires. synthesiser white light colourful minimal dots"><img src="img/skins/patch.webp" width="760" height="944" loading="lazy" decoding="async" alt="The skin Patch"><figcaption><b>Patch</b><span>A white synthesiser: five keys in five colours, small white knobs, grilles and dotted wires.</span></figcaption></figure>
+        <figure class="sk" data-k="pocket a white pocket calculator that plays music: a slanted display and round keys in three colours. calculator light minimal white round keys"><img src="img/skins/pocket.webp" width="680" height="904" loading="lazy" decoding="async" alt="The skin Pocket"><figcaption><b>Pocket</b><span>A white pocket calculator that plays music: a slanted display and round keys in three colours.</span></figcaption></figure>
+        <figure class="sk" data-k="radar a silver deck with two speaker cones, a green window and a clear cassette. deck silver light speakers cassette skeuomorphic"><img src="img/skins/radar.webp" width="720" height="1200" loading="lazy" decoding="async" alt="The skin Radar"><figcaption><b>Radar</b><span>A silver deck with two speaker cones, a green window and a clear cassette.</span></figcaption></figure>
+        <figure class="sk" data-k="recorder a pocket recorder: matt black body, a glowing display and a ring of keys around play. recorder pocket dark display red"><img src="img/skins/recorder.webp" width="680" height="1200" loading="lazy" decoding="async" alt="The skin Recorder"><figcaption><b>Recorder</b><span>A pocket recorder: matt black body, a glowing display and a ring of keys around play.</span></figcaption></figure>
+        <figure class="sk" data-k="silver a portable tape machine: a silver front, two smoked reels, a badge and knurled knobs. reel silver light portable smoked skeuomorphic"><img src="img/skins/silver.webp" width="760" height="1144" loading="lazy" decoding="async" alt="The skin Silver"><figcaption><b>Silver</b><span>A portable tape machine: a silver front, two smoked reels, a badge and knurled knobs.</span></figcaption></figure>
+        <figure class="sk" data-k="split half white, half red, a thick black line around it and two heavy black knobs. bold flat red white black graphic light"><img src="img/skins/split.webp" width="760" height="1032" loading="lazy" decoding="async" alt="The skin Split"><figcaption><b>Split</b><span>Half white, half red, a thick black line around it and two heavy black knobs.</span></figcaption></figure>
+        <figure class="sk" data-k="stripe a flat drawing: black outlines on cream, a cassette and racing stripes in blue and pink. flat illustration light stripes cassette blue pink"><img src="img/skins/stripe.webp" width="760" height="1120" loading="lazy" decoding="async" alt="The skin Stripe"><figcaption><b>Stripe</b><span>A flat drawing: black outlines on cream, a cassette and racing stripes in blue and pink.</span></figcaption></figure>
+        <figure class="sk" data-k="studio a recorder in black leather with a cream meter panel, steel knobs and tabs that light up blue. recorder leather meter cream steel skeuomorphic"><img src="img/skins/studio.webp" width="760" height="932" loading="lazy" decoding="async" alt="The skin Studio"><figcaption><b>Studio</b><span>A recorder in black leather with a cream meter panel, steel knobs and tabs that light up blue.</span></figcaption></figure>
+        <figure class="sk" data-k="switch soft white with round keys in cream, red and green, a lever and a black rocker. white light soft switches minimal sixties"><img src="img/skins/switch.webp" width="720" height="928" loading="lazy" decoding="async" alt="The skin Switch"><figcaption><b>Switch</b><span>Soft white with round keys in cream, red and green, a lever and a black rocker.</span></figcaption></figure>
+        <figure class="sk" data-k="system white marks on black: dots, hairlines, a reel that turns and a single green light. minimal black white dots reel graphic"><img src="img/skins/system.webp" width="760" height="1220" loading="lazy" decoding="async" alt="The skin System"><figcaption><b>System</b><span>White marks on black: dots, hairlines, a reel that turns and a single green light.</span></figcaption></figure>
+        <figure class="sk" data-k="tape a cassette deck in cream and orange: paper label, piano keys and two reels. cassette tape light seventies orange skeuomorphic"><img src="img/skins/tape.webp" width="800" height="1080" loading="lazy" decoding="async" alt="The skin Tape"><figcaption><b>Tape</b><span>A cassette deck in cream and orange: paper label, piano keys and two reels.</span></figcaption></figure>
+        <figure class="sk" data-k="walk a pocket cassette player in orange and black, for music on the way. cassette portable orange eighties dark"><img src="img/skins/walk.webp" width="720" height="1160" loading="lazy" decoding="async" alt="The skin Walk"><figcaption><b>Walk</b><span>A pocket cassette player in orange and black, for music on the way.</span></figcaption></figure>
+        <figure class="sk" data-k="wheel a white pocket player: a bright screen with the cover of the album and a ring of keys below it. pocket player white light cover ring glossy"><img src="img/skins/wheel.webp" width="680" height="1400" loading="lazy" decoding="async" alt="The skin Wheel"><figcaption><b>Wheel</b><span>A white pocket player: a bright screen with the cover of the album and a ring of keys below it.</span></figcaption></figure>
+        <!-- skins:end -->
+      </div>
+      <p class="note center">The pictures show the app as it is: each one is the preview that ships inside the skin.</p>
+    </div>
+  </section>
+
+  <section class="sec sec-line" id="format" data-title="The skin format">
+    <div class="wrap duo">
+      <div>
+        <p class="eyebrow reveal"><b class="tr">A4</b> skin format · version 1</p>
+        <h2 class="h2 split">A skin is data, not a program.</h2>
+        <p class="lead reveal">A ZIP with a <code>skin.json</code> and pictures. No JavaScript, no HTML, no free CSS: a skin chooses values and arranges the parts the app provides. That is why you can install one from anywhere.</p>
+        <ol class="rules reveal">
+          <li><b>Skins change the look, never the logic.</b> What a key does and how a slider is read out to a screen reader is the same in every skin.</li>
+          <li><b>An invalid skin is refused as a whole.</b> The check runs in Rust before anything is shown and names every violation at once.</li>
+          <li><b>There is always a way back.</b> <kbd>⌘0</kbd> or <kbd>Ctrl+0</kbd> returns to the default skin, whatever the current one looks like.</li>
+          <li><b>Winamp skins come along.</b> A classic <code>.wsz</code> is converted on import: main window, keys and colours. It is a conversion, not a pixel-exact copy.</li>
+        </ol>
+        <a class="more reveal" href="https://github.com/krocon/flac-commander/blob/main/docs/SKIN-FORMAT.md">The format in full</a>
+      </div>
+      <figure class="win reveal" style="--d:2">
+        <div class="win-bar" aria-hidden="true"><i></i><i></i><i></i><span>neon.fcskin / skin.json</span></div>
+<pre><code>{
+  <span class="k">"formatVersion"</span>: <span class="n">1</span>,
+  <span class="k">"id"</span>: <span class="s">"org.example.neon"</span>,
+  <span class="k">"name"</span>: <span class="s">"Neon"</span>,
+  <span class="k">"version"</span>: <span class="s">"1.0.0"</span>,
+  <span class="k">"author"</span>: <span class="s">"Jane Doe"</span>,
+  <span class="k">"description"</span>: <span class="s">"Pink on black."</span>,
+  <span class="k">"preview"</span>: <span class="s">"preview.png"</span>,
+  <span class="k">"theme"</span>: {
+    <span class="k">"background"</span>: <span class="s">"#101010"</span>,
+    <span class="k">"accent"</span>: <span class="s">"#ff2bd6"</span>,
+    <span class="k">"radius"</span>: <span class="n">2</span>
+  },
+  <span class="k">"windows"</span>: {
+    <span class="k">"player"</span>: { <span class="k">"layout"</span>: <span class="s">"flow"</span> }
+  }
+}</code></pre>
+        <figcaption>A whole skin. Add a <code>components</code> list and every key, reel and meter sits where you put it.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec sec-line" id="windows" data-title="Windows and equalizer">
+    <div class="wrap">
+      <div class="duo">
+        <div>
+          <p class="eyebrow reveal"><b class="tr">B1</b> windows · equalizer</p>
+          <h2 class="h2 split">Put the windows where you want them.</h2>
+          <p class="lead reveal">Playlist, equalizer, library and skin picker each open in a window of their own. All of them follow the same player, and the app remembers where you left them.</p>
+          <p class="note reveal">Try the presets: they are the ones in the app, with the preamp lowered where bands are raised, against clipping.</p>
+        </div>
+        <div class="eq reveal" style="--d:2" aria-label="Equalizer with the presets of the app">
+          <div class="eq-presets" role="group" aria-label="Presets">
+            <button type="button" aria-pressed="true" data-gains="0,0,0,0,0,0,0,0,0,0,0">Flat</button>
+            <button type="button" aria-pressed="false" data-gains="-4,6,5,4,2,0,0,0,0,0,0">Bass</button>
+            <button type="button" aria-pressed="false" data-gains="-4,0,0,0,0,0,1,2,4,5,6">Treble</button>
+            <button type="button" aria-pressed="false" data-start="1" data-gains="-5,6,4,2,0,-1,-1,0,2,4,5">Loudness</button>
+            <button type="button" aria-pressed="false" data-gains="-3,-4,-3,-1,1,3,4,3,1,-1,-2">Voice</button>
+          </div>
+          <div class="eq-bands">
+            <div class="band pre"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>pre</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>31</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>62</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>125</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>250</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>500</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>1k</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>2k</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>4k</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>8k</span></div>
+            <div class="band"><span class="db">0</span><span class="slot"><i class="knob"></i></span><span>16k</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bento reveal">
+        <article class="card w3">
+          <span class="glyph">⌘L · playlist</span>
+          <h3>Drop a folder, press space</h3>
+          <p>Add files with the dialog, drop files and folders on the window or pass them on the command line. Title, artist and length come from the tags.</p>
+        </article>
+        <article class="card w3">
+          <span class="glyph">⌘B · library</span>
+          <h3>Your folders are the library</h3>
+          <p>Choose a music folder and walk through it: albums as a grid of covers, a search over folder, album, artist and title. Play at once or add to the playlist. No database, no import.</p>
+        </article>
+        <article class="card">
+          <span class="glyph">⌘E · equalizer</span>
+          <h3>Ten bands, at once</h3>
+          <p>Every move of a slider is heard immediately. The equalizer runs inside the audio callback.</p>
+        </article>
+        <article class="card">
+          <span class="glyph">restart</span>
+          <h3>It remembers</h3>
+          <p>Playlist, the current track with its position, volume, repeat, shuffle, the skin, the places of the windows and the folder of the library.</p>
+        </article>
+        <article class="card">
+          <span class="glyph">visualizer</span>
+          <h3>A spectrum in every skin</h3>
+          <p>Bars, meters and needles move with the music, and stay still when your system asks for reduced motion.</p>
+        </article>
+        <article class="card w4">
+          <span class="glyph">not there yet</span>
+          <h3>What version 0.1 cannot do</h3>
+          <p>Reordering the playlist and selecting several titles. The library does not sort by year and has no view of all albums of one artist across folders. The import of Winamp skins covers the main window only.</p>
+        </article>
+        <article class="card">
+          <span class="glyph">de · en</span>
+          <h3>Two languages</h3>
+          <p>All texts and error messages in German and English.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec-line" id="keyboard" data-title="Keyboard">
+    <div class="wrap">
+      <p class="eyebrow reveal"><b class="tr">B2</b> keyboard</p>
+      <h2 class="h2 split">Every key is the same in every skin.</h2>
+      <p class="lead reveal">One central set of actions. On Windows and Linux, <kbd>Ctrl</kbd> takes the place of <kbd>⌘</kbd>.</p>
+      <div class="keys2 reveal" style="margin-top:36px">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Key</th><th>Playback</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>Space</kbd></td><td>Play / pause (without a track: open a file)</td></tr>
+              <tr><td><kbd>V</kbd></td><td>Stop</td></tr>
+              <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>5 seconds back / forward</td></tr>
+              <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Louder / quieter</td></tr>
+              <tr><td><kbd>Z</kbd> <kbd>B</kbd></td><td>Previous / next track</td></tr>
+              <tr><td><kbd>R</kbd> <kbd>S</kbd></td><td>Repeat (off, playlist, track) / shuffle</td></tr>
+              <tr><td><kbd>⌘O</kbd></td><td>Add files</td></tr>
+              <tr><td><kbd>⌘K</kbd></td><td>Choose a skin</td></tr>
+              <tr><td><kbd>⌘0</kbd></td><td>Back to the default skin</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Key</th><th>Windows and lists</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>⌘L</kbd></td><td>Playlist in its own window / in the main window</td></tr>
+              <tr><td><kbd>⌘E</kbd></td><td>Equalizer window</td></tr>
+              <tr><td><kbd>⌘B</kbd></td><td>Library window</td></tr>
+              <tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Home</kbd> <kbd>End</kbd></td><td>Playlist: move the selection</td></tr>
+              <tr><td><kbd>Enter</kbd></td><td>Playlist: play the selected title</td></tr>
+              <tr><td><kbd>Del</kbd></td><td>Playlist: remove the selected title</td></tr>
+              <tr><td><kbd>⌘F</kbd></td><td>Library: search field; <kbd>Esc</kbd> clears it</td></tr>
+              <tr><td><kbd>Tab</kbd> <kbd>Enter</kbd></td><td>Library: choose a tile or title; open the album or play</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec sec-line" id="platforms" data-title="Platforms">
+    <div class="wrap">
+      <p class="eyebrow reveal"><b class="tr">B3</b> platforms · version 0.1.0</p>
+      <h2 class="h2 split">One code base, three systems.</h2>
+      <p class="lead reveal">A small Tauri 2 app: the window is the system's own web view, everything that sounds is native Rust.</p>
+      <div class="os reveal">
+        <article class="card">
+          <h3>macOS</h3>
+          <p>Universal <code>.dmg</code> for Apple Silicon and Intel.</p>
+          <b>This is where the app is developed and listened to.</b>
+          <span class="state">checked by ear</span>
+        </article>
+        <article class="card">
+          <h3>Windows</h3>
+          <p><code>.msi</code> or setup <code>.exe</code>, 64 bit.</p>
+          <b>Built and tested by the CI. The sound on real hardware is still unverified.</b>
+          <span class="state open">tell us how it sounds</span>
+        </article>
+        <article class="card">
+          <h3>Linux</h3>
+          <p><code>.deb</code>, <code>.rpm</code> or AppImage, 64 bit.</p>
+          <b>Built and tested by the CI. The sound on real hardware is still unverified.</b>
+          <span class="state open">tell us how it sounds</span>
+        </article>
+      </div>
+      <p class="note reveal">The packages are not signed: macOS and Windows warn at the first start. The source is open, so you can read it and build it yourself.</p>
+    </div>
+  </section>
+
+  <section class="cta" id="download" data-title="Download">
+    <div class="record" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="prompt reveal">B4 · 33⅓ rpm</p>
+      <h2 class="h2 split">Drop the needle.</h2>
+      <div class="actions reveal">
+        <a class="btn btn-primary" href="https://github.com/krocon/flac-commander/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+          Download 0.1.0
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/krocon/flac-commander">Source on GitHub</a>
+      </div>
+      <p class="note reveal">Free and open source under the MIT licence.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>FLAC Commander · MIT © 2026 Marc Kronberg · This page loads nothing from other servers and sets no cookies.</p>
+    <ul>
+      <li><a href="https://github.com/krocon/flac-commander">GitHub</a></li>
+      <li><a href="https://github.com/krocon/flac-commander/releases">Releases</a></li>
+      <li><a href="https://github.com/krocon/flac-commander/blob/main/docs/SKIN-FORMAT.md">Skin format</a></li>
+      <li><a href="https://github.com/krocon/flac-commander/issues">Issues</a></li>
+      <li><a href="https://krocon.de/">krocon.de</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>
