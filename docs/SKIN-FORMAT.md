@@ -169,9 +169,9 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 | **Hi-Fi** (`io.github.krocon.hifi`) | `absolute`, 400 × 528 | gebürstetes Aluminium, gedrehte Knöpfe, bernsteinfarbenes Display |
 | **Neon** (`io.github.krocon.neon`) | `absolute`, 380 × 540 | leuchtende Röhren in Cyan und Magenta über einem Gitter, Sonne im Display |
 | **Tape** (`io.github.krocon.tape`) | `absolute`, 400 × 540 | heller Skin: Kassette mit Papieretikett, Klaviertasten, Creme und Orange |
-| **Vinyl** (`io.github.krocon.vinyl`) | `absolute`, 640 × 400 | **der Standard.** Weicher dunkler Plattenspieler im Querformat; der Tonarm zeigt die Position und lässt sich ziehen, das Etikett dreht sich |
+| **Vinyl** (`io.github.krocon.vinyl`) | `absolute`, 640 × 562 | **der Standard.** Weicher dunkler Plattenspieler im Querformat; der Tonarm zeigt die Position und lässt sich ziehen, das Etikett dreht sich. Ohne Titelliste 640 × 398 |
 | **Panel** (`io.github.krocon.panel`) | `absolute`, 340 × 560 | heller Skin: matte Frontplatte, runde Drucktasten, eine einzige rote |
-| **Reel** (`io.github.krocon.reel`) | `absolute`, 640 × 430 | heller Skin: Tonbandgerät mit weißer Front, zwei Spulen, die sich drehen |
+| **Reel** (`io.github.krocon.reel`) | `absolute`, 640 × 530 | heller Skin: Tonbandgerät mit weißer Front, zwei Spulen, die sich drehen. Ohne Titelliste 640 × 372 |
 | **Recorder** (`io.github.krocon.recorder`) | `absolute`, 340 × 600 | Taschenrekorder: schwarzes Gehäuse, leuchtendes Display, Tastenring um Play |
 | **Deck** (`io.github.krocon.deck`) | `absolute`, 380 × 600 | Kassette auf dunklem gebürstetem Metall, geriffelte Silbertasten |
 | **Walk** (`io.github.krocon.walk`) | `absolute`, 360 × 580 | tragbarer Kassettenspieler in Orange und Schwarz |
@@ -190,7 +190,8 @@ der Zeiger die Position und lässt sich ziehen, in Dub tun das beide Zeiger und 
 Mono, Wheel und Classic zeigen das Cover des Titels.
 
 Alle mitgelieferten Skins lassen sich nach unten aufziehen (`resize.stretchY` durch die Titelliste) und tragen
-Stichwörter. In Reel folgt das aufgewickelte Band dem Fortschritt (`pack`).
+Stichwörter. Alle außer Retro haben eine Taste, die die Titelliste aus- und einblendet (`app.playlist`), und nennen ihre
+Höhe ohne Liste (`collapsedHeight`); die Liste liegt dafür in jedem Skin unter dem Gerät, auch in Vinyl und Reel. In Reel folgt das aufgewickelte Band dem Fortschritt (`pack`).
 
 Die Grafiken aller Skins außer Retro beschreibt `scripts/make-designer-skins.mjs` als HTML und CSS; ein
 Headless-Chrome rendert sie in doppelter Auflösung, das Skript schneidet die Tasten je Zustand aus. Es sind eigene

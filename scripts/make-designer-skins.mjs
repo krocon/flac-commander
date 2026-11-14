@@ -438,7 +438,7 @@ const vinyl = {
     },
   },
   width: 640,
-  height: 400,
+  height: 562,
   pad: 6,
   css: `
     body { background: linear-gradient(145deg, #272a30, #202327); }
@@ -500,31 +500,32 @@ const vinyl = {
   art: `
     <div class="platter"></div><div class="record"></div>
     <div class="pivot"></div>
-    <div class="well" style="left:341px;top:113px;width:286px;height:14px;border-radius:7px"></div>
-    <div class="well" style="left:435px;top:227px;width:102px;height:14px;border-radius:7px"></div>
-    <div class="well" style="left:340px;top:258px;width:288px;height:130px"></div>
+    <div class="well" style="left:341px;top:139px;width:286px;height:14px;border-radius:7px"></div>
+    <div class="well" style="left:341px;top:333px;width:286px;height:14px;border-radius:7px"></div>
+    <div class="well" style="left:12px;top:400px;width:616px;height:150px"></div>
   `,
   buttons: [
-    button('player.open', 'open', 346, 149, 46, 46, 'soft'),
-    button('player.previous', 'previous', 392, 144, 56, 56, 'soft'),
-    button('player.togglePlay', 'play', 448, 136, 72, 72, 'soft blue', PLAY),
-    button('player.next', 'next', 520, 144, 56, 56, 'soft'),
-    button('player.stop', 'stop', 576, 149, 46, 46, 'soft'),
-    button('player.repeat', 'repeat', 342, 212, 44, 44, 'soft', TOGGLE),
-    button('player.shuffle', 'shuffle', 386, 212, 44, 44, 'soft', TOGGLE),
-    button('window.equalizer', 'equalizer', 540, 212, 44, 44, 'soft', TOGGLE),
-    button('app.skins', 'skins', 584, 212, 44, 44, 'soft'),
+    button('player.open', 'open', 346, 183, 46, 46, 'soft'),
+    button('player.previous', 'previous', 392, 178, 56, 56, 'soft'),
+    button('player.togglePlay', 'play', 448, 170, 72, 72, 'soft blue', PLAY),
+    button('player.next', 'next', 520, 178, 56, 56, 'soft'),
+    button('player.stop', 'stop', 576, 183, 46, 46, 'soft'),
+    button('player.repeat', 'repeat', 341, 264, 46, 46, 'soft', TOGGLE),
+    button('player.shuffle', 'shuffle', 401, 264, 46, 46, 'soft', TOGGLE),
+    button('window.equalizer', 'equalizer', 461, 264, 46, 46, 'soft', TOGGLE),
+    button('app.playlist', 'list', 521, 264, 46, 46, 'soft', TOGGLE),
+    button('app.skins', 'skins', 581, 264, 46, 46, 'soft'),
   ],
   components: [
-    { type: 'text', source: 'track.title', x: 344, y: 22, width: 280, height: 26, fontSize: 18, color: '#e9ecf0' },
-    { type: 'text', source: 'track.artist', x: 344, y: 48, width: 280, height: 18, fontSize: 13, color: '#66b5f5' },
-    { type: 'text', source: 'player.status', x: 344, y: 70, width: 280, height: 14, fontSize: 10, color: '#a0a9b3' },
-    { type: 'time', source: 'position', x: 344, y: 94, width: 80, height: 14, fontSize: 11, color: '#a0a9b3' },
-    { type: 'time', source: 'duration', x: 544, y: 94, width: 80, height: 14, fontSize: 11, align: 'right', color: '#a0a9b3' },
-    { type: 'seekbar', x: 344, y: 116, width: 280, height: 8 },
-    { type: 'volume', x: 438, y: 230, width: 96, height: 8 },
+    { type: 'text', source: 'track.title', x: 344, y: 34, width: 280, height: 26, fontSize: 18, color: '#e9ecf0' },
+    { type: 'text', source: 'track.artist', x: 344, y: 62, width: 280, height: 18, fontSize: 13, color: '#66b5f5' },
+    { type: 'text', source: 'player.status', x: 344, y: 86, width: 280, height: 14, fontSize: 10, color: '#a0a9b3' },
+    { type: 'time', source: 'position', x: 344, y: 120, width: 80, height: 14, fontSize: 11, color: '#a0a9b3' },
+    { type: 'time', source: 'duration', x: 544, y: 120, width: 80, height: 14, fontSize: 11, align: 'right', color: '#a0a9b3' },
+    { type: 'seekbar', x: 344, y: 142, width: 280, height: 8 },
+    { type: 'volume', x: 344, y: 336, width: 280, height: 8 },
     { type: 'spectrum', x: 60, y: 350, width: 200, height: 30, color: '#66b5f5' },
-    { type: 'playlist', x: 346, y: 264, width: 276, height: 118 },
+    { type: 'playlist', x: 18, y: 406, width: 604, height: 138 },
   ],
   spinners: [{ name: 'label', x: 112, y: 134, width: 96, height: 96, period: 1800, source: 'track.cover', html: '<div class="disc-label"></div>' }],
   // the spindle stays on top of the cover
@@ -674,7 +675,7 @@ const reelDeck = {
     },
   },
   width: 640,
-  height: 430,
+  height: 530,
   pad: 4,
   css: `
     body { background: linear-gradient(170deg, #f1f1ee, #e2e2de); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -718,20 +719,21 @@ const reelDeck = {
   `,
   art: `
     <div class="screw" style="left:8px;top:8px"></div><div class="screw" style="right:8px;top:8px"></div>
-    <div class="screw" style="left:8px;bottom:8px"></div><div class="screw" style="right:8px;bottom:8px"></div>
+    <div class="screw" style="left:8px;top:356px"></div><div class="screw" style="right:8px;top:356px"></div>
     <div class="seat" style="left:34px;top:14px"></div><div class="seat" style="left:374px;top:14px"></div>
     <div class="path"></div><div class="head"></div>
-    <div class="slot" style="left:22px;top:343px;width:284px;height:14px"></div>
-    <div class="cap" style="left:332px;top:262px">volume</div>
-    <div class="slot" style="left:376px;top:259px;width:242px;height:14px"></div>
-    <div class="sheet" style="left:330px;top:282px;width:288px;height:134px"></div>
+    <div class="slot" style="left:22px;top:339px;width:284px;height:14px"></div>
+    <div class="cap" style="left:386px;top:340px">volume</div>
+    <div class="slot" style="left:430px;top:337px;width:188px;height:14px"></div>
+    <div class="sheet" style="left:22px;top:376px;width:596px;height:142px"></div>
   `,
   buttons: [
-    button('player.previous', 'previous', 22, 372, 52, 46, 'sq'),
-    button('player.togglePlay', 'play', 74, 372, 52, 46, 'sq go', PLAY),
-    button('player.stop', 'stop', 126, 372, 52, 46, 'sq'),
-    button('player.next', 'next', 178, 372, 52, 46, 'sq'),
-    button('player.open', 'open', 230, 372, 52, 46, 'sq'),
+    button('player.previous', 'previous', 332, 270, 57, 48, 'sq'),
+    button('player.togglePlay', 'play', 389, 270, 57, 48, 'sq go', PLAY),
+    button('player.stop', 'stop', 446, 270, 57, 48, 'sq'),
+    button('player.next', 'next', 503, 270, 57, 48, 'sq'),
+    button('player.open', 'open', 560, 270, 57, 48, 'sq'),
+    button('app.playlist', 'list', 332, 322, 44, 44, 'knob', TOGGLE),
     button('player.repeat', 'repeat', 298, 16, 44, 44, 'knob', TOGGLE),
     button('player.shuffle', 'shuffle', 298, 60, 44, 44, 'knob', TOGGLE),
     button('window.equalizer', 'equalizer', 298, 104, 44, 44, 'knob', TOGGLE),
@@ -739,14 +741,14 @@ const reelDeck = {
   ],
   components: [
     { type: 'spectrum', x: 266, y: 208, width: 108, height: 26, color: '#b73e0e' },
-    { type: 'text', source: 'track.title', x: 24, y: 276, width: 282, height: 24, fontSize: 17, color: '#1d1d1b' },
-    { type: 'text', source: 'track.artist', x: 24, y: 300, width: 282, height: 18, fontSize: 12, color: '#5a5a56' },
-    { type: 'time', source: 'position', x: 24, y: 324, width: 80, height: 16, fontSize: 12, color: '#1d1d1b' },
-    { type: 'text', source: 'player.status', x: 104, y: 324, width: 122, height: 16, fontSize: 10, align: 'center', color: '#5a5a56' },
-    { type: 'time', source: 'duration', x: 226, y: 324, width: 80, height: 16, fontSize: 12, align: 'right', color: '#5a5a56' },
-    { type: 'seekbar', x: 24, y: 346, width: 280, height: 8 },
-    { type: 'volume', x: 378, y: 262, width: 238, height: 8 },
-    { type: 'playlist', x: 334, y: 286, width: 280, height: 126 },
+    { type: 'text', source: 'track.title', x: 24, y: 270, width: 282, height: 24, fontSize: 17, color: '#1d1d1b' },
+    { type: 'text', source: 'track.artist', x: 24, y: 294, width: 282, height: 18, fontSize: 12, color: '#5a5a56' },
+    { type: 'time', source: 'position', x: 24, y: 319, width: 80, height: 16, fontSize: 12, color: '#1d1d1b' },
+    { type: 'text', source: 'player.status', x: 104, y: 319, width: 122, height: 16, fontSize: 10, align: 'center', color: '#5a5a56' },
+    { type: 'time', source: 'duration', x: 226, y: 319, width: 80, height: 16, fontSize: 12, align: 'right', color: '#5a5a56' },
+    { type: 'seekbar', x: 24, y: 342, width: 280, height: 8 },
+    { type: 'volume', x: 432, y: 340, width: 184, height: 8 },
+    { type: 'playlist', x: 26, y: 380, width: 588, height: 134 },
   ],
   spinners: [
     { name: 'reel-left', x: 38, y: 18, width: 224, height: 224, period: 3200, html: reelHtml() },
@@ -1986,7 +1988,7 @@ const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen wit
   `,
   art: `<div class="screen"><div class="bar"><div class="cell"></div></div></div><div class="ringpad"></div>
     <div class="slot" style="left:40px;top:177px;width:260px;height:14px"></div>
-    <div class="slot" style="left:118px;top:497px;width:104px;height:14px"></div>
+    <div class="slot" style="left:160px;top:497px;width:66px;height:14px"></div>
     <div class="well" style="left:22px;top:530px;width:296px;height:156px"></div>`,
   buttons: [
     button('player.open', 'open', 140, 254, 60, 50, 'on'),
@@ -1996,7 +1998,8 @@ const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen wit
     button('player.stop', 'stop', 140, 416, 60, 50, 'on'),
     button('player.repeat', 'repeat', 22, 482, 44, 44, 'lite', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 482, 44, 44, 'lite', TOGGLE),
-    button('window.equalizer', 'equalizer', 230, 482, 44, 44, 'lite', TOGGLE),
+    button('window.equalizer', 'equalizer', 110, 482, 44, 44, 'lite', TOGGLE),
+    button('app.playlist', 'list', 230, 482, 44, 44, 'lite', TOGGLE),
     button('app.skins', 'skins', 274, 482, 44, 44, 'lite'),
   ],
   components: [
@@ -2007,7 +2010,7 @@ const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen wit
     { type: 'seekbar', x: 42, y: 180, width: 256, height: 8 },
     { type: 'time', source: 'position', x: 42, y: 194, width: 80, height: 16, fontSize: 12, color: '#111417' },
     { type: 'time', source: 'duration', x: 218, y: 194, width: 80, height: 16, fontSize: 12, align: 'right', color: '#111417' },
-    { type: 'volume', x: 120, y: 500, width: 100, height: 8 },
+    { type: 'volume', x: 162, y: 500, width: 62, height: 8 },
     { type: 'playlist', x: 26, y: 534, width: 288, height: 148 },
   ],
   overlays: [{ name: 'cover', x: 40, y: 58, width: 88, height: 88, source: 'track.cover', html: NOTE }],
@@ -2822,9 +2825,9 @@ const MORE = {
   hifi: { keywords: ['hi-fi', 'receiver', 'aluminium', 'amber', 'dark', 'skeuomorphic'], resize: { stretchY: 400 } },
   neon: { keywords: ['neon', 'synthwave', 'retro', 'dark', 'glow', 'eighties'], resize: { stretchY: 410 } },
   tape: { keywords: ['cassette', 'tape', 'light', 'seventies', 'orange', 'skeuomorphic'], resize: { stretchY: 440 } },
-  vinyl: { keywords: ['turntable', 'record', 'vinyl', 'dark', 'soft', 'neumorphic', 'landscape'], resize: { stretchY: 340 } },
+  vinyl: { keywords: ['turntable', 'record', 'vinyl', 'dark', 'soft', 'neumorphic', 'landscape'], resize: { stretchY: 475 } },
   panel: { keywords: ['minimal', 'light', 'functional', 'sixties', 'red'], resize: { stretchY: 440 } },
-  reel: { keywords: ['reel', 'tape machine', 'light', 'minimal', 'landscape', 'sixties'], resize: { stretchY: 364 } },
+  reel: { keywords: ['reel', 'tape machine', 'light', 'minimal', 'landscape', 'sixties'], resize: { stretchY: 448 } },
   recorder: { keywords: ['recorder', 'pocket', 'dark', 'display', 'red'], resize: { stretchY: 500 } },
   deck: { keywords: ['cassette', 'deck', 'metal', 'dark', 'orange', 'skeuomorphic'], resize: { stretchY: 490 } },
   walk: { keywords: ['cassette', 'portable', 'orange', 'eighties', 'dark'], resize: { stretchY: 480 } },
@@ -3052,9 +3055,9 @@ function build(design, mockDir) {
 
   writeFileSync(join(out, 'assets/background.png'), whole(shot('none')));
 
-  // without its track list a skin ends just above it; the two wide ones keep their list
+  // without its track list a skin ends just above it
   const list = design.components.find((c) => c.type === 'playlist');
-  const collapsedHeight = ['vinyl', 'reel'].includes(design.folder) || !list ? null : list.y - 8;
+  const collapsedHeight = list ? list.y - 8 : null;
 
   const states = {};
   for (const state of ['normal', 'hover', 'pressed', 'active']) {

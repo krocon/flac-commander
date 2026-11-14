@@ -35,10 +35,11 @@
     "player": {
       "layout": "absolute",
       "width": 640,
-      "height": 400,
+      "height": 562,
       "background": "assets/background.png",
+      "collapsedHeight": 398,
       "resize": {
-        "stretchY": 340
+        "stretchY": 475
       },
       "components": [
         {
@@ -67,7 +68,7 @@
           "type": "text",
           "source": "track.title",
           "x": 344,
-          "y": 22,
+          "y": 34,
           "width": 280,
           "height": 26,
           "fontSize": 18,
@@ -77,7 +78,7 @@
           "type": "text",
           "source": "track.artist",
           "x": 344,
-          "y": 48,
+          "y": 62,
           "width": 280,
           "height": 18,
           "fontSize": 13,
@@ -87,7 +88,7 @@
           "type": "text",
           "source": "player.status",
           "x": 344,
-          "y": 70,
+          "y": 86,
           "width": 280,
           "height": 14,
           "fontSize": 10,
@@ -97,7 +98,7 @@
           "type": "time",
           "source": "position",
           "x": 344,
-          "y": 94,
+          "y": 120,
           "width": 80,
           "height": 14,
           "fontSize": 11,
@@ -107,7 +108,7 @@
           "type": "time",
           "source": "duration",
           "x": 544,
-          "y": 94,
+          "y": 120,
           "width": 80,
           "height": 14,
           "fontSize": 11,
@@ -117,15 +118,15 @@
         {
           "type": "seekbar",
           "x": 344,
-          "y": 116,
+          "y": 142,
           "width": 280,
           "height": 8
         },
         {
           "type": "volume",
-          "x": 438,
-          "y": 230,
-          "width": 96,
+          "x": 344,
+          "y": 336,
+          "width": 280,
           "height": 8
         },
         {
@@ -140,7 +141,7 @@
           "type": "button",
           "action": "player.open",
           "x": 346,
-          "y": 149,
+          "y": 183,
           "width": 46,
           "height": 46,
           "states": {
@@ -153,7 +154,7 @@
           "type": "button",
           "action": "player.previous",
           "x": 392,
-          "y": 144,
+          "y": 178,
           "width": 56,
           "height": 56,
           "states": {
@@ -166,7 +167,7 @@
           "type": "button",
           "action": "player.togglePlay",
           "x": 448,
-          "y": 136,
+          "y": 170,
           "width": 72,
           "height": 72,
           "states": {
@@ -180,7 +181,7 @@
           "type": "button",
           "action": "player.next",
           "x": 520,
-          "y": 144,
+          "y": 178,
           "width": 56,
           "height": 56,
           "states": {
@@ -193,7 +194,7 @@
           "type": "button",
           "action": "player.stop",
           "x": 576,
-          "y": 149,
+          "y": 183,
           "width": 46,
           "height": 46,
           "states": {
@@ -205,10 +206,10 @@
         {
           "type": "button",
           "action": "player.repeat",
-          "x": 342,
-          "y": 212,
-          "width": 44,
-          "height": 44,
+          "x": 341,
+          "y": 264,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/repeat.png",
             "hover": "assets/repeat-hover.png",
@@ -219,10 +220,10 @@
         {
           "type": "button",
           "action": "player.shuffle",
-          "x": 386,
-          "y": 212,
-          "width": 44,
-          "height": 44,
+          "x": 401,
+          "y": 264,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/shuffle.png",
             "hover": "assets/shuffle-hover.png",
@@ -233,10 +234,10 @@
         {
           "type": "button",
           "action": "window.equalizer",
-          "x": 540,
-          "y": 212,
-          "width": 44,
-          "height": 44,
+          "x": 461,
+          "y": 264,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/equalizer.png",
             "hover": "assets/equalizer-hover.png",
@@ -246,11 +247,25 @@
         },
         {
           "type": "button",
+          "action": "app.playlist",
+          "x": 521,
+          "y": 264,
+          "width": 46,
+          "height": 46,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
           "action": "app.skins",
-          "x": 584,
-          "y": 212,
-          "width": 44,
-          "height": 44,
+          "x": 581,
+          "y": 264,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/skins.png",
             "hover": "assets/skins-hover.png",
@@ -259,10 +274,10 @@
         },
         {
           "type": "playlist",
-          "x": 346,
-          "y": 264,
-          "width": 276,
-          "height": 118
+          "x": 18,
+          "y": 406,
+          "width": 604,
+          "height": 138
         },
         {
           "type": "needle",
