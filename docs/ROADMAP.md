@@ -119,7 +119,8 @@ vorige fertig ist.
 Was nach den sieben Phasen offen ist, in der Reihenfolge des Nutzens:
 
 1. Alle manuellen Tests durchgehen – vor allem Hören und Sehen ab Phase 5 – und Windows/Linux an echter Hardware.
-2. Musikbibliothek (SQLite, inkrementeller Scan, Suche) samt Albumcover.
+2. Bibliothek: steht als Ordner-Browser mit Cover-Raster und Suche ([ADR 0011](decisions/0011-bibliothek-ohne-datenbank.md)).
+   Offen: manuelle Tests B1–B14, Messung an einer großen Sammlung, danach erst die Frage nach SQLite.
 3. Playlist: Umsortieren, Mehrfachauswahl, Änderungs-Events statt ganzer Liste (R17).
 4. Medientasten, Tray, „Now Playing" je Plattform (R9); Auswahl des Ausgabegeräts.
 5. Lizenz festlegen, Signierung und Release-Workflow (E1, R12).

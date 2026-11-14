@@ -478,3 +478,40 @@ fn a_link_to_a_folder_is_not_followed() {
     let found = collect_audio_files(std::slice::from_ref(&folder), 100);
     assert_eq!(found, [folder.join("music/a.flac")]);
 }
+
+#[test]
+fn playing_something_now_replaces_the_list() {
+    let mut rig = Rig::new();
+    rig.add(&["sine.flac", "sine.wav"], PlayAdded::Always);
+    rig.device.play_frames(4_800);
+    rig.device.heard.clear();
+
+    // nothing to play: the list stays as it is
+    assert_eq!(rig.session.replace_with(Vec::new()).unwrap(), 0);
+    assert_eq!(rig.list(), ["[sine.flac]", "sine.wav"]);
+
+    let added = rig.session.replace_with(vec![fixture("sine.aiff"), fixture("sine.mp3")]).unwrap();
+    assert_eq!(added, 2);
+    assert_eq!(rig.list(), ["[sine.aiff]", "sine.mp3"]);
+    rig.device.run_until("the new track plays", |s| {
+        s.status == PlaybackStatus::Playing
+            && s.track.as_ref().is_some_and(|t| t.file_name == "sine.aiff")
+    });
+    rig.run_to_the_end();
+    assert_eq!(rig.list(), ["sine.aiff", "[sine.mp3]"]);
+}
+
+#[test]
+fn the_folders_of_the_library_are_saved_with_the_session() {
+    let folder = temp("library-roots");
+    let state_file = folder.join("state.json");
+    let roots = vec![fs::canonicalize(&folder).unwrap()];
+    {
+        let rig = Rig::with_state_file(Some(state_file.clone()));
+        assert!(rig.session.library_roots().is_empty());
+        rig.session.set_library_roots(roots.clone());
+        rig.session.save_now();
+    }
+    let rig = Rig::with_state_file(Some(state_file));
+    assert_eq!(rig.session.library_roots(), roots);
+}

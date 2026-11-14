@@ -295,6 +295,7 @@ pub const ACTIONS: &[&str] = &[
     "app.playlist",
     "window.playlist",
     "window.equalizer",
+    "window.library",
 ];
 pub const TEXT_SOURCES: &[&str] =
     &["track.title", "track.artist", "track.details", "player.status"];

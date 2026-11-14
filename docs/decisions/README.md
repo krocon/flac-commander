@@ -15,3 +15,4 @@ ersetzt (Status „ersetzt durch …").
 | [0008](0008-mehrere-fenster.md) | Mehrere Fenster: je Fenster eine WebView, Synchronität über Rust-Events | angenommen |
 | [0009](0009-equalizer-spektrum-gapless.md) | Equalizer im Callback, Spektrum als Abzweig, Gapless durch Vorladen | angenommen |
 | [0010](0010-klassische-skins-und-plugins.md) | Klassische Skins werden konvertiert; keine Plugin-API | angenommen |
+| [0011](0011-bibliothek-ohne-datenbank.md) | Bibliothek: Ordner statt Datenbank, Index im Speicher, kleine Cover | angenommen |

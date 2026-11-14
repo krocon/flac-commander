@@ -123,7 +123,7 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `pack` | `states.normal`, `from`, `to` (Pflicht), `rest` | Ein rundes Bild, von dem ein Kreis um die Mitte gezeigt wird. Sein Durchmesser (CSS-Pixel, höchstens die Kastengröße) geht mit dem Fortschritt des Titels von `from` nach `to`; ohne Titel `rest`. Beispiel: das Band auf einer Spule – links `from` groß und `to` klein, rechts umgekehrt. |
 
 **Aktionen** (`action`): `player.togglePlay`, `player.play`, `player.pause`, `player.stop`, `player.next`, `player.previous`, `player.open`,
-`player.repeat`, `player.shuffle`, `app.skins`, `app.playlist` (Titelliste aus- und einblenden, ⌘J / Strg+J), `window.playlist` (Titelliste in eigenem Fenster, ⌘L / Strg+L), `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
+`player.repeat`, `player.shuffle`, `app.skins`, `app.playlist` (Titelliste aus- und einblenden, ⌘J / Strg+J), `window.playlist` (Titelliste in eigenem Fenster, ⌘L / Strg+L), `window.equalizer`, `window.library` (Bibliothek-Fenster, ⌘B / Strg+B). Es gibt keine frei definierbaren Aktionen.
 
 **Cover:** Das Cover ist das Bild in den Tags der Datei (bevorzugt „Front Cover"), sonst eine Datei `cover`, `folder`, `front` oder `album` (`.jpg`, `.png`, `.webp`) im selben Ordner. Die App liefert nur das Cover des gerade geladenen Titels aus; ein Skin kann keine anderen Dateien ansprechen.
 

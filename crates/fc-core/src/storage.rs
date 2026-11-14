@@ -37,6 +37,8 @@ pub struct SavedState {
     pub equalizer: EqSettings,
     /// Place, size and visibility of the windows, by window label.
     pub windows: BTreeMap<String, WindowPlace>,
+    /// The folders of the music library.
+    pub library_roots: Vec<PathBuf>,
 }
 
 /// Where a window was, in logical pixels of the desktop.
@@ -75,6 +77,7 @@ impl Default for SavedState {
             skin: None,
             equalizer: EqSettings::default(),
             windows: BTreeMap::new(),
+            library_roots: Vec::new(),
         }
     }
 }
@@ -94,6 +97,8 @@ impl SavedState {
         self.windows.retain(|label, place| {
             label.len() <= 40 && label.chars().all(|c| c.is_ascii_lowercase()) && place.is_sane()
         });
+        self.library_roots.retain(|root| root.is_absolute());
+        self.library_roots.truncate(crate::library::MAX_ROOTS);
         while self.windows.len() > 16 {
             self.windows.pop_last();
         }
@@ -254,6 +259,7 @@ mod tests {
             current: Some(1),
             position_ms: 61_500,
             skin: Some("io.github.krocon.retro".to_owned()),
+            library_roots: vec![PathBuf::from(if cfg!(windows) { "C:\\Musik" } else { "/Musik" })],
             windows: BTreeMap::from([(
                 "playlist".to_owned(),
                 WindowPlace { x: 700.0, y: 120.0, width: 420.0, height: 520.0, visible: true },
@@ -324,6 +330,24 @@ mod tests {
         fs::write(&path, r#"{"version":1,"skin":"../../etc"}"#).unwrap();
         let Loaded::State(state) = load(&path) else { panic!("not loaded") };
         assert_eq!(state.skin, None);
+    }
+
+    #[test]
+    fn library_folders_must_be_absolute_and_few() {
+        let path = folder("library").join("state.json");
+        let absolute = if cfg!(windows) { "C:/music" } else { "/music" };
+        let many: Vec<String> = (0..100).map(|i| format!("\"{absolute}{i}\"")).collect();
+        fs::write(
+            &path,
+            format!(
+                r#"{{"version":1,"libraryRoots":["relative/music","../up",{}]}}"#,
+                many.join(",")
+            ),
+        )
+        .unwrap();
+        let Loaded::State(state) = load(&path) else { panic!("not loaded") };
+        assert_eq!(state.library_roots.len(), crate::library::MAX_ROOTS);
+        assert!(state.library_roots.iter().all(|root| root.is_absolute()));
     }
 
     #[test]

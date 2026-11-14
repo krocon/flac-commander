@@ -1,0 +1,245 @@
+<header class="bar">
+  <nav class="crumbs" [attr.aria-label]="t.path">
+    <ol>
+      <li>
+        <button
+          type="button"
+          class="crumb"
+          [attr.aria-current]="store.path() === null && !store.searching() ? 'page' : null"
+          (click)="open(null)"
+        >
+          {{ t.library }}
+        </button>
+      </li>
+      @if (!store.searching()) {
+        @for (crumb of store.listing().crumbs; track crumb.path; let last = $last) {
+          <li>
+            <button
+              type="button"
+              class="crumb"
+              [title]="crumb.path"
+              [attr.aria-current]="last ? 'page' : null"
+              (click)="open(crumb.path)"
+            >
+              {{ crumb.name }}
+            </button>
+          </li>
+        }
+      }
+    </ol>
+  </nav>
+
+  <div class="search">
+    <input
+      #search
+      type="search"
+      [value]="store.query()"
+      [placeholder]="t.searchHint"
+      [attr.aria-label]="t.search"
+      autocomplete="off"
+      spellcheck="false"
+      (input)="onSearch($event)"
+      (keydown.escape)="clearSearch()"
+    />
+  </div>
+
+  <button type="button" class="tool" [disabled]="store.scan().scanning" (click)="store.rescan()">
+    {{ t.rescan }}
+  </button>
+  <button type="button" class="tool primary" (click)="store.addRoot()">{{ t.addFolder }}</button>
+</header>
+
+<main class="content">
+  @if (errorText(); as message) {
+    <p class="message error" role="alert">{{ message }}</p>
+  }
+
+  @if (store.isEmpty()) {
+    <div class="empty">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="19" />
+        <circle cx="24" cy="24" r="5" />
+      </svg>
+      <h1>{{ t.empty }}</h1>
+      <p>{{ t.emptyHint }}</p>
+      <button type="button" class="tool primary" (click)="store.addRoot()">
+        {{ t.addFolder }}
+      </button>
+    </div>
+  } @else {
+    @if (album(); as folder) {
+      <section class="album">
+        <div class="cover">
+          @if (cover(folder.path); as src) {
+            <img [src]="src" alt="" (error)="noCover(folder.path)" />
+          }
+        </div>
+        <div class="about">
+          <h1>{{ folder.album ?? folder.name }}</h1>
+          @if (folder.artist) {
+            <p class="artist">{{ folder.artist }}</p>
+          }
+          <p class="count">{{ t.trackCount(folder.tracks) }}</p>
+          <div class="buttons">
+            <button type="button" class="tool primary" (click)="store.play(folder.path)">
+              {{ t.playAll }}
+            </button>
+            <button type="button" class="tool" (click)="store.add(folder.path)">
+              {{ t.addAll }}
+            </button>
+          </div>
+        </div>
+      </section>
+    }
+
+    @if (nothingFound()) {
+      <p class="message">{{ t.noResults(store.query().trim()) }}</p>
+      @if (store.scan().scanning) {
+        <p class="message">{{ t.noResultsYet }}</p>
+      }
+    }
+
+    @if (folders().length > 0) {
+      <section>
+        @if (store.searching()) {
+          <h2>{{ t.albums }}</h2>
+        }
+        <ul class="grid" [attr.aria-label]="store.searching() ? t.albums : t.folders">
+          @for (folder of folders(); track folder.path) {
+            <li
+              class="tile"
+              [class.selected]="selected() === folder.path"
+              [class.plain]="folder.tracks === 0"
+            >
+              <button
+                type="button"
+                class="face"
+                [title]="folder.path"
+                (click)="folderClick(folder, $event)"
+                (dblclick)="store.play(folder.path)"
+              >
+                <span class="cover">
+                  @if (cover(folder.path); as src) {
+                    <img [src]="src" alt="" loading="lazy" (error)="noCover(folder.path)" />
+                  }
+                </span>
+                <span class="name">{{ folder.name }}</span>
+                <span class="sub">{{ subtitle(folder) }}</span>
+              </button>
+              <span class="acts">
+                <button
+                  type="button"
+                  class="act play"
+                  [attr.aria-label]="t.play(folder.name)"
+                  [title]="t.play(folder.name)"
+                  (click)="store.play(folder.path)"
+                >
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z" /></svg>
+                </button>
+                <button
+                  type="button"
+                  class="act"
+                  [attr.aria-label]="t.add(folder.name)"
+                  [title]="t.add(folder.name)"
+                  (click)="store.add(folder.path)"
+                >
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg>
+                </button>
+                @if (folder.tracks > 0) {
+                  <button
+                    type="button"
+                    class="act"
+                    [attr.aria-label]="t.open(folder.name)"
+                    [title]="t.open(folder.name)"
+                    (click)="open(folder.path)"
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M3 4.5h10M3 8h10M3 11.5h10" />
+                    </svg>
+                  </button>
+                }
+                @if (atTop()) {
+                  <button
+                    type="button"
+                    class="act"
+                    [attr.aria-label]="t.removeFolder(folder.name)"
+                    [title]="t.removeFolder(folder.name)"
+                    (click)="store.removeRoot(folder.path)"
+                  >
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M4 4l8 8M12 4l-8 8" />
+                    </svg>
+                  </button>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (tracks().length > 0) {
+      <section>
+        @if (store.searching()) {
+          <h2>{{ t.tracks }}</h2>
+        }
+        <ol class="tracks" [attr.aria-label]="t.tracks">
+          @for (track of tracks(); track track.path; let index = $index) {
+            <li class="row" [class.selected]="selected() === track.path">
+              <button
+                type="button"
+                class="face"
+                [title]="track.path"
+                (click)="trackClick(track, $event)"
+                (dblclick)="store.play(track.path)"
+              >
+                <span class="number" aria-hidden="true">{{ index + 1 }}</span>
+                <span class="title">{{ track.title ?? track.name }}</span>
+                <span class="by">
+                  {{ track.artist ?? '' }}
+                  @if (store.searching() && track.album) {
+                    <span class="on"> · {{ track.album }}</span>
+                  }
+                </span>
+                <span class="time">{{ duration(track) }}</span>
+              </button>
+              <span class="acts">
+                <button
+                  type="button"
+                  class="act play"
+                  [attr.aria-label]="t.play(track.title ?? track.name)"
+                  [title]="t.play(track.title ?? track.name)"
+                  (click)="store.play(track.path)"
+                >
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z" /></svg>
+                </button>
+                <button
+                  type="button"
+                  class="act"
+                  [attr.aria-label]="t.add(track.title ?? track.name)"
+                  [title]="t.add(track.title ?? track.name)"
+                  (click)="store.add(track.path)"
+                >
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg>
+                </button>
+              </span>
+            </li>
+          }
+        </ol>
+      </section>
+    }
+
+    @if (store.searching() && store.found()?.more) {
+      <p class="message">{{ t.more }}</p>
+    }
+    @if (
+      !store.searching() && store.path() !== null && folders().length === 0 && tracks().length === 0
+    ) {
+      <p class="message">{{ t.emptyFolder }}</p>
+    }
+  }
+</main>
+
+<footer class="foot">
+  <span role="status">{{ store.notice() ?? status() }}</span>
+</footer>

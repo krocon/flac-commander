@@ -1,4 +1,5 @@
 import { ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { LibraryApi, TauriLibraryApi } from './core/library/library-api';
 import { LogApi, TauriLogApi } from './core/log/log-api';
 import { LoggingErrorHandler } from './core/log/logging-error-handler';
 import { PlayerApi, TauriPlayerApi } from './core/player/player-api';
@@ -16,6 +17,7 @@ export const appConfig: ApplicationConfig = {
     { provide: PlayerApi, useClass: TauriPlayerApi },
     { provide: PlaylistApi, useClass: TauriPlaylistApi },
     { provide: SkinApi, useClass: TauriSkinApi },
+    { provide: LibraryApi, useClass: TauriLibraryApi },
     { provide: WindowApi, useClass: TauriWindowApi },
   ],
 };

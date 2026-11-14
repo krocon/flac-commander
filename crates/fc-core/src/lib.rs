@@ -6,6 +6,7 @@
 
 pub mod audio;
 pub mod error;
+pub mod library;
 pub mod metadata;
 pub mod playlist;
 pub mod session;

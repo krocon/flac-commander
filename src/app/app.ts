@@ -3,6 +3,8 @@ import { APP_TEXTS } from './app-texts';
 import { ActionService } from './core/actions/action.service';
 import { LogApi } from './core/log/log-api';
 import { Diagnostics } from './features/diagnostics/diagnostics';
+import { Library } from './features/library/library';
+import { LIBRARY_TEXTS } from './features/library/library-texts';
 import { Equalizer } from './features/equalizer/equalizer';
 import { EQUALIZER_TEXTS } from './features/equalizer/equalizer-texts';
 import { DiagnosticsStore } from './features/diagnostics/diagnostics.store';
@@ -20,7 +22,7 @@ import { WindowsStore } from './features/windows/windows.store';
 
 @Component({
   selector: 'app-root',
-  imports: [Diagnostics, Equalizer, Player, Playlist, SkinChooser, SkinnedPlayer],
+  imports: [Diagnostics, Equalizer, Library, Player, Playlist, SkinChooser, SkinnedPlayer],
   template: `
     @if (windows.label === 'equalizer') {
       <div class="solo">
@@ -34,6 +36,9 @@ import { WindowsStore } from './features/windows/windows.store';
     } @else if (windows.label === 'skins') {
       <!-- the skin chooser as a window of its own: room to look at the skins -->
       <app-skin-chooser [page]="true" />
+    } @else if (windows.label === 'library') {
+      <!-- the library: its own window, its own look, whatever the skin -->
+      <app-library />
     } @else if (skins.absolutePlayer(); as layout) {
       <!-- a skin that places everything itself: nothing of the app's own layout around it -->
       <app-skinned-player [layout]="layout" [listAway]="listAway()" />
@@ -63,6 +68,17 @@ import { WindowsStore } from './features/windows/windows.store';
             (click)="windows.toggle('equalizer')"
           >
             {{ e.equalizer }}
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M4.5 1.5h6v6M10.5 1.5 5.5 6.5M8 9v1.5H1.5V4H3" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="windows.libraryOpen()"
+            [title]="actions.hint('window.library')"
+            (click)="windows.toggle('library')"
+          >
+            {{ l.openWindow }}
             <svg viewBox="0 0 12 12" aria-hidden="true">
               <path d="M4.5 1.5h6v6M10.5 1.5 5.5 6.5M8 9v1.5H1.5V4H3" />
             </svg>
@@ -107,6 +123,7 @@ export class App {
   protected readonly p = PLAYLIST_TEXTS;
   protected readonly s = SKINS_TEXTS;
   protected readonly e = EQUALIZER_TEXTS;
+  protected readonly l = LIBRARY_TEXTS;
   /** The main window shows no track list: hidden by the user, or in a window of its own. */
   protected readonly listAway = computed(
     () => this.skins.listHidden() || this.windows.playlistDetached(),
@@ -145,6 +162,13 @@ export class App {
         shortcut: { key: 'e', mod: true },
         active: () => this.windows.equalizerOpen(),
         run: () => void this.windows.toggle('equalizer'),
+      },
+      {
+        id: 'window.library',
+        label: () => this.l.openWindow,
+        shortcut: { key: 'b', mod: true },
+        active: () => this.windows.libraryOpen(),
+        run: () => void this.windows.toggle('library'),
       },
       {
         // the way out of any skin: no skin can take this key away

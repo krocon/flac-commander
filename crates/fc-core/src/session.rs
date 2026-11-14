@@ -67,6 +67,8 @@ struct Inner {
     next_sent: Option<PathBuf>,
     /// Places of the windows: kept here only to be saved with the rest.
     windows: BTreeMap<String, WindowPlace>,
+    /// Folders of the library: kept here only to be saved with the rest.
+    library_roots: Vec<PathBuf>,
 }
 
 /// Cheap to clone: every clone is the same session.
@@ -113,6 +115,7 @@ impl Inner {
             skin: self.skin.clone(),
             equalizer: self.equalizer,
             windows: self.windows.clone(),
+            library_roots: self.library_roots.clone(),
             ..SavedState::default()
         }
     }
@@ -291,6 +294,7 @@ impl Session {
             skin: saved.skin.clone(),
             next_sent: None,
             windows: saved.windows.clone(),
+            library_roots: saved.library_roots.clone(),
         }));
 
         let hook = inner.clone();
@@ -351,6 +355,44 @@ impl Session {
             inner.windows.insert(label.to_owned(), place);
             inner.save();
         }
+    }
+
+    /// The folders of the library when the state was saved.
+    pub fn library_roots(&self) -> Vec<PathBuf> {
+        lock(&self.inner).library_roots.clone()
+    }
+
+    /// Remembers the folders of the library.
+    pub fn set_library_roots(&self, roots: Vec<PathBuf>) {
+        let mut inner = lock(&self.inner);
+        if inner.library_roots != roots {
+            inner.library_roots = roots;
+            inner.save();
+        }
+    }
+
+    /// Empties the list and plays `files` instead (tracks, not folders). Nothing happens if
+    /// `files` is empty. Returns how many tracks the list has now.
+    pub fn replace_with(&self, files: Vec<PathBuf>) -> AppResult<usize> {
+        if files.is_empty() {
+            return Ok(0);
+        }
+        let ids = {
+            let mut inner = lock(&self.inner);
+            inner.playlist.clear();
+            inner.active = None;
+            self.player.unload()?;
+            let ids = inner.playlist.add(files);
+            if let Some(first) = ids.first() {
+                inner.failures_in_a_row = 0;
+                inner.start(*first, true);
+            }
+            inner.changed();
+            ids
+        };
+        let added = ids.len();
+        self.read_meta_in_background(ids);
+        Ok(added)
     }
 
     pub fn playlist_state(&self) -> PlaylistState {

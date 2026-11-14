@@ -1,6 +1,7 @@
 import '../../app-texts';
 import '../../features/diagnostics/diagnostics-texts';
 import '../../features/equalizer/equalizer-texts';
+import '../../features/library/library-texts';
 import '../../features/player/player-texts';
 import '../../features/playlist/playlist-texts';
 import '../../features/skins/skins-texts';
@@ -17,6 +18,7 @@ describe('text catalogs', () => {
       'diagnostics',
       'equalizer',
       'errors',
+      'library',
       'player',
       'playlist',
       'skins',

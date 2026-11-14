@@ -357,7 +357,7 @@ fn content_type(bytes: &[u8]) -> &'static str {
 }
 
 /// `%2F` → `/` and so on; the frontend builds the address with `convertFileSrc`.
-fn percent_decode(text: &str) -> String {
+pub(crate) fn percent_decode(text: &str) -> String {
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;
