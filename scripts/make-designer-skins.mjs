@@ -2023,44 +2023,111 @@ const belowReels = (c) => [
   { type: 'time', source: 'duration', x: 266, y: 232, width: 80, height: 14, fontSize: 11, align: 'right', color: c.muted },
 ];
 
-// ---- "Nano": a tiny steel recorder with one mint and one red reel
+// ---- "Nano": a miniature tape recorder cut from steel, seen from above
+//
+// The face is the machine and nothing else: two reels, the tape between them, machined keys.
+// The track list lies below it and can be hidden, which leaves the machine alone.
 
-const nanoLow = lower({ width: 380, y: 254, look: 'roller', playLook: 'roller go', toggleLook: 'roller', big: 64, mid: 52, toggle: [44, 44], list: 150 });
-const nano = skin('nano', 'Nano', 'A tiny recorder cut from steel: one mint and one red reel, rollers, and print as fine as a watch.', ['reel', 'steel', 'light', 'miniature', 'red', 'mint', 'skeuomorphic'], {
-  theme: theme({ background: '#c7cace', surface: '#eef0f1', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#474b50', accent: '#a31d16', accentContrast: '#ffffff', border: '#7c8188', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
-  width: 380,
-  height: nanoLow.height,
-  resize: nanoLow.resize,
+const holes = (size, distance, radius, count = 6) =>
+  Array.from({ length: count }, (_, n) => (n * 2 * Math.PI) / count)
+    .map((a) => `radial-gradient(circle at ${(size / 2 + distance * Math.sin(a)).toFixed(1)}px ${(size / 2 - distance * Math.cos(a)).toFixed(1)}px, transparent 0 ${radius}px, #000 ${radius + 0.6}px)`)
+    .join(', ');
+const nanoReel = (colour) => `<div class="disc ${colour}"></div><div class="boss"><i></i><i></i><i></i></div><div class="mark ${colour}">FC·12</div>`;
+const nanoBlock = (action, icon, x, y) => button(action, icon, x, y, 54, 44, 'block', TOGGLE);
+
+const nano = skin('nano', 'Nano', 'A miniature tape recorder cut from steel, seen from above: a mint and a red reel, machined keys, print as fine as on a watch.', ['reel', 'steel', 'light', 'miniature', 'red', 'mint', 'landscape', 'skeuomorphic'], {
+  theme: theme({ background: '#d3d5d7', surface: '#f3f1ea', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#44484d', accent: '#a31d16', accentContrast: '#ffffff', border: '#7c8188', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
+  width: 620,
+  height: 576,
+  resize: { stretchY: 490 },
+  titleBar: '#c9ccd0',
+  pad: 4,
   css: `
-    body { background: repeating-linear-gradient(0deg, rgba(255,255,255,.22) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2.5px), linear-gradient(120deg, #dfe1e4, #b4b8bd 55%, #d2d5d8); box-shadow: inset 0 0 0 1px #8d9197, inset 0 2px 0 #fff; font-family: ${HELVETICA}; }
-    .fine { position: absolute; font-size: 6.5px; font-weight: 700; letter-spacing: .14em; color: #2b2e32; white-space: nowrap; }
-    .screw { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f1f2f3, #6f747a 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
-    .post { position: absolute; top: 160px; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #7d8288 70%); box-shadow: 0 1px 2px rgba(0,0,0,.5), 0 0 0 1px #5d6166; }
-    .plate { position: absolute; left: 30px; top: 180px; width: 320px; height: 70px; border-radius: 3px; background: #eef0f1; box-shadow: inset 0 1px 3px rgba(0,0,0,.4), 0 1px 0 #fff; }
-    ${WOUND}
-    .hole6 { position: absolute; inset: 0; border-radius: 50%; -webkit-mask-image: ${SIX_HOLES}; -webkit-mask-composite: source-in; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
-    .hole6.mint { background: radial-gradient(circle, #1b1d20 0 4px, #e9ebed 4px 12px, #6fb596 12px 14px, #9bd9bd 14px 72px, #6fb596 72px); }
-    .hole6.red { background: radial-gradient(circle, #1b1d20 0 4px, #e9ebed 4px 12px, #9c1a13 12px 14px, #dd2a22 14px 72px, #9c1a13 72px); }
-    ${beds('#9aa0a6', '#eef0f1', true)}
-    .face { color: #1b1d20; } .face svg { width: 18px; height: 18px; }
-    .roller { border-radius: 50%; background: radial-gradient(circle at 38% 28%, #ffffff, #a3a8ae 65%, #7d8288); box-shadow: 0 0 0 1px #5d6166, 0 2px 3px rgba(0,0,0,.4), inset 0 0 0 5px rgba(255,255,255,.25); }
-    .roller.go { color: #fff; background: radial-gradient(circle at 38% 28%, #f0584f, #a31d16 70%); box-shadow: 0 0 0 1px #5a0d08, 0 2px 3px rgba(0,0,0,.4); }
-    .roller.go svg { width: 24px; height: 24px; }
+    body { background: linear-gradient(#dfe1e3, #c9cbce); font-family: ${HELVETICA}; }
+    .plate { position: absolute; left: 10px; top: 8px; width: 600px; height: 390px; border-radius: 14px;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.2) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2.5px), linear-gradient(115deg, #e6e8ea, #b9bdc2 48%, #dcdfe2 70%, #c2c6ca);
+      box-shadow: 0 6px 14px rgba(0,0,0,.35), 0 0 0 1px #6f747a, inset 0 0 0 2px rgba(255,255,255,.7), inset 0 0 0 3px rgba(0,0,0,.12); }
+    .pins { position: absolute; left: 3px; top: 70px; width: 9px; height: 200px; border-radius: 2px; background: repeating-linear-gradient(#c9a23a 0 3px, #2f6a43 3px 9px); box-shadow: 0 0 0 1px #1f4a2e; }
+    .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fafafa, #747980 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.2); }
+    .screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 4px; height: 1px; background: #33363a; transform: rotate(35deg); }
+    .fine { position: absolute; font-size: 6.5px; font-weight: 700; letter-spacing: .13em; color: #2b2e32; white-space: nowrap; }
+    .hair { position: absolute; border-top: 1px solid #2b2e32; opacity: .6; }
+    .seatn { position: absolute; top: 22px; width: 216px; height: 216px; border-radius: 50%; background: radial-gradient(circle, #9da2a8 0 20px, #c6cace 20px 100px, #b0b5ba 100px); box-shadow: inset 0 2px 5px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.8); }
+    .guide { position: absolute; left: 285px; top: 14px; width: 30px; height: 62px; border-radius: 3px 3px 12px 12px; background: linear-gradient(90deg, #aeb3b9, #f4f5f6 45%, #a3a8ae); box-shadow: 0 2px 4px rgba(0,0,0,.4), 0 0 0 1px #6f747a; }
+    .guide::after { content: ''; position: absolute; left: 9px; top: 10px; width: 12px; height: 38px; border-radius: 2px; background: linear-gradient(#2b2e32 0 2px, transparent 2px 10px, #2b2e32 10px 12px, transparent 12px 26px, #2b2e32 26px 28px, transparent 28px); }
+    .arcn { position: absolute; left: 262px; top: 78px; width: 76px; height: 76px; border-radius: 50%; border: 1px solid #2b2e32; opacity: .55; -webkit-mask-image: linear-gradient(#000 0 34%, transparent 34%); }
+    .band { position: absolute; left: 196px; top: 236px; width: 208px; height: 18px; border: 1.5px solid #47322a; border-top: none; border-radius: 0 0 20px 20px; }
+    .label { position: absolute; left: 150px; top: 258px; width: 320px; height: 26px; border-radius: 2px; background: #f3f1ea; box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.18); }
+    .label::before { content: ''; position: absolute; left: 0; top: 0; width: 7px; height: 100%; background: #d8262d; }
+    .dialn { position: absolute; left: 512px; top: 262px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, #f3f1ea 0 30px, #1b1d20 30px 31px, #cfd2d5 31px 35px, #8d9299 35px 37px, #e6e8ea 37px); box-shadow: 0 3px 5px rgba(0,0,0,.4), 0 0 0 1px #6f747a; }
+    .post { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #7d8288 70%); box-shadow: 0 2px 3px rgba(0,0,0,.5), 0 0 0 1px #5d6166; }
+    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #4a342a 0 1.5px, #38271f 1.5px 3px); }
+    .disc { position: absolute; inset: 0; border-radius: 50%; -webkit-mask-image: ${holes(210, 62, 22)}; -webkit-mask-composite: source-in; filter: drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
+    .disc.mint { background: radial-gradient(circle, #7fc4a6 0 30px, #9bdcc0 30px 99px, #6fb596 99px 102px, #8fd0b4 102px); }
+    .disc.red { background: radial-gradient(circle, #b81d22 0 30px, #e02b31 30px 99px, #9c1a1e 99px 102px, #cf262c 102px); }
+    .boss { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px; border-radius: 50%; background: radial-gradient(circle, #33363a 0 4px, #f6f6f4 4px 11px, #9a9fa5 11px 12.5px, #f1f1ee 12.5px); box-shadow: 0 1px 3px rgba(0,0,0,.45), 0 0 0 1px #7c8188; }
+    .boss i { position: absolute; left: 24px; top: 5px; width: 6px; height: 44px; background: radial-gradient(circle at 50% 4px, #33363a 2.6px, transparent 3px), radial-gradient(circle at 50% 40px, #33363a 2.6px, transparent 3px); }
+    .boss i:nth-child(2) { transform: rotate(60deg); } .boss i:nth-child(3) { transform: rotate(120deg); }
+    .mark { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); font: 800 9px ${HELVETICA}; letter-spacing: .12em; color: rgba(255,255,255,.92); }
+    .mark.mint { color: #1f5a41; }
+    ${beds('#8f959c', '#f3f1ea', true)}
+    .well { border-radius: 3px; box-shadow: inset 0 1px 3px rgba(0,0,0,.35), 0 1px 0 #fff; }
+    .face { color: #23262a; } .face svg { width: 17px; height: 17px; }
+    .puck { border-radius: 50%; background: radial-gradient(circle, #5d6166 0 3px, #f6f7f8 3px 8px, #9a9fa5 8px 9.5px, #e3e5e8 9.5px 62%, #9da2a8 62% 66%, #eff0f2 66%); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #5d6166; }
+    .puck svg { margin-top: 26px; width: 13px; height: 13px; }
+    .puck.go { color: #fff; background: radial-gradient(circle, #e7373d 0 62%, #9c1a1e 62% 66%, #cf262c 66%); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #6d1114; }
+    .puck.go svg { margin-top: 0; width: 26px; height: 26px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.3)); }
+    .block { border-radius: 3px; background: linear-gradient(145deg, #f4f5f6, #b4b8bd 60%, #d5d8db); box-shadow: 0 2px 4px rgba(0,0,0,.4), 0 0 0 1px #5d6166, inset 0 0 0 1px rgba(255,255,255,.7); }
+    .block::before { content: ''; position: absolute; right: 5px; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: #6a2a2a; box-shadow: inset 0 1px 1px rgba(0,0,0,.5); }
+    .small { border-radius: 50%; background: radial-gradient(circle at 38% 30%, #fff, #a3a8ae 68%, #7d8288); box-shadow: 0 2px 3px rgba(0,0,0,.45), 0 0 0 1px #5d6166; }
     ${STATES}
-    .pressed .roller { box-shadow: 0 0 0 1px #5d6166, inset 0 3px 5px rgba(0,0,0,.4); }
-    .active .roller { color: #a31d16; box-shadow: 0 0 0 1px #5d6166, 0 0 0 3px #dd2a22; }
-    .active .roller.go { color: #fff; box-shadow: 0 0 0 1px #5a0d08, 0 0 0 3px #c7cace, 0 0 0 4.5px #dd2a22; }
+    .pressed .puck, .pressed .block, .pressed .small { box-shadow: 0 0 0 1px #5d6166, inset 0 3px 5px rgba(0,0,0,.4); }
+    .active .puck.go { box-shadow: 0 0 0 1px #6d1114, 0 0 0 3px #c9ccd0, 0 0 0 4.5px #e02b31, 0 0 12px 3px rgba(224,43,49,.45); }
+    .active .block::before { background: #ff3b30; box-shadow: 0 0 5px 1px rgba(255,59,48,.9); }
+    .active .block { color: #a31d16; }
   `,
-  art: `<div class="screw" style="left:8px;top:8px"></div><div class="screw" style="right:8px;top:8px"></div>
-    <div class="fine" style="left:182px;top:10px;transform:translateX(-50%)">SUPPLY</div><div class="fine" style="left:150px;top:150px">TAPE · LOSSLESS</div>
-    <div class="post" style="left:92px"></div><div class="post" style="left:183px"></div><div class="post" style="left:274px"></div>
-    <div class="plate"></div>${nanoLow.art}`,
-  buttons: nanoLow.buttons,
-  components: [...belowReels({ title: '#1b1d20', artist: '#a31d16', muted: '#474b50' }), ...nanoLow.components],
-  packs: twoPacks,
+  art: `<div class="plate"><div class="pins"></div></div>
+    ${[[22, 18], [589, 18], [22, 378], [589, 378], [300, 222]].map(([x, y]) => `<div class="screw" style="left:${x}px;top:${y}px"></div>`).join('')}
+    <div class="seatn" style="left:82px"></div><div class="seatn" style="left:322px"></div>
+    <div class="guide"></div><div class="arcn"></div><div class="band"></div>
+    <div class="fine" style="left:46px;top:20px">SUPPLY REEL</div><div class="fine" style="left:520px;top:20px">TAKE-UP</div>
+    <div class="fine" style="left:28px;top:246px">MODE</div><div class="fine" style="left:514px;top:246px">LEVEL</div><div class="fine" style="left:482px;top:354px">VOLUME</div>
+    <div class="fine" style="left:28px;top:384px;opacity:.75">MINIATURE TAPE RECORDER · LOSSLESS</div>
+    <div class="post" style="left:176px;top:240px"></div><div class="post" style="left:428px;top:240px"></div>
+    <div class="label"></div><div class="dialn"></div>
+    <div class="slot" style="left:148px;top:309px;width:324px;height:14px"></div>
+    <div class="slot" style="left:480px;top:364px;width:116px;height:14px"></div>
+    <div class="well" style="left:10px;top:408px;width:600px;height:158px"></div>`,
+  buttons: [
+    button('player.open', 'open', 168, 331, 54, 54, 'puck'),
+    button('player.previous', 'previous', 222, 331, 54, 54, 'puck'),
+    button('player.togglePlay', 'play', 276, 326, 68, 64, 'puck go', PLAY),
+    button('player.next', 'next', 344, 331, 54, 54, 'puck'),
+    button('player.stop', 'stop', 398, 331, 54, 54, 'puck'),
+    nanoBlock('player.repeat', 'repeat', 26, 256),
+    nanoBlock('player.shuffle', 'shuffle', 82, 256),
+    nanoBlock('window.equalizer', 'equalizer', 26, 302),
+    nanoBlock('app.playlist', 'list', 82, 302),
+    button('app.skins', 'skins', 60, 346, 40, 36, 'small'),
+  ],
+  components: [
+    { type: 'text', source: 'track.title', x: 164, y: 260, width: 218, height: 22, fontSize: 14, color: '#1b1d20' },
+    { type: 'text', source: 'player.status', x: 386, y: 260, width: 78, height: 22, fontSize: 10, align: 'right', color: '#a31d16' },
+    { type: 'time', source: 'position', x: 150, y: 288, width: 70, height: 16, fontSize: 12, color: '#1b1d20' },
+    { type: 'text', source: 'track.artist', x: 222, y: 288, width: 176, height: 16, fontSize: 11, align: 'center', color: '#a31d16' },
+    { type: 'time', source: 'duration', x: 400, y: 288, width: 70, height: 16, fontSize: 12, align: 'right', color: '#44484d' },
+    { type: 'seekbar', x: 150, y: 312, width: 320, height: 8 },
+    { type: 'spectrum', x: 526, y: 286, width: 52, height: 30, color: '#44484d' },
+    { type: 'volume', x: 482, y: 367, width: 112, height: 8 },
+    { type: 'playlist', x: 16, y: 412, width: 588, height: 150 },
+  ],
+  packs: [
+    { name: 'tape-left', x: 95, y: 35, width: 190, height: 190, from: 190, to: 76, html: '<div class="wound"></div>' },
+    { name: 'tape-right', x: 335, y: 35, width: 190, height: 190, from: 76, to: 190, html: '<div class="wound"></div>' },
+  ],
   spinners: [
-    { name: 'reel-left', x: 29, y: 17, width: 150, height: 150, period: 3000, html: '<div class="hole6 mint"></div>' },
-    { name: 'reel-right', x: 201, y: 17, width: 150, height: 150, period: 3000, html: '<div class="hole6 red"></div>' },
+    { name: 'reel-left', x: 85, y: 25, width: 210, height: 210, period: 3200, html: nanoReel('mint') },
+    { name: 'reel-right', x: 325, y: 25, width: 210, height: 210, period: 3200, html: nanoReel('red') },
   ],
 });
 
