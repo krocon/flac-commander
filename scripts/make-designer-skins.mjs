@@ -51,6 +51,7 @@ const ICON = {
     '<g fill="currentColor"><circle cx="7" cy="9" r="2.6"/><circle cx="12" cy="15" r="2.6"/><circle cx="17" cy="8" r="2.6"/></g>',
   ),
   skins: filled('M12 3.2c3.2 3.8 5.8 7 5.8 10.2a5.8 5.8 0 0 1-11.6 0c0-3.2 2.6-6.4 5.8-10.2z'),
+  none: '',
   list: filled('M4 5.5h2.5V8H4zM9 5.5h11V8H9zM4 10.75h2.5v2.5H4zM9 10.75h11v2.5H9zM4 16h2.5v2.5H4zM9 16h11v2.5H9z'),
 };
 
@@ -2871,7 +2872,7 @@ function cut(image, x, y, width, height, alpha = false) {
 
 function build(design, mockDir) {
   const work = mkdtempSync(join(tmpdir(), 'fc-skin-'));
-  const out = join(ROOT, 'skins', design.folder);
+  const out = design.out ?? join(ROOT, 'skins', design.folder);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(join(out, 'assets'), { recursive: true });
   const shot = (state, extra, scale = SCALE) =>
@@ -2961,7 +2962,100 @@ function build(design, mockDir) {
   const ordered = { formatVersion: 1, id, name, version: '1.0.0', author: 'FLAC Commander', description, keywords: design.keywords ?? MORE[design.folder]?.keywords, preview, theme, windows: manifest.windows };
   writeFileSync(join(out, 'skin.json'), `${JSON.stringify(ordered, null, 2)}\n`);
   rmSync(work, { recursive: true, force: true });
-  console.log(`skins/${design.folder}: ${buttons.length} buttons, ${design.width} × ${design.height}`);
+  console.log(`${design.out ? 'local-skins' : 'skins'}/${design.folder}: ${buttons.length} buttons, ${design.width} × ${design.height}`);
+}
+
+// ---------------------------------------------------------------- a skin from a photograph
+//
+//   node scripts/make-designer-skins.mjs --photo PICTURE.jpg
+//
+// builds "Nano 2" in two orientations from a photograph of the machine (1200 × 797, seen from
+// above, reels on) into local-skins/, each also packed as .fcskin to import. The photograph is
+// the face; its own parts are the keys, cut from it and lit when touched; the left reel and
+// the right hub turn. Nothing of this is committed: the picture is not ours to publish.
+
+function photoSkin(photo, portrait) {
+  const PHOTO = [1200, 797];
+  const k = 0.5;
+  const picture = portrait ? join(dirname(photo), 'photo-portrait.jpg') : photo;
+  if (portrait) {
+    execFileSync('sips', ['-r', '90', photo, '--out', picture], { stdio: 'ignore' });
+  }
+  const [faceWidth, faceHeight] = portrait ? [PHOTO[1] * k, PHOTO[0] * k] : [PHOTO[0] * k, PHOTO[1] * k];
+  const width = Math.floor(faceWidth);
+  const y0 = Math.floor(faceHeight);
+  const image = `url("${pathToFileURL(picture).href}")`;
+  // a box in pixels of the photograph as it was taken → CSS pixels in this orientation
+  const box = (x, y, w, h) => {
+    const [bx, by, bw, bh] = portrait ? [PHOTO[1] - y - h, x, h, w] : [x, y, w, h];
+    return { x: Math.round(bx * k), y: Math.round(by * k), width: Math.round(bw * k), height: Math.round(bh * k) };
+  };
+  const round = (cx, cy, w, h = w) => box(cx - w / 2, cy - h / 2, w, h);
+  const grow = (b, by = 3) => ({ x: b.x - by, y: b.y - by, width: b.width + 2 * by, height: b.height + 2 * by });
+  const key = (action, at, look, more = {}) => {
+    const b = grow(at);
+    return button(action, 'none', b.x, b.y, b.width, b.height, look, more);
+  };
+  const cutOut = (name, at, period) => ({
+    name,
+    ...at,
+    period,
+    html: `<div style="position:absolute;inset:0;background:${image} ${-at.x}px ${-at.y}px / ${faceWidth}px ${faceHeight}px no-repeat;clip-path:ellipse(50% 50% at 50% 50%)"></div>`,
+  });
+  const listY = y0 + 72;
+  return {
+    folder: portrait ? 'nano2-portrait' : 'nano2',
+    out: join(ROOT, 'local-skins', portrait ? 'nano2-portrait' : 'nano2'),
+    manifest: {
+      id: portrait ? 'local.nano2-portrait' : 'local.nano2',
+      name: portrait ? 'Nano 2 (upright)' : 'Nano 2',
+      description: 'The miniature tape recorder as a photograph: its own parts are the keys, the reel turns.',
+      theme: theme({ background: '#d6d8da', surface: '#f3f1ea', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#44484d', accent: '#a31d16', accentContrast: '#ffffff', border: '#7c8188', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
+    },
+    keywords: ['reel', 'photograph', 'steel', 'miniature', portrait ? 'upright' : 'landscape'],
+    width,
+    height: listY + 158,
+    resize: { stretchY: listY + 75 },
+    titleBar: '#f2f2f2',
+    pad: 3,
+    css: `
+      body { background: ${image} 0 0 / ${faceWidth}px ${faceHeight}px no-repeat, #d6d8da; font-family: ${HELVETICA}; }
+      .info { position: absolute; left: 0; top: ${y0}px; width: 100%; height: 64px; background: linear-gradient(#eceded, #cfd1d4); box-shadow: inset 0 1px 0 #fff, 0 -1px 0 rgba(0,0,0,.25), 0 1px 0 rgba(0,0,0,.2); }
+      ${beds('#9aa0a6', '#f3f1ea', true)}
+      .hot { border-radius: 5px; } .hot.round { border-radius: 50%; }
+      .hover .hot { backdrop-filter: brightness(1.2) saturate(1.15); box-shadow: 0 0 0 1.5px rgba(255,255,255,.9), 0 0 7px 2px rgba(255,255,255,.55); }
+      .pressed .hot { backdrop-filter: brightness(.76); box-shadow: 0 0 0 1.5px rgba(0,0,0,.35); }
+      .active .hot { backdrop-filter: brightness(1.08); box-shadow: 0 0 0 2px #ff3b30, 0 0 9px 3px rgba(255,59,48,.65); }
+    `,
+    art: `<div class="info"></div>
+      <div class="slot" style="left:10px;top:${y0 + 45}px;width:${width - 148}px;height:14px"></div>
+      <div class="slot" style="left:${width - 120}px;top:${y0 + 45}px;width:110px;height:14px"></div>
+      <div class="well" style="left:8px;top:${listY}px;width:${width - 16}px;height:150px"></div>`,
+    buttons: [
+      // the parts of the machine, by what they are in the photograph
+      key('player.togglePlay', round(213, 592, 92), 'hot round', { toggle: true }), // the white knob "on"
+      key('player.stop', round(283, 545, 44), 'hot round'), // the small red knob
+      key('player.open', box(318, 565, 84, 75), 'hot'), // the black block
+      key('player.previous', box(455, 548, 73, 102), 'hot'), // the first head cover
+      key('player.next', box(580, 520, 80, 100), 'hot'), // the second head cover
+      key('app.skins', round(826, 576, 84), 'hot round'), // the capstan
+      key('player.repeat', round(772, 520, 54), 'hot round', TOGGLE), // the brass post
+      key('player.shuffle', round(207, 490, 44), 'hot round', TOGGLE), // the grey post
+      key('window.equalizer', round(622, 285, 46), 'hot round', TOGGLE), // the guide between the reels
+      key('app.playlist', round(990, 612, 118), 'hot round', TOGGLE), // the meter
+    ],
+    components: [
+      { type: 'text', source: 'track.title', x: 12, y: y0 + 4, width: width - 134, height: 22, fontSize: 14, color: '#1b1d20' },
+      { type: 'time', source: 'position', x: width - 116, y: y0 + 2, width: 104, height: 26, fontSize: 19, align: 'right', color: '#1b1d20' },
+      { type: 'text', source: 'track.artist', x: 12, y: y0 + 25, width: width - 200, height: 16, fontSize: 11, color: '#a31d16' },
+      { type: 'text', source: 'player.status', x: width - 182, y: y0 + 26, width: 80, height: 14, fontSize: 10, align: 'right', color: '#44484d' },
+      { type: 'time', source: 'duration', x: width - 96, y: y0 + 27, width: 84, height: 14, fontSize: 11, align: 'right', color: '#44484d' },
+      { type: 'seekbar', x: 12, y: y0 + 48, width: width - 152, height: 8 },
+      { type: 'volume', x: width - 118, y: y0 + 48, width: 106, height: 8 },
+      { type: 'playlist', x: 12, y: listY + 4, width: width - 24, height: 142 },
+    ],
+    spinners: [cutOut('reel', round(395, 326, 410, 388), 3200), cutOut('hub', round(848, 312, 116, 112), 3200)],
+  };
 }
 
 if (!CHROME) {
@@ -2970,9 +3064,20 @@ if (!CHROME) {
 }
 const mockAt = process.argv.indexOf('--mock');
 const mockDir = mockAt > 0 ? process.argv[mockAt + 1] : null;
-const only = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && all[i - 1] !== '--mock');
-for (const design of DESIGNS) {
-  if (only.length === 0 || only.includes(design.folder)) {
+const only = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && !['--mock', '--photo'].includes(all[i - 1]));
+const photoAt = process.argv.indexOf('--photo');
+if (photoAt > 0) {
+  // only the skins made from the photograph, each also as an archive to import
+  for (const portrait of [false, true]) {
+    const design = photoSkin(process.argv[photoAt + 1], portrait);
     build(design, mockDir);
+    rmSync(`${design.out}.fcskin`, { force: true });
+    execFileSync('zip', ['-qr', `${design.out}.fcskin`, '.'], { cwd: design.out });
+  }
+} else {
+  for (const design of DESIGNS) {
+    if (only.length === 0 || only.includes(design.folder)) {
+      build(design, mockDir);
+    }
   }
 }

@@ -148,9 +148,10 @@
           [class.turning]="store.isPlaying()"
           [class.round]="c.source === 'track.cover'"
           [style.left.px]="item.left"
-          [style.top.px]="item.top"
+          [style.top.px]="item.top + (item.height - item.width) / 2"
           [style.width.px]="item.width"
-          [style.height.px]="item.height"
+          [style.height.px]="item.width"
+          [style.--squash]="item.height / item.width"
           [style.background-image]="picture(item)"
           [style.animation-duration.ms]="c.period ?? 2000"
         ></div>
