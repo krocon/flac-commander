@@ -210,8 +210,12 @@ button.grip {
   transition: clip-path 0.3s linear;
 }
 
-/* a picture that turns while music plays (a reel) */
+/*
+ * a picture that turns while music plays (a reel). Its box need not be square: it turns as a
+ * circle and is squashed to the box, as a reel looks that is seen at an angle
+ */
 .spinner {
+  transform: scaleY(var(--squash, 1));
   background-repeat: no-repeat;
   background-size: 100% 100%;
   pointer-events: none;
@@ -230,8 +234,12 @@ button.grip {
 }
 
 @keyframes turn {
+  from {
+    transform: scaleY(var(--squash, 1)) rotate(0deg);
+  }
+
   to {
-    transform: rotate(360deg);
+    transform: scaleY(var(--squash, 1)) rotate(360deg);
   }
 }
 
