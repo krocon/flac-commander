@@ -220,6 +220,52 @@ describe('SkinnedPlayer', () => {
     expect(label?.style.animationDuration).toBe('1800ms');
   });
 
+  it('a pack shows a circle of its picture, cut to its window if it has one', () => {
+    const pack = {
+      type: 'pack' as const,
+      x: 10,
+      y: 10,
+      width: 100,
+      height: 100,
+      action: null,
+      source: null,
+      states: {
+        normal: 'assets/tape.png',
+        hover: null,
+        pressed: null,
+        active: null,
+        disabled: null,
+      },
+      align: null,
+      fontSize: null,
+      color: null,
+      from: 100,
+      to: 40,
+      rest: 60,
+    };
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', {
+      ...RETRO_SKIN.player,
+      components: [
+        pack,
+        { ...pack, x: 120, clip: { x: 0, y: 30, width: 90, height: 40 } },
+        { ...pack, x: 230, clip: { x: 0, y: 30, width: 90, height: 40, radius: 20 } },
+      ],
+    });
+    fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement;
+    const [whole, cut, pill] = Array.from(page.querySelectorAll<HTMLElement>('.pack-window'));
+    expect(whole.style.clipPath).toBe('');
+    expect(cut.style.clipPath).toBe('inset(30px 10px 30px 0px)');
+    expect(pill.style.clipPath).toBe('inset(30px 10px 30px 0px round 20px)');
+    expect(cut.querySelector<HTMLElement>('.pack')?.style.clipPath).toMatch(
+      /^circle\(.+px at 50% 50%\)$/,
+    );
+    expect(cut.querySelector<HTMLElement>('.pack')?.style.backgroundImage).toContain(
+      'assets/tape.png',
+    );
+  });
+
   it('without its list a skin that has a height for that is cut off above it', async () => {
     const fixture = TestBed.createComponent(SkinnedPlayer);
     fixture.componentRef.setInput('layout', { ...RETRO_SKIN.player, collapsedHeight: 158 });

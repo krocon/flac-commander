@@ -76,6 +76,17 @@ export interface SkinComponent {
   readonly rest?: number | null;
   /** A `spinner` only: milliseconds for one turn. */
   readonly period?: number | null;
+  /** A `pack` only: the part of its box that is seen at all, from the top left of the box. */
+  readonly clip?: SkinClip | null;
+}
+
+export interface SkinClip {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  /** Rounded corners, in CSS pixels. */
+  readonly radius?: number | null;
 }
 
 /** Along each axis one line of the background is drawn out when the window grows. */

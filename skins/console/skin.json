@@ -36,6 +36,7 @@
       "width": 400,
       "height": 580,
       "background": "assets/background.png",
+      "titleBar": "#caccce",
       "collapsedHeight": 376,
       "resize": {
         "stretchY": 470
@@ -173,7 +174,7 @@
           "action": "player.repeat",
           "x": 23,
           "y": 264,
-          "width": 71,
+          "width": 59,
           "height": 62,
           "states": {
             "normal": "assets/repeat.png",
@@ -185,9 +186,9 @@
         {
           "type": "button",
           "action": "player.shuffle",
-          "x": 94,
+          "x": 82,
           "y": 264,
-          "width": 71,
+          "width": 59,
           "height": 62,
           "states": {
             "normal": "assets/shuffle.png",
@@ -199,9 +200,9 @@
         {
           "type": "button",
           "action": "window.equalizer",
-          "x": 165,
+          "x": 141,
           "y": 264,
-          "width": 71,
+          "width": 59,
           "height": 62,
           "states": {
             "normal": "assets/equalizer.png",
@@ -212,10 +213,24 @@
         },
         {
           "type": "button",
-          "action": "app.skins",
-          "x": 236,
+          "action": "app.playlist",
+          "x": 200,
           "y": 264,
-          "width": 71,
+          "width": 59,
+          "height": 62,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 259,
+          "y": 264,
+          "width": 59,
           "height": 62,
           "states": {
             "normal": "assets/skins.png",
@@ -226,9 +241,9 @@
         {
           "type": "button",
           "action": "player.stop",
-          "x": 307,
+          "x": 318,
           "y": 264,
-          "width": 70,
+          "width": 59,
           "height": 62,
           "states": {
             "normal": "assets/stop.png",

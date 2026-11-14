@@ -35,11 +35,50 @@
       "width": 400,
       "height": 570,
       "background": "assets/background.png",
+      "titleBar": "#232324",
       "collapsedHeight": 402,
       "resize": {
         "stretchY": 480
       },
       "components": [
+        {
+          "type": "pack",
+          "x": 48,
+          "y": 71,
+          "width": 160,
+          "height": 160,
+          "from": 160,
+          "to": 68,
+          "clip": {
+            "x": 117,
+            "y": 62,
+            "width": 43,
+            "height": 36,
+            "radius": 3
+          },
+          "states": {
+            "normal": "assets/tape-left.png"
+          }
+        },
+        {
+          "type": "pack",
+          "x": 192,
+          "y": 71,
+          "width": 160,
+          "height": 160,
+          "from": 68,
+          "to": 160,
+          "clip": {
+            "x": 0,
+            "y": 62,
+            "width": 43,
+            "height": 36,
+            "radius": 3
+          },
+          "states": {
+            "normal": "assets/tape-right.png"
+          }
+        },
         {
           "type": "spinner",
           "x": 110,
@@ -133,7 +172,7 @@
           "type": "volume",
           "x": 170,
           "y": 376,
-          "width": 146,
+          "width": 112,
           "height": 8
         },
         {
@@ -242,6 +281,20 @@
             "hover": "assets/equalizer-hover.png",
             "pressed": "assets/equalizer-pressed.png",
             "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 290,
+          "y": 362,
+          "width": 46,
+          "height": 36,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
           }
         },
         {
