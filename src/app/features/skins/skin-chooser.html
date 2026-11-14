@@ -4,21 +4,29 @@
     <button type="button" class="plain" [attr.aria-label]="t.close" (click)="close()">✕</button>
   </header>
 
-  <input
-    #filter
-    class="filter"
-    type="search"
-    [attr.aria-label]="t.filter"
-    [placeholder]="t.filterHint"
-    [value]="query()"
-    (input)="query.set(filter.value)"
-  />
+  <!-- the label lies in the field and moves up out of the way once the field is in use -->
+  <label class="field">
+    <input
+      #filter
+      type="search"
+      placeholder=" "
+      [attr.aria-label]="t.filter"
+      [value]="query()"
+      (input)="query.set(filter.value)"
+    />
+    <span>{{ t.filterHint }}</span>
+  </label>
 
   <ul class="skins">
     @for (skin of shown(); track skin.id) {
-      <li [class.active]="skin.id === store.activeId()">
+      <li [class.active]="skin.id === store.activeId()" [style.--i]="$index">
         @if (store.previewUrl(skin); as preview) {
-          <img [src]="preview" [alt]="t.previewOf(skin.name)" />
+          <img
+            [src]="preview"
+            [alt]="t.previewOf(skin.name)"
+            [title]="t.activate + ': ' + skin.name"
+            (dblclick)="use(skin.id)"
+          />
         } @else {
           <div class="no-preview" aria-hidden="true"></div>
         }
@@ -102,9 +110,9 @@
     </div>
   }
 
-  <p class="hint">{{ t.importHint }}</p>
   <footer>
     <button type="button" (click)="store.import()">{{ t.import }}</button>
+    <span class="hint">{{ t.importHint }}</span>
     <button type="button" (click)="close()">{{ t.close }}</button>
   </footer>
 </dialog>

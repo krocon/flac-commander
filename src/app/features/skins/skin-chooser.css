@@ -104,20 +104,52 @@ img,
   overflow-wrap: anywhere;
 }
 
-.filter {
+/* a field whose label lies in it and moves up once the field is in use */
+.field {
+  position: relative;
   flex: none;
-  box-sizing: border-box;
-  width: 100%;
+  display: block;
   margin-top: 10px;
-  padding: 5px 10px;
-  font: inherit;
-  color: var(--player-foreground);
-  background: var(--player-background);
-  border: 1px solid var(--player-border);
-  border-radius: var(--player-radius);
 
-  &::placeholder {
+  input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 17px 12px 5px;
+    font: inherit;
+    color: var(--player-foreground);
+    background: var(--player-background);
+    border: 1px solid var(--player-border);
+    border-radius: 8px;
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+
+    &:focus {
+      border-color: var(--player-accent);
+      box-shadow: 0 0 0 1px var(--player-accent);
+    }
+  }
+
+  span {
+    position: absolute;
+    left: 13px;
+    top: 11px;
     color: var(--player-muted);
+    pointer-events: none;
+    transform-origin: 0 0;
+    transition:
+      transform 0.16s cubic-bezier(0.2, 0, 0, 1),
+      color 0.16s;
+  }
+
+  input:focus + span,
+  input:not(:placeholder-shown) + span {
+    transform: translateY(-8px) scale(0.75);
+  }
+
+  input:focus + span {
+    color: var(--player-accent);
   }
 }
 
@@ -209,9 +241,9 @@ button {
 }
 
 .hint {
+  flex: 1;
   color: var(--player-muted);
   font-size: 12px;
-  margin-bottom: 8px;
 }
 
 .notice {
@@ -231,10 +263,43 @@ button {
   }
 }
 
-/* a window of its own: the skins as cards with a preview big enough to judge them */
+/*
+ * A window of its own. It looks the same whatever skin is active: its colours are its own,
+ * light or dark with the system, and the names the rules above use are pointed at them.
+ */
 :host(.page) {
+  --player-background: #f5f5f7;
+  --player-surface: #ffffff;
+  --player-surface-raised: #ffffff;
+  --player-foreground: #1d1d1f;
+  --player-muted: #6e6e73;
+  --player-accent: #0a66d8;
+  --player-accent-contrast: #ffffff;
+  --player-border: #d2d2d7;
+  --player-ok: #1f7a3a;
+  --player-danger: #c0271d;
+  --player-radius: 8px;
+  --lift: 0 1px 2px rgb(0 0 0 / 10%), 0 8px 22px rgb(0 0 0 / 13%);
+  --lift-more: 0 2px 4px rgb(0 0 0 / 12%), 0 18px 40px rgb(0 0 0 / 22%);
+
   display: block;
   height: 100vh;
+  background: var(--player-background);
+
+  @media (prefers-color-scheme: dark) {
+    --player-background: #1c1c1e;
+    --player-surface: #2c2c2e;
+    --player-surface-raised: #3a3a3c;
+    --player-foreground: #f5f5f7;
+    --player-muted: #a1a1a6;
+    --player-accent: #4da3ff;
+    --player-accent-contrast: #00172e;
+    --player-border: #48484a;
+    --player-ok: #6fdc8c;
+    --player-danger: #ff8a80;
+    --lift: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 22px rgb(0 0 0 / 45%);
+    --lift-more: 0 2px 4px rgb(0 0 0 / 45%), 0 18px 40px rgb(0 0 0 / 60%);
+  }
 
   dialog {
     position: static;
@@ -243,63 +308,158 @@ button {
     height: 100%;
     max-height: none;
     margin: 0;
-    padding: 16px 20px;
+    padding: 14px 24px;
     border: none;
     border-radius: 0;
-    background: var(--player-background);
+    background: none;
+    font-family:
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      sans-serif;
+    font-size: 13px;
   }
 
-  h2 {
-    font-size: 18px;
-  }
-
-  header .plain {
+  /* the title bar of the window says what this is */
+  header {
     display: none;
   }
 
-  .filter {
-    max-width: 360px;
-    background: var(--player-surface);
+  .field {
+    margin-top: 0;
+
+    input {
+      background: var(--player-surface);
+    }
   }
 
   .skins {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    grid-auto-rows: max-content;
-    align-content: start;
-    gap: 14px;
-    margin: 14px 0;
-    padding: 2px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    align-items: start;
+    gap: 34px 28px;
+    margin: 18px -8px 0;
+    padding: 6px 8px 24px;
 
     > li {
-      grid-template-columns: 1fr;
-      align-items: start;
-      gap: 10px;
-      padding: 12px;
-      background: var(--player-surface);
+      display: block;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: none;
+      /* the cards come in one after the other */
+      animation: arrive 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: calc(min(var(--i, 0), 14) * 28ms);
     }
   }
 
   img,
   .no-preview {
+    display: block;
     width: 100%;
-    height: 320px;
-    object-fit: contain;
+    height: auto;
+    border: none;
+    border-radius: 12px;
+    background: var(--player-surface);
+    box-shadow: var(--lift);
     image-rendering: auto;
-    background: var(--player-background);
+    cursor: pointer;
+    transition:
+      transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.28s;
+  }
+
+  .no-preview {
+    aspect-ratio: 3 / 4;
+  }
+
+  li:hover img {
+    transform: translateY(-4px);
+    box-shadow: var(--lift-more);
+  }
+
+  li.active img {
+    outline: 3px solid var(--player-accent);
+    outline-offset: 3px;
+  }
+
+  .about {
+    margin-top: 14px;
   }
 
   .name {
-    font-size: 15px;
+    font-size: 16px;
+    font-weight: 650;
+  }
+
+  .badge {
+    padding: 1px 8px;
+    border: none;
+    border-radius: 999px;
+    color: var(--player-accent-contrast);
+    background: var(--player-accent);
+  }
+
+  button {
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: var(--player-surface);
+    transition:
+      background-color 0.15s,
+      transform 0.1s;
+
+    &:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    &.primary {
+      background: var(--player-accent);
+    }
+
+    /* a keyword is small print, not a control of its own weight */
+    &.keyword {
+      padding: 1px 9px;
+      background: none;
+    }
   }
 
   .buttons {
     grid-column: auto;
     flex-flow: row wrap;
+    gap: 8px;
+    margin-top: 12px;
 
     > button {
-      flex: 1 1 auto;
+      flex: 0 0 auto;
     }
+  }
+
+  footer {
+    gap: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--player-border);
+  }
+
+  .hint {
+    font-size: 13px;
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.page) .skins > li {
+    animation: none;
+  }
+
+  :host(.page) img,
+  .field span {
+    transition: none;
   }
 }
