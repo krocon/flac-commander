@@ -4,6 +4,7 @@
 //! window); blocking work goes to `spawn_blocking`.
 
 pub mod library;
+pub mod menu;
 pub mod player;
 pub mod playlist;
 pub mod skins;

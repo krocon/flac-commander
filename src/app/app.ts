@@ -1,6 +1,9 @@
 import { afterRenderEffect, Component, computed, DestroyRef, effect, inject } from '@angular/core';
 import { APP_TEXTS } from './app-texts';
 import { ActionService } from './core/actions/action.service';
+import { describeShortcut } from './core/actions/shortcut';
+import { untilDestroyed } from './core/backend/events';
+import { MenuApi, MenuEntry, MenuModel } from './core/menu/menu-api';
 import { LogApi } from './core/log/log-api';
 import { Diagnostics } from './features/diagnostics/diagnostics';
 import { Library } from './features/library/library';
@@ -130,6 +133,79 @@ export class App {
   );
   protected readonly version = computed(() => this.diagnostics.info()?.app.version ?? null);
 
+  /**
+   * The native menu: every action a button can have, in three menus. It follows the language,
+   * what is on (ticks) and what is possible right now.
+   */
+  private readonly menuModel = computed<MenuModel>(() => {
+    const item = (id: string): MenuEntry[] => {
+      const action = this.actions.get(id);
+      if (!action) {
+        return [];
+      }
+      // a shortcut without the command key stays the window's: in a native menu it would
+      // be taken away from every text field. The menu still says which key it is.
+      const shortcut = action.shortcut;
+      const key = shortcut?.key ?? '';
+      const native = shortcut?.mod === true && /^[a-z0-9]$/.test(key);
+      return [
+        {
+          kind: 'action',
+          id,
+          label:
+            shortcut && !native
+              ? `${action.label()}  (${describeShortcut(shortcut)})`
+              : action.label(),
+          accelerator: native ? `CmdOrCtrl+${key.toUpperCase()}` : null,
+          checked: action.active ? action.active() : null,
+          enabled: action.enabled?.() !== false,
+        },
+      ];
+    };
+    const line: MenuEntry = { kind: 'separator' };
+    return {
+      editTitle: this.t.menuEdit,
+      windowTitle: this.t.menuWindow,
+      groups: [
+        {
+          title: this.t.menuFile,
+          items: [...item('player.open'), ...item('window.library')],
+        },
+        {
+          title: this.t.menuPlayback,
+          items: [
+            ...item('player.togglePlay'),
+            ...item('player.play'),
+            ...item('player.pause'),
+            ...item('player.stop'),
+            line,
+            ...item('player.previous'),
+            ...item('player.next'),
+            ...item('player.back'),
+            ...item('player.forward'),
+            line,
+            ...item('player.louder'),
+            ...item('player.quieter'),
+            line,
+            ...item('player.repeat'),
+            ...item('player.shuffle'),
+          ],
+        },
+        {
+          title: this.t.menuView,
+          items: [
+            ...item('app.playlist'),
+            ...item('window.playlist'),
+            ...item('window.equalizer'),
+            line,
+            ...item('app.skins'),
+            ...item('app.resetSkin'),
+          ],
+        },
+      ],
+    };
+  });
+
   constructor() {
     // actions belong to the app, not to one way of showing the player: every skin uses them
     const unregister = this.actions.register([
@@ -181,6 +257,25 @@ export class App {
     inject(DestroyRef).onDestroy(unregister);
     // one line per window in the log file: a window that never says this did not come up
     inject(LogApi).info(`window ${this.windows.label} ready`);
+    // the native menu belongs to the main window: it says what the menu offers, whenever
+    // that changes, and runs what is chosen there
+    if (this.windows.isMain) {
+      const menu = inject(MenuApi);
+      const log = inject(LogApi);
+      let sent = '';
+      effect(() => {
+        const model = this.menuModel();
+        const text = JSON.stringify(model);
+        if (text !== sent) {
+          sent = text;
+          menu.set(model).catch((e: unknown) => log.error(`menu_set failed: ${String(e)}`));
+        }
+      });
+      void untilDestroyed(
+        menu.onAction((id) => this.actions.runFromMenu(id)),
+        inject(DestroyRef),
+      );
+    }
     // the backend sizes the window of a skin that is shorter without its list
     effect(() => {
       const away = this.listAway();

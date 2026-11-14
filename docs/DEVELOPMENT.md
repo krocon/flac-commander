@@ -87,6 +87,13 @@ neueren Version wird weder gelesen noch überschrieben.
 Ein Tastenkürzel: eine `Action` mit `shortcut` im Feature registrieren (Vorbild `features/player/player.actions.ts`),
 nie ein eigener `keydown`-Handler.
 
+Das **native Menü** kommt aus denselben Aktionen: Das Hauptfenster schickt Beschriftung, Kürzel, Häkchen und
+„möglich/nicht möglich" jeder Aktion an das Backend (`menu_set`, `commands/menu.rs`), das daraus das Menü baut; ein
+Klick kommt als Ereignis `menu://action` zurück und läuft über `ActionService.runFromMenu`. Eine neue Aktion erscheint
+im Menü, sobald sie in `menuModel` (`app.ts`) einer Gruppe zugeordnet ist. Nur Kürzel mit ⌘ / Strg werden native
+Menükürzel; ein einzelner Buchstabe im nativen Menü würde jedem Textfeld die Taste wegnehmen, er steht deshalb nur
+im Text des Eintrags.
+
 Ein Event: Name und Payload in `src-tauri/src/events.rs` (mit Test der JSON-Form), im Frontend eine `on…`-Methode der
 Fassade über `subscribe()`; der Store bindet das Abo mit `untilDestroyed()` an seine Lebensdauer.
 

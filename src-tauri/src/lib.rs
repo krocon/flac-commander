@@ -248,7 +248,10 @@ pub fn run() {
             );
             Ok(())
         })
+        // a click in the native menu: actions live in the frontend
+        .on_menu_event(|app, event| commands::menu::on_event(app, event.id().as_ref()))
         .invoke_handler(tauri::generate_handler![
+            commands::menu::menu_set,
             commands::system::system_info,
             commands::system::start_test_tone,
             commands::player::player_state,

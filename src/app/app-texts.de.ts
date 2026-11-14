@@ -9,4 +9,9 @@ export const APP_TEXTS_DE: Translation<typeof APP_TEXTS_EN> = {
   playlistDocked: 'Playlist im Hauptfenster',
   hideList: 'Titelliste ausblenden',
   showList: 'Titelliste einblenden',
+  menuFile: 'Datei',
+  menuPlayback: 'Wiedergabe',
+  menuView: 'Ansicht',
+  menuEdit: 'Bearbeiten',
+  menuWindow: 'Fenster',
 };

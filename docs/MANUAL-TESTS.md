@@ -70,6 +70,7 @@ Vorbereitung: `open "target/debug/bundle/macos/FLAC Commander.app" --args --volu
 | S1 | „Skins" (oder ⌘K / Strg+K) | eigenes Fenster mit allen Skins samt Vorschau, Vinyl aktiv |
 | S2 | Retro „Verwenden" | Fenster wird 320 × 440 (Inhalt), grünes Display, Pixel-Tasten, Playlist im Skin; nichts ist abgeschnitten, keine Rollbalken am Fenster; Musik läuft dabei weiter |
 | S3 | Im Retro-Skin alles bedienen: Tasten, beide Regler, Playlist, Tastenkürzel | wie im Standard-Skin; gedrückte und aktive Tasten sehen anders aus; Tooltips mit Kürzel |
+| S3a | Menüleiste: Datei, Wiedergabe, Ansicht durchgehen; ⌘K, ⌘J, ⌘E, ⌘L, ⌘B, ⌘O, ⌘0 drücken; in einem Textfeld tippen, kopieren und einfügen | jeder Eintrag tut, was die Taste im Fenster tut, und genau einmal; Häkchen folgen (Zufall, Wiederholen, Titelliste, Fenster); Einträge ohne Wirkung sind grau; Tippen von V, S, R, Leertaste im Filterfeld löst nichts aus |
 | S4 | Einen eigenen Skin importieren (Kopie von `skins/retro` mit anderer `id`, als ZIP) | „… wurde installiert", erscheint in der Liste, lässt sich verwenden und entfernen |
 | S5 | Ein ZIP importieren, dessen `skin.json` einen Fehler hat (z. B. `"accent": "red"`) | Ablehnung mit Liste der Verstöße; der aktive Skin bleibt |
 | S6 | ⌘0 / Strg+0 im Retro-Skin | zurück zu Vinyl (Standard) |
