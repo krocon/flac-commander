@@ -3275,15 +3275,105 @@ function photoSkin(photo, portrait) {
   };
 }
 
+// ---- a pocket recorder from a photograph (492 × 800, seen from the front)
+//
+//   node scripts/make-designer-skins.mjs --recorder PICTURE
+//
+// The photograph is the machine; its display is painted over and shows the track, the time,
+// the level and both sliders; its own keys are the keys. Built into local-skins/, never
+// committed.
+
+function recorderPhotoSkin(photo) {
+  const PHOTO = [492, 800];
+  const k = 0.8;
+  const [faceWidth, faceHeight] = [PHOTO[0] * k, PHOTO[1] * k];
+  const width = Math.floor(faceWidth);
+  const y0 = Math.floor(faceHeight);
+  const image = `url("${pathToFileURL(photo).href}")`;
+  const box = (x, y, w, h) => ({ x: Math.round(x * k), y: Math.round(y * k), width: Math.round(w * k), height: Math.round(h * k) });
+  const round = (cx, cy, w, h = w) => box(cx - w / 2, cy - h / 2, w, h);
+  const key = (action, at, look, more = {}) => button(action, 'none', at.x - 3, at.y - 3, at.width + 6, at.height + 6, look, more);
+  // the display, in pixels of the photograph
+  const lcd = box(106, 297, 256, 181);
+  const bar = box(106, 440, 256, 38);
+  const on = (x, y, w, h) => box(106 + x, 297 + y, w, h);
+  const INK = '#15171a';
+  const listY = y0 + 8;
+  return {
+    folder: 'recorder-photo',
+    out: join(ROOT, 'local-skins', 'recorder-photo'),
+    manifest: {
+      id: 'local.recorder-photo',
+      name: 'Recorder (photo)',
+      description: 'A pocket recorder as a photograph: its display shows the track, its own keys are the keys.',
+      theme: theme({ background: '#ffffff', surface: '#d7dbde', surfaceRaised: '#eceff1', foreground: INK, muted: '#474c52', accent: INK, accentContrast: '#d7dbde', border: '#5d636a', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, '"Helvetica Neue", "Arial Narrow", Arial, sans-serif', 1, '"Helvetica Neue", "Arial Narrow", Arial, sans-serif'),
+    },
+    keywords: ['recorder', 'photograph', 'pocket', 'display', 'upright'],
+    width,
+    height: listY + 158,
+    resize: { stretchY: listY + 75 },
+    titleBar: '#ffffff',
+    pad: 3,
+    css: `
+      body { background: ${image} 0 0 / ${faceWidth}px ${faceHeight}px no-repeat, #fff; font-family: "Helvetica Neue", Arial, sans-serif; }
+      .lcd { position: absolute; left: ${lcd.x}px; top: ${lcd.y}px; width: ${lcd.width}px; height: ${lcd.height}px; border-radius: 2px;
+        background: linear-gradient(#dde1e4, #cfd4d8); box-shadow: inset 0 0 6px rgba(0,0,0,.25); }
+      .lcdbar { position: absolute; left: ${bar.x}px; top: ${bar.y}px; width: ${bar.width}px; height: ${bar.height}px; border-radius: 0 0 2px 2px; background: linear-gradient(#444b56, #353b45); }
+      .lr { position: absolute; left: ${on(4, 2, 0, 0).x}px; font: 700 7px "Helvetica Neue", Arial, sans-serif; color: ${INK}; }
+      .well { position: absolute; border-radius: 4px; background: #d7dbde; box-shadow: inset 0 1px 3px rgba(0,0,0,.35); }
+      .hot { border-radius: 5px; } .hot.round { border-radius: 50%; }
+      .hover .hot { backdrop-filter: brightness(1.45) saturate(1.1); box-shadow: 0 0 0 1.5px rgba(255,255,255,.8), 0 0 7px 2px rgba(255,255,255,.4); }
+      .pressed .hot { backdrop-filter: brightness(.7); box-shadow: 0 0 0 1.5px rgba(255,255,255,.3); }
+      .active .hot { backdrop-filter: brightness(1.25); box-shadow: 0 0 0 2px #ff3b30, 0 0 9px 3px rgba(255,59,48,.7); }
+    `,
+    art: `<div class="lcd"></div><div class="lcdbar"></div>
+      <div class="lr" style="top:${on(0, 5, 0, 0).y}px">L</div><div class="lr" style="top:${on(0, 19, 0, 0).y}px">R</div>
+      <div class="well" style="left:8px;top:${listY}px;width:${width - 16}px;height:150px"></div>`,
+    buttons: [
+      // the keys of the machine, by what is printed on or beside them
+      key('player.togglePlay', round(162, 587, 50), 'hot round', { toggle: true }), // ▶ in the middle
+      key('player.previous', box(100, 568, 38, 38), 'hot'), // ⏮
+      key('player.next', box(186, 568, 38, 38), 'hot'), // ⏭
+      key('player.pause', round(290, 550, 54), 'hot round'), // PAUSE
+      key('player.open', round(357, 550, 54), 'hot round'), // REC: takes files in
+      key('player.stop', round(290, 623, 54), 'hot round'), // STOP
+      key('app.playlist', round(357, 623, 50), 'hot round', TOGGLE), // T-MARK: the track list
+      key('player.repeat', round(100, 548, 40), 'hot round', TOGGLE), // F1
+      key('player.shuffle', round(225, 548, 40), 'hot round', TOGGLE), // F2
+      key('app.skins', round(100, 625, 40), 'hot round'), // HOME/BACK
+      key('window.equalizer', round(225, 625, 40), 'hot round', TOGGLE), // OPTION
+    ],
+    components: [
+      { type: 'spectrum', ...on(14, 4, 116, 26), color: INK },
+      { type: 'text', source: 'player.status', ...on(140, 6, 108, 20), fontSize: 11, align: 'right', color: INK },
+      { type: 'time', source: 'position', ...on(8, 40, 240, 44), fontSize: 30, align: 'right', color: INK },
+      { type: 'time', source: 'duration', ...on(150, 86, 98, 18), fontSize: 11, align: 'right', color: INK },
+      { type: 'text', source: 'track.title', ...on(8, 104, 240, 22), fontSize: 13, color: INK },
+      { type: 'seekbar', ...on(8, 129, 240, 9) },
+      { type: 'text', source: 'track.artist', ...on(8, 148, 140, 24), fontSize: 11, color: '#f1f4f6' },
+      { type: 'volume', ...on(158, 156, 90, 9) },
+      { type: 'playlist', x: 12, y: listY + 4, width: width - 24, height: 142 },
+    ],
+  };
+}
+
 if (!CHROME) {
   console.error('No Chrome found. Set CHROME=/path/to/chrome.');
   process.exit(1);
 }
 const mockAt = process.argv.indexOf('--mock');
 const mockDir = mockAt > 0 ? process.argv[mockAt + 1] : null;
-const only = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && !['--mock', '--photo'].includes(all[i - 1]));
+const only = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && !['--mock', '--photo', '--recorder'].includes(all[i - 1]));
+const packed = (design) => {
+  build(design, mockDir);
+  rmSync(`${design.out}.fcskin`, { force: true });
+  execFileSync('zip', ['-qr', `${design.out}.fcskin`, '.'], { cwd: design.out });
+};
 const photoAt = process.argv.indexOf('--photo');
-if (photoAt > 0) {
+const recorderAt = process.argv.indexOf('--recorder');
+if (recorderAt > 0) {
+  packed(recorderPhotoSkin(process.argv[recorderAt + 1]));
+} else if (photoAt > 0) {
   // only the skins made from the photograph, each also as an archive to import
   for (const portrait of [false, true]) {
     const design = photoSkin(process.argv[photoAt + 1], portrait);
