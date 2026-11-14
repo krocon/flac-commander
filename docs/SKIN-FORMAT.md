@@ -191,7 +191,10 @@ Mono, Wheel und Classic zeigen das Cover des Titels.
 
 Alle mitgelieferten Skins lassen sich nach unten aufziehen (`resize.stretchY` durch die Titelliste) und tragen
 Stichwörter. Alle außer Retro haben eine Taste, die die Titelliste aus- und einblendet (`app.playlist`), und nennen ihre
-Höhe ohne Liste (`collapsedHeight`); die Liste liegt dafür in jedem Skin unter dem Gerät, auch in Vinyl und Reel. In Reel folgt das aufgewickelte Band dem Fortschritt (`pack`).
+Höhe ohne Liste (`collapsedHeight`); die Liste liegt dafür in jedem Skin unter dem Gerät, auch in Vinyl und Reel.
+Jeder dieser Skins färbt die Titelleiste (`titleBar`) in der Farbe seiner Oberkante; der Generator liest sie aus dem
+Hintergrundbild, wenn das Design keine nennt. In den Kassetten-Skins (Tape, Deck, Meter, Ferro, Mixtape, Magnet,
+Classic, Chrome, Stripe) wandert das Band mit dem Titel von der linken auf die rechte Nabe (`pack` mit `clip`). In Reel folgt das aufgewickelte Band dem Fortschritt (`pack`).
 
 Die Grafiken aller Skins außer Retro beschreibt `scripts/make-designer-skins.mjs` als HTML und CSS; ein
 Headless-Chrome rendert sie in doppelter Auflösung, das Skript schneidet die Tasten je Zustand aus. Es sind eigene

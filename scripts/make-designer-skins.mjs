@@ -3062,6 +3062,19 @@ function cut(image, x, y, width, height, alpha = false) {
   ]);
 }
 
+/**
+ * The colour of the top edge of a picture as `#rrggbb`: the middle one, by brightness, of a
+ * row just below any bevel. A texture or a gradient gives its typical colour, not a mixture.
+ */
+function topEdgeColour(image) {
+  const row = 3 * SCALE;
+  const colours = Array.from({ length: image.width }, (_, x) => {
+    const at = (row * image.width + x) * 4;
+    return [image.pixels[at], image.pixels[at + 1], image.pixels[at + 2]];
+  }).sort((a, b) => a[0] * 2 + a[1] * 7 + a[2] - (b[0] * 2 + b[1] * 7 + b[2]));
+  return `#${colours[colours.length >> 1].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 // ---------------------------------------------------------------- one skin
 
 function build(design, mockDir) {
@@ -3073,7 +3086,10 @@ function build(design, mockDir) {
     decodePng(screenshot(page(design, state, extra), design.width, design.height, scale, work));
   const whole = (image) => cut(image, 0, 0, image.width, image.height);
 
-  writeFileSync(join(out, 'assets/background.png'), whole(shot('none')));
+  const background = shot('none');
+  writeFileSync(join(out, 'assets/background.png'), whole(background));
+  // the title bar takes the colour of the top edge of the body, unless the design names one
+  const titleBar = design.titleBar ?? topEdgeColour(background);
 
   // without its track list a skin ends just above it
   const list = design.components.find((c) => c.type === 'playlist');
@@ -3150,7 +3166,7 @@ function build(design, mockDir) {
         width: design.width,
         height: design.height,
         background: 'assets/background.png',
-        ...(design.titleBar ? { titleBar: design.titleBar } : {}),
+        titleBar,
         ...(collapsedHeight ? { collapsedHeight } : {}),
         resize: design.resize ?? MORE[design.folder]?.resize,
         components: [...packs, ...spinners, ...overlays, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],

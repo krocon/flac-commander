@@ -36,6 +36,7 @@
       "width": 640,
       "height": 530,
       "background": "assets/background.png",
+      "titleBar": "#f0f0ed",
       "collapsedHeight": 372,
       "resize": {
         "stretchY": 448
