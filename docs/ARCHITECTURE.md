@@ -18,6 +18,7 @@ Stand: Phase 7. Was hier als „geplant" markiert ist, existiert noch nicht.
 │   commands/…   dünn, async, validiert, ruft fc-core                  │
 │   events.rs    Namen und Payloads der Events                         │
 │   lib.rs       App-Lifecycle, Logging, AppState                      │
+│   platform/    Mediensteuerung des Systems (Now Playing, Tasten)     │
 └───────────────────────────────┬──────────────────────────────────────┘
                                 │ Rust-Funktionsaufrufe
 ┌───────────────────────────────▼──────────────────────────────────────┐
@@ -89,6 +90,20 @@ Engine-Thread → PlayerState bei jeder Änderung, beim Abspielen alle ≤ 200 m
   → Event player://state an alle Fenster → PlayerStore → Signals → Template
 Fenster startet oder lädt neu → erst Event abonnieren, dann call('player_state') → Schnappschuss
 ```
+
+### Mediensteuerung des Systems
+
+```text
+Engine-Thread → PlayerState → derselbe Callback, der player://state sendet → Kanal (nur kopieren)
+  → Thread „media-controls": neuer Titel? Tags und Cover lesen; Status oder Sprung? Position melden
+  → Hauptthread → souvlaki → macOS Now Playing | Windows SMTC | Linux MPRIS
+Kontrollzentrum / Medientaste → souvlaki → Thread „media-controls"
+  → Session::play | next | previous, player().pause | seek   – dieselben Aufrufe wie die Commands
+```
+
+Das System ist eine weitere Ansicht, wie ein Fenster: Es zeigt, was die Engine gemeldet hat, und schickt nur
+Wünsche. Die Position zählt es selbst weiter; gestoppt oder ohne Titel verschwindet der Eintrag
+([ADR 0012](decisions/0012-mediensteuerung-des-systems.md)).
 
 ### Playlist und Sitzung
 
@@ -194,7 +209,8 @@ crates/fc-core/          Rust-Kern (kein Tauri)
   tests/session.rs       Titelwechsel, defekte Dateien, Speichern/Wiederherstellen
   tests/fixtures/        selbst erzeugte Sinus-Dateien (scripts/make-fixtures.sh)
   examples/              play (Engine ohne App), probe (Symphonia + Lofty)
-src-tauri/               Tauri-Schale: commands/, events.rs, windows.rs, lib.rs, capabilities/
+src-tauri/               Tauri-Schale: commands/, events.rs, windows.rs, lib.rs, capabilities/,
+                         platform/ (was je Betriebssystem anders ist: Mediensteuerung)
 src/app/core/            actions, backend, errors, i18n, library, log, player, playlist, skins, system, windows
 src/app/features/        player (auch SkinnedPlayer), playlist, library, equalizer, visualizer, skins, windows,
                          diagnostics
@@ -214,6 +230,7 @@ Neue Abhängigkeiten nur mit Begründung in dieser Tabelle. Reines Rust ohne Sys
 | `tauri`, `tauri-build` | 2.12 / 2.7 | MIT/Apache-2.0 | Desktop-Schale | nur in `src-tauri` |
 | `tauri-plugin-log` | 2.10 | MIT/Apache-2.0 | Logdatei, auch für das Frontend | einziges Plugin mit WebView-Berechtigung |
 | `tauri-plugin-dialog` | 2.8 | MIT/Apache-2.0 | System-Dialog „Datei öffnen" | nur aus Rust genutzt, keine WebView-Berechtigung |
+| `souvlaki` | 0.9.3 | MIT | „Now Playing" im Kontrollzentrum, Medientasten, SMTC, MPRIS | nur in `src-tauri/src/platform`; bringt unter macOS `objc`, `block`, `dispatch` mit, unter Linux `dbus-crossroads` ([ADR 0012](decisions/0012-mediensteuerung-des-systems.md), R9) |
 | `symphonia` | 0.6.1 | **MPL-2.0** | Container und Decoder | reines Rust; kein Opus ([ADR 0003](decisions/0003-audio-bibliotheken.md)) |
 | `symphonia-adapter-libopus` | 0.3 | MIT/Apache-2.0, libopus BSD-artig | Opus-Decoder | **C-Bibliothek, gebündelt, braucht cmake**; optionales Feature `opus` ([ADR 0006](decisions/0006-resampling-opus-seek.md)) |
 | `zip`, `flate2` | 9.5 / 1.1 | MIT bzw. MIT/Apache-2.0 | Skin-Pakete entpacken | nur Deflate, reines Rust (miniz_oxide) |

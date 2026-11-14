@@ -122,7 +122,8 @@ Was nach den sieben Phasen offen ist, in der Reihenfolge des Nutzens:
 2. Bibliothek: steht als Ordner-Browser mit Cover-Raster und Suche ([ADR 0011](decisions/0011-bibliothek-ohne-datenbank.md)).
    Offen: manuelle Tests B1–B14, Messung an einer großen Sammlung, danach erst die Frage nach SQLite.
 3. Playlist: Umsortieren, Mehrfachauswahl, Änderungs-Events statt ganzer Liste (R17).
-4. Medientasten, Tray, „Now Playing" je Plattform (R9); Auswahl des Ausgabegeräts.
+4. Medientasten und „Now Playing" stehen ([ADR 0012](decisions/0012-mediensteuerung-des-systems.md)); offen: unter
+   Windows und Linux ausprobieren (R9), Tray, Auswahl des Ausgabegeräts.
 5. Lizenz festlegen, Signierung und Release-Workflow (E1, R12).
 
 ## Bewusst später

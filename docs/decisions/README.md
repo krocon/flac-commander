@@ -16,3 +16,4 @@ ersetzt (Status „ersetzt durch …").
 | [0009](0009-equalizer-spektrum-gapless.md) | Equalizer im Callback, Spektrum als Abzweig, Gapless durch Vorladen | angenommen |
 | [0010](0010-klassische-skins-und-plugins.md) | Klassische Skins werden konvertiert; keine Plugin-API | angenommen |
 | [0011](0011-bibliothek-ohne-datenbank.md) | Bibliothek: Ordner statt Datenbank, Index im Speicher, kleine Cover | angenommen |
+| [0012](0012-mediensteuerung-des-systems.md) | Mediensteuerung des Systems (Kontrollzentrum, Medientasten) über `souvlaki` | angenommen |
