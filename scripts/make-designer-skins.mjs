@@ -3280,8 +3280,8 @@ function photoSkin(photo, portrait) {
 //   node scripts/make-designer-skins.mjs --recorder PICTURE
 //
 // The photograph is the machine; its display is painted over and shows the track, the time,
-// the level and both sliders; its own keys are the keys. Built into local-skins/, never
-// committed.
+// the level and both sliders; its own keys are the keys. Built into local-skins/;
+// skins/recorder-pcm is a copy of the result that ships with the app.
 
 function recorderPhotoSkin(photo) {
   const PHOTO = [492, 800];
@@ -3300,10 +3300,10 @@ function recorderPhotoSkin(photo) {
   const INK = '#15171a';
   const listY = y0 + 8;
   return {
-    folder: 'recorder-photo',
-    out: join(ROOT, 'local-skins', 'recorder-photo'),
+    folder: 'recorder-pcm',
+    out: join(ROOT, 'local-skins', 'recorder-pcm'),
     manifest: {
-      id: 'local.recorder-photo',
+      id: 'io.github.krocon.recorder-pcm',
       name: 'Recorder (photo)',
       description: 'A pocket recorder as a photograph: its display shows the track, its own keys are the keys.',
       theme: theme({ background: '#ffffff', surface: '#d7dbde', surfaceRaised: '#eceff1', foreground: INK, muted: '#474c52', accent: INK, accentContrast: '#d7dbde', border: '#5d636a', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, '"Helvetica Neue", "Arial Narrow", Arial, sans-serif', 1, '"Helvetica Neue", "Arial Narrow", Arial, sans-serif'),
@@ -3350,10 +3350,137 @@ function recorderPhotoSkin(photo) {
       { type: 'time', source: 'duration', ...on(150, 86, 98, 18), fontSize: 11, align: 'right', color: INK },
       { type: 'text', source: 'track.title', ...on(8, 104, 240, 22), fontSize: 13, color: INK },
       { type: 'seekbar', ...on(8, 129, 240, 9) },
-      { type: 'text', source: 'track.artist', ...on(8, 148, 140, 24), fontSize: 11, color: '#f1f4f6' },
+      // on the light part of the display, beside the duration: the dark bar below is no ground for ink
+      { type: 'text', source: 'track.artist', ...on(8, 86, 140, 18), fontSize: 11, color: INK },
       { type: 'volume', ...on(158, 156, 90, 9) },
       { type: 'playlist', x: 12, y: listY + 4, width: width - 24, height: 142 },
     ],
+  };
+}
+
+// ---- a miniature reel-to-reel recorder from photographs cut apart (seen from above)
+//
+//   node scripts/make-designer-skins.mjs --nagra FOLDER
+//
+// FOLDER holds the machine without reels and without the pointer of its meter (1958 × 1286,
+// cut out), both reels and the pointer as pictures of their own, and nagra_masse.txt with
+// where each of them lies (docs/design/TODO_nagra). The machine is the face; both reels turn,
+// the tape goes from the left reel to the right one, the pointer of the meter shows the
+// position and can be dragged; parts of the machine are the keys. Built into local-skins/,
+// never committed: the photographs are not ours to publish.
+
+function nagraSkin(folder) {
+  const PHOTO = [1958, 1286];
+  const width = 640;
+  const margin = 12;
+  const k = (width - 2 * margin) / PHOTO[0];
+  const [faceWidth, faceHeight] = [PHOTO[0] * k, PHOTO[1] * k];
+  const y0 = Math.ceil(faceHeight) + 2 * margin;
+  // single quotes: the pictures are also named inside style="…" attributes
+  const url = (name) => `url('${pathToFileURL(join(folder, name)).href}')`;
+  // a point of the photograph of the machine → CSS pixels of the window
+  const at = (x, y) => [margin + x * k, margin + y * k];
+  const box = (x, y, w, h) => ({ x, y, width: w, height: h });
+  const round = (cx, cy, w, h = w) => box(Math.round(cx - w / 2), Math.round(cy - h / 2), w, h);
+  const key = (action, b, look, more = {}) => button(action, 'none', b.x - 3, b.y - 3, b.width + 6, b.height + 6, look, more);
+  const picture = (name) => `<div style="position:absolute;inset:0;background:${url(name)} center / 100% 100% no-repeat"></div>`;
+
+  // the reels: centre in the photograph, size of the picture of the reel (nagra_masse.txt)
+  const reel = (name, file, cx, cy, size) => {
+    const [x, y] = at(cx, cy);
+    const side = Math.round(size * k);
+    return { name, ...round(Math.floor(x) + (side % 2) / 2, Math.floor(y) + (side % 2) / 2, side), period: 3200, html: picture(file) };
+  };
+  const left = reel('reel-left', 'nagra_spule_rot.png', 547.1, 470.2, 872);
+  const right = reel('reel-right', 'nagra_spule_silber.png', 1508.5, 471.0, 868);
+  // the tape: a ring around the hub (radius 133 in the photograph), wound up to radius 258,
+  // with the green core of the reel as its innermost turns
+  const hub = Math.round(133 * k);
+  const wound = `<div style="position:absolute;inset:0;border-radius:50%;
+    background: radial-gradient(circle, transparent 0 ${hub}px, #1c8f76 ${hub}px ${hub + 3.5}px, transparent ${hub + 4}px), repeating-radial-gradient(circle, #1b1715 0 1px, #2b2421 1px 2px);
+    -webkit-mask: radial-gradient(circle, transparent 0 ${hub - 0.5}px, #000 ${hub}px); mask: radial-gradient(circle, transparent 0 ${hub - 0.5}px, #000 ${hub}px)"></div>`;
+  const pack = (name, r, full, empty, toRight) => {
+    const side = full + ((r.width - full) % 2);
+    const inset = (r.width - side) / 2;
+    return { name, x: r.x + inset, y: r.y + inset, width: side, height: side, from: toRight ? empty : side, to: toRight ? side : empty, html: wound };
+  };
+  const full = Math.round(2 * 258 * k);
+  const empty = 2 * hub + 12;
+  // the pointer: its picture is 109 × 113 with the pivot at 102, 106; the pivot lies at 1785, 1122
+  const [px, py] = at(1785, 1122).map(Math.round);
+  const pivot = [33, 34];
+  const pointer = {
+    name: 'pointer',
+    x: px - pivot[0],
+    y: py - pivot[1],
+    width: 36,
+    height: 37,
+    pivotX: pivot[0],
+    pivotY: pivot[1],
+    from: 0,
+    to: 86,
+    rest: 0,
+    html: `<div style="position:absolute;left:${(pivot[0] - 102 * k).toFixed(2)}px;top:${(pivot[1] - 106 * k).toFixed(2)}px;width:${(109 * k).toFixed(2)}px;height:${(113 * k).toFixed(2)}px;background:${url('nagra_zeiger.png')} center / 100% 100% no-repeat"></div>`,
+  };
+  const listY = y0 + 72;
+  const INK = '#1b1d20';
+  const RED = '#8c1d24';
+  return {
+    folder: 'nagra-sn',
+    out: join(ROOT, 'local-skins', 'nagra-sn'),
+    manifest: {
+      id: 'local.nagra-sn',
+      name: 'Nagra SN',
+      description: 'The miniature reel-to-reel recorder as a photograph: both reels turn, the meter shows the position, its own parts are the keys.',
+      theme: theme({ background: '#d6d8da', surface: '#f3f1ea', surfaceRaised: '#ffffff', foreground: INK, muted: '#44484d', accent: RED, accentContrast: '#ffffff', border: '#7c8188', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
+    },
+    keywords: ['reel', 'photograph', 'aluminium', 'miniature', 'landscape', 'meter'],
+    width,
+    height: listY + 158,
+    resize: { stretchY: listY + 75 },
+    titleBar: '#dcdee0',
+    pad: 3,
+    css: `
+      body { background: linear-gradient(#dcdee0, #cfd1d4 ${y0}px, #d6d8da ${y0}px); font-family: ${HELVETICA}; }
+      .machine { position: absolute; left: ${margin}px; top: ${margin}px; width: ${faceWidth.toFixed(2)}px; height: ${faceHeight.toFixed(2)}px;
+        background: ${url('nagra_geraet_ohne_spulen_ohne_zeiger.png')} 0 0 / 100% 100% no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)) drop-shadow(0 5px 9px rgba(0,0,0,.22)); }
+      .info { position: absolute; left: 0; top: ${y0}px; width: 100%; height: 64px; background: linear-gradient(#eceded, #cfd1d4); box-shadow: inset 0 1px 0 #fff, 0 -1px 0 rgba(0,0,0,.25), 0 1px 0 rgba(0,0,0,.2); }
+      ${beds('#9aa0a6', '#f3f1ea', true)}
+      .hot { border-radius: 5px; } .hot.round { border-radius: 50%; }
+      .hover .hot { backdrop-filter: brightness(1.22) saturate(1.15); box-shadow: 0 0 0 1.5px rgba(255,255,255,.9), 0 0 7px 2px rgba(255,255,255,.55); }
+      .pressed .hot { backdrop-filter: brightness(.76); box-shadow: 0 0 0 1.5px rgba(0,0,0,.35); }
+      .active .hot { backdrop-filter: brightness(1.08); box-shadow: 0 0 0 2px #ff3b30, 0 0 9px 3px rgba(255,59,48,.65); }
+    `,
+    art: `<div class="machine"></div><div class="info"></div>
+      <div class="slot" style="left:10px;top:${y0 + 45}px;width:${width - 148}px;height:14px"></div>
+      <div class="slot" style="left:${width - 120}px;top:${y0 + 45}px;width:110px;height:14px"></div>
+      <div class="well" style="left:8px;top:${listY}px;width:${width - 16}px;height:150px"></div>`,
+    buttons: [
+      // the parts of the machine, in CSS pixels of the window; none of them reaches under a reel
+      key('player.togglePlay', round(77, 345, 48), 'hot round', { toggle: true }), // the white pinch roller
+      key('player.stop', box(140, 336, 63, 44), 'hot'), // the black pad
+      key('player.previous', box(223, 314, 60, 72), 'hot'), // the first head cover
+      key('player.next', box(296, 296, 64, 72), 'hot'), // the second head cover
+      key('player.open', box(404, 365, 50, 34), 'hot'), // the wedge below the capstan
+      key('player.repeat', box(368, 290, 40, 42), 'hot', TOGGLE), // the slanted lever
+      key('player.shuffle', round(513, 388, 24), 'hot round', TOGGLE), // the post at the lower edge
+      key('window.equalizer', box(324, 46, 24, 116), 'hot', TOGGLE), // the slider between the reels
+      key('app.skins', round(467, 335, 48), 'hot round'), // the capstan
+      key('app.playlist', box(13, 361, 31, 25), 'hot', TOGGLE), // the toothed lever "REWIND & LOAD"
+    ],
+    components: [
+      { type: 'text', source: 'track.title', x: 12, y: y0 + 4, width: width - 134, height: 22, fontSize: 14, color: INK },
+      { type: 'time', source: 'position', x: width - 116, y: y0 + 2, width: 104, height: 26, fontSize: 19, align: 'right', color: INK },
+      { type: 'text', source: 'track.artist', x: 12, y: y0 + 25, width: width - 200, height: 16, fontSize: 11, color: RED },
+      { type: 'text', source: 'player.status', x: width - 182, y: y0 + 26, width: 80, height: 14, fontSize: 10, align: 'right', color: '#44484d' },
+      { type: 'time', source: 'duration', x: width - 96, y: y0 + 27, width: 84, height: 14, fontSize: 11, align: 'right', color: '#44484d' },
+      { type: 'seekbar', x: 12, y: y0 + 48, width: width - 152, height: 8 },
+      { type: 'volume', x: width - 118, y: y0 + 48, width: 106, height: 8 },
+      { type: 'playlist', x: 12, y: listY + 4, width: width - 24, height: 142 },
+    ],
+    packs: [pack('tape-left', left, full, empty, false), pack('tape-right', right, full, empty, true)],
+    spinners: [left, right],
+    needles: [pointer],
   };
 }
 
@@ -3363,7 +3490,7 @@ if (!CHROME) {
 }
 const mockAt = process.argv.indexOf('--mock');
 const mockDir = mockAt > 0 ? process.argv[mockAt + 1] : null;
-const only = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && !['--mock', '--photo', '--recorder'].includes(all[i - 1]));
+const only = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && !['--mock', '--photo', '--recorder', '--nagra'].includes(all[i - 1]));
 const packed = (design) => {
   build(design, mockDir);
   rmSync(`${design.out}.fcskin`, { force: true });
@@ -3371,7 +3498,10 @@ const packed = (design) => {
 };
 const photoAt = process.argv.indexOf('--photo');
 const recorderAt = process.argv.indexOf('--recorder');
-if (recorderAt > 0) {
+const nagraAt = process.argv.indexOf('--nagra');
+if (nagraAt > 0) {
+  packed(nagraSkin(process.argv[nagraAt + 1]));
+} else if (recorderAt > 0) {
   packed(recorderPhotoSkin(process.argv[recorderAt + 1]));
 } else if (photoAt > 0) {
   // only the skins made from the photograph, each also as an archive to import
