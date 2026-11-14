@@ -2025,110 +2025,205 @@ const belowReels = (c) => [
 
 // ---- "Nano": a miniature tape recorder cut from steel, seen from above
 //
-// The face is the machine and nothing else: two reels, the tape between them, machined keys.
-// The track list lies below it and can be hidden, which leaves the machine alone.
+// The face is the machine and nothing else: a steel plate in landscape, two reels that reach
+// over its edge, the tape path along the heads, a small round meter. The parts of the machine
+// are the keys: the roller loads, the pad stops, the two heads skip, the pinch roller plays.
+// The track list lies below the machine and can be hidden, which leaves the machine alone.
 
-const holes = (size, distance, radius, count = 6) =>
-  Array.from({ length: count }, (_, n) => (n * 2 * Math.PI) / count)
-    .map((a) => `radial-gradient(circle at ${(size / 2 + distance * Math.sin(a)).toFixed(1)}px ${(size / 2 - distance * Math.cos(a)).toFixed(1)}px, transparent 0 ${radius}px, #000 ${radius + 0.6}px)`)
-    .join(', ');
-const nanoReel = (colour) => `<div class="disc ${colour}"></div><div class="boss"><i></i><i></i><i></i></div><div class="mark ${colour}">FC·12</div>`;
-const nanoBlock = (action, icon, x, y) => button(action, icon, x, y, 54, 44, 'block', TOGGLE);
+const NANO_INK = '#1f2123';
+const nanoAt = (r, deg, cx = 120, cy = 120) => [cx + r * Math.sin((deg * Math.PI) / 180), cy - r * Math.cos((deg * Math.PI) / 180)];
+const nanoRing = (cx, cy, r) => `M${(cx - r).toFixed(1)} ${cy.toFixed(1)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
+const NANO_HOLES = [0, 60, 120, 180, 240, 300].map((a) => nanoRing(...nanoAt(76, a), 27)).join('');
+/** A flange with six holes, its hub with the locking bar, three brass pins. */
+const nanoReel = (c) => `<svg class="flange" width="240" height="240" viewBox="0 0 240 240">
+  <path fill-rule="evenodd" fill="${c.fill}" d="${nanoRing(120, 120, 119)}${NANO_HOLES}${nanoRing(120, 120, 38)}"/>
+  <circle cx="120" cy="120" r="118.3" fill="none" stroke="${c.edge}" stroke-width="1.4"/>
+  <circle cx="120" cy="120" r="114" fill="none" stroke="${c.dark}" stroke-width=".6" opacity=".5"/>
+  <path d="${NANO_HOLES}" fill="none" stroke="${c.dark}" stroke-width="1.6"/>
+  <path d="${NANO_HOLES}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width=".7" transform="translate(0 1.2)"/>
+  <circle cx="120" cy="120" r="38" fill="#dfe1e2" stroke="#6f7274"/>
+  <circle cx="120" cy="120" r="35" fill="none" stroke="#1f8a68" stroke-width="4.5"/>
+  <circle cx="120" cy="120" r="31.5" fill="#e9eaea" stroke="#8b8e90" stroke-width=".8"/>
+  <g transform="rotate(38 120 120)">
+    <rect x="108.5" y="88" width="23" height="64" rx="2.5" fill="#f7f7f7" stroke="#85888a" stroke-width=".8"/>
+    <rect x="108.5" y="88" width="5" height="64" rx="2" fill="rgba(0,0,0,.14)"/>
+    <circle cx="120" cy="120" r="6.5" fill="#55585a" stroke="#2e3032"/>
+    <rect x="114.5" y="119" width="11" height="2" fill="#17181a"/>
+  </g>
+  ${[30, 150, 270].map((a) => `<circle cx="${nanoAt(49, a)[0].toFixed(1)}" cy="${nanoAt(49, a)[1].toFixed(1)}" r="2.6" fill="#d9b86a" stroke="rgba(0,0,0,.35)" stroke-width=".6"/>`).join('')}
+  ${(c.marks ?? []).map(([text, a]) => `<text x="120" y="13.5" text-anchor="middle" transform="rotate(${a} 120 120)" font-family="'Marker Felt', 'Chalkboard SE', sans-serif" font-size="10" fill="${c.ink}">${text}</text>`).join('')}
+</svg>`;
+const NANO_MINT = { fill: '#79b99a', edge: '#b9dccb', dark: '#3f7d62', ink: '#14271f', marks: [['FC 12', -98], ['6 H', 82]] };
+const NANO_RED = { fill: '#d8232a', edge: '#e9e9e9', dark: '#8f1116', ink: '#fff' };
 
-const nano = skin('nano', 'Nano', 'A miniature tape recorder cut from steel, seen from above: a mint and a red reel, machined keys, print as fine as on a watch.', ['reel', 'steel', 'light', 'miniature', 'red', 'mint', 'landscape', 'skeuomorphic'], {
-  theme: theme({ background: '#d3d5d7', surface: '#f3f1ea', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#44484d', accent: '#a31d16', accentContrast: '#ffffff', border: '#7c8188', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
-  width: 620,
-  height: 576,
-  resize: { stretchY: 490 },
-  titleBar: '#c9ccd0',
+const nanoScrew = ([x, y], n) => `<g transform="translate(${x} ${y}) rotate(${(n * 47) % 180})"><circle r="3.6" fill="url(#nscrew)" stroke="#5d6062" stroke-width=".7"/><rect x="-3" y="-.6" width="6" height="1.2" fill="#2e3032"/></g>`;
+const nanoPrint = (text, x, y, size = 7, more = '') => `<text x="${x}" y="${y}" font-size="${size}" ${more}>${text}</text>`;
+/** A scale of minutes as it is printed beside the take-up reel. */
+const nanoScale = (x, y, turn, label) => `<g transform="translate(${x} ${y}) rotate(${turn})"><path d="M0 0h58" stroke="${NANO_INK}" stroke-width="1.4"/>${Array.from({ length: 15 }, (_, n) => `<path d="M${n * 4 + 1} 0v${n % 5 === 0 ? -6 : -3.5}" stroke="${NANO_INK}" stroke-width=".8"/>`).join('')}${nanoPrint(label, 20, 10, 8)}</g>`;
+const nanoStud = (action, icon, x) => button(action, icon, x, 259, 38, 38, 'stud', TOGGLE);
+
+const NANO_ART = `<div class="plate"></div>
+  <div class="socket" style="top:112px;height:92px"></div><div class="socket" style="top:226px;height:104px"></div>
+  <div class="tab"></div><div class="jack"></div>
+  <svg class="works" width="640" height="460" viewBox="0 0 640 460" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" fill="${NANO_INK}">
+    <defs>
+      <radialGradient id="nscrew" cx=".35" cy=".3"><stop offset="0" stop-color="#fafafa"/><stop offset="1" stop-color="#8e9193"/></radialGradient>
+      <linearGradient id="nlight" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f1f2f2"/><stop offset="1" stop-color="#c6c8c9"/></linearGradient>
+      <linearGradient id="nturn" x1="0" x2="1"><stop offset="0" stop-color="#9da0a2"/><stop offset=".45" stop-color="#f4f5f5"/><stop offset="1" stop-color="#8e9193"/></linearGradient>
+      <radialGradient id="nbrass" cx=".4" cy=".35"><stop offset="0" stop-color="#f3dc9a"/><stop offset="1" stop-color="#a47c2c"/></radialGradient>
+      <filter id="nsh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.4" flood-opacity=".45"/></filter>
+    </defs>
+    <!-- the bright cut-out under the supply reel, and what the reels sit on -->
+    <path d="M112 86h150a66 66 0 0 1 28 126h-58q-12 0-12 12v8h-108q-10 0-10-10v-126q0-10 10-10z" fill="#cfd1d2" stroke="#8b8e90"/>
+    <path d="M113 87h150" stroke="rgba(0,0,0,.25)" stroke-width="2"/>
+    <circle cx="170" cy="134" r="33" fill="url(#nlight)" stroke="#7b7e80"/>
+    <circle cx="470" cy="134" r="52" fill="#b9b39f" stroke="#7b7e80"/><circle cx="470" cy="134" r="45" fill="#cfd1d2" stroke="#8b8e90"/>
+    <circle cx="470" cy="134" r="33" fill="url(#nlight)" stroke="#7b7e80"/>
+    <!-- print -->
+    <path d="M30 62h14v-22" fill="none" stroke="${NANO_INK}" stroke-width="1.2"/><path d="M26 62l5-3v6z"/>
+    ${nanoPrint('PHONES 1 kΩ or less', 50, 44)}
+    ${nanoPrint('SUPPLY REEL', 110, 74, 11)}
+    ${nanoPrint('SPEED', 348, 62, 9)}${nanoPrint('High&#160;&#160;&#160;Low', 344, 76, 6.5)}
+    <circle cx="352" cy="84" r="1.2"/><circle cx="366" cy="84" r="1.2"/><circle cx="359" cy="94" r="5.5" fill="url(#nscrew)" stroke="#5d6062"/><path d="M355 96l8-4" stroke="#2e3032" stroke-width="1.3"/>
+    ${nanoPrint('FLAC COMMANDER', 618, 37, 9, 'letter-spacing="1" text-anchor="end"')}
+    ${nanoPrint('Lossless', 618, 47, 6.5, 'text-anchor="end"')}
+    ${nanoPrint('Standard Tape', 466, 78, 7)}${nanoPrint('Timing Min.', 466, 87, 7)}
+    ${nanoScale(506, 104, -22, '3¾″')}${nanoScale(512, 132, 0, '1⅞″')}${nanoScale(506, 160, 18, '15⁄16″')}
+    <path id="nrew" d="M392 188a62 62 0 0 1-36 34" fill="none"/>
+    <path d="M400 168a70 70 0 0 1-48 62" fill="none" stroke="${NANO_INK}" stroke-width="1.2"/><path d="M348 231l7-5 1 7z"/>
+    <text font-size="7"><textPath href="#nrew">REWIND</textPath></text>
+    ${nanoPrint('Pilot &amp; Remote', 0, 0, 6.5, 'transform="translate(27 198) rotate(-90)"')}
+    ${nanoPrint('Mike or Line', 0, 0, 6.5, 'transform="translate(27 318) rotate(-90)"')}
+    ${nanoPrint('▼ BATT', 0, 0, 7, 'transform="translate(622 252) rotate(-90)"')}
+    ${nanoPrint('Press to', 0, 0, 6.5, 'transform="translate(615 316) rotate(-90)"')}${nanoPrint('TEST', 0, 0, 6.5, 'transform="translate(623 310) rotate(-90)"')}
+    ${nanoPrint('MODE', 420, 284, 6)}
+    ${nanoPrint('LOAD', 22, 440, 6.5)}<path d="M44 437.5h12" stroke="${NANO_INK}" stroke-width="1.2"/><path d="M60 437.5l-6-3v6z"/>
+    ${nanoPrint('VOL', 426, 434, 6)}
+    ${nanoPrint('A.L.C', 86, 352, 5)}
+    <!-- the tape, from reel to reel along the heads -->
+    <path d="M62 190L37 318Q24 372 24 398A26 26 0 0 0 50 424L120 419H404Q417 419 417 404L415 350L398 196" fill="none" stroke="#3a2a22" stroke-width="1.6"/>
+    <!-- the guide between the reels -->
+    <g filter="url(#nsh)">
+      <path d="M284 22h72l-22 82q-2 8-10 8h-8q-8 0-10-8z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <rect x="313" y="34" width="14" height="52" rx="2" fill="#8e9193" stroke="#5d6062"/><rect x="317.5" y="40" width="5" height="40" rx="2.5" fill="url(#nturn)" stroke="#5d6062" stroke-width=".6"/>
+      <rect x="315" y="30" width="10" height="7" fill="#6f7274"/>
+      <rect x="308" y="96" width="24" height="26" rx="3" fill="url(#nlight)" stroke="#7b7e80"/><circle cx="320" cy="108" r="7" fill="#b9bbbc" stroke="#5d6062"/><circle cx="320" cy="108" r="3.5" fill="#e9eaea" stroke="#7b7e80"/>
+    </g>
+    <!-- post and wire at the left, lever, capstan and the arm of the pinch roller -->
+    <path d="M56 300q16 10 2 26t0 30" fill="none" stroke="#17181a" stroke-width="1.2"/>
+    <g filter="url(#nsh)">
+      <circle cx="40" cy="322" r="9" fill="#8e9193" stroke="#5d6062"/><circle cx="39" cy="320" r="5" fill="#a9acae"/>
+      <path d="M52 352h18q6 0 6 6v22h-30v-22q0-6 6-6z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <path d="M366 322l12-6 26 62-6 14-12 2z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <path d="M446 424l-20-18 12-22 66 8-6 28z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <path d="M404 320l14-6 12 12-6 16-16 2-8-12z" fill="#c9cbcc" stroke="#7b7e80"/><circle cx="416" cy="330" r="7" fill="url(#nbrass)" stroke="#6d5420"/><circle cx="416" cy="330" r="2.5" fill="#6d5420"/>
+      <rect x="92" y="392" width="18" height="18" rx="2" fill="#e9eaea" stroke="#7b7e80"/>
+    </g>
+    <!-- the meter in its bracket -->
+    <g filter="url(#nsh)">
+      <rect x="530" y="326" width="84" height="84" rx="9" fill="url(#nlight)" stroke="#7b7e80"/>
+      <circle cx="524" cy="412" r="9" fill="#dfe1e2" stroke="#7b7e80"/><circle cx="524" cy="412" r="4" fill="#b9bbbc" stroke="#5d6062"/>
+    </g>
+    <circle cx="572" cy="368" r="38" fill="url(#nturn)" stroke="#5d6062"/>
+    <circle cx="572" cy="368" r="33.5" fill="#2a2420" stroke="#3a3c3e"/>
+    <circle cx="572" cy="380" r="19" fill="#7a2a22"/><circle cx="572" cy="380" r="14" fill="url(#nbrass)" stroke="#6d5420"/>
+    ${[0, 60, 120].map((a) => `<rect x="552" y="378.5" width="40" height="3" fill="#c9a347" stroke="#6d5420" stroke-width=".4" transform="rotate(${a} 572 380)"/>`).join('')}
+    <circle cx="572" cy="380" r="3.5" fill="#b3261e"/>
+    <path d="M540.5 368a31.5 31.5 0 0 1 63 0l-9 4h-45z" fill="#f6f4ec" stroke="#8b8e90" stroke-width=".6"/>
+    <path d="M${nanoAt(27, 12, 572, 372).map((v) => v.toFixed(1)).join(' ')}A27 27 0 0 1 ${nanoAt(27, 50, 572, 372).map((v) => v.toFixed(1)).join(' ')}" fill="none" stroke="#2f8a4a" stroke-width="2.6"/>
+    ${[-50, -37.5, -25, -12.5, 0, 12.5, 25, 37.5, 50].map((a, n) => `<path d="M${nanoAt(n % 2 ? 22 : 20.5, a, 572, 372).map((v) => v.toFixed(1)).join(' ')}L${nanoAt(24.5, a, 572, 372).map((v) => v.toFixed(1)).join(' ')}" stroke="${NANO_INK}" stroke-width=".7"/>`).join('')}
+    ${['0', '10', '20', '30'].map((t, n) => nanoPrint(t, ...nanoAt(15.5, -42 + n * 28, 572, 373).map((v) => v.toFixed(1)), 4.5, 'text-anchor="middle"')).join('')}
+    <path id="nlevel" d="M546 364a27 27 0 0 1 52 0" fill="none"/>
+    <path d="M548 352q24-20 48 0" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="5" stroke-linecap="round"/>
+    ${[[536, 332], [608, 332], [536, 404], [608, 404]].map(nanoScrew).join('')}
+    ${[[30, 84], [26, 240], [604, 64], [610, 232], [300, 150], [340, 160], [320, 196], [300, 236], [342, 244], [126, 104], [232, 100], [150, 204], [240, 176], [424, 96], [524, 200], [432, 196], [92, 300], [596, 306], [512, 334], [61, 362], [101, 401], [386, 380]].map(nanoScrew).join('')}
+  </svg>
+  <div class="cast" style="left:52px"></div><div class="cast" style="left:352px"></div>
+  <div class="slot" style="left:138px;top:424px;width:240px;height:14px"></div>
+  <div class="slot" style="left:442px;top:424px;width:84px;height:14px"></div>
+  <div class="well" style="left:12px;top:460px;width:616px;height:140px"></div>`;
+
+const nano = skin('nano', 'Nano', 'A miniature tape recorder cut from steel, seen from above: a mint and a red reel reach over its edge, and the heads, the roller and the pad are its keys.', ['reel', 'steel', 'light', 'miniature', 'red', 'mint', 'landscape', 'skeuomorphic'], {
+  theme: theme({ background: '#dcdddf', surface: '#f3f1ea', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#44484d', accent: '#a31d16', accentContrast: '#ffffff', border: '#6f7274', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
+  width: 640,
+  height: 610,
+  resize: { stretchY: 530 },
+  titleBar: '#ecedee',
   pad: 4,
   css: `
-    body { background: linear-gradient(#dfe1e3, #c9cbce); font-family: ${HELVETICA}; }
-    .plate { position: absolute; left: 10px; top: 8px; width: 600px; height: 390px; border-radius: 14px;
-      background: repeating-linear-gradient(0deg, rgba(255,255,255,.2) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2.5px), linear-gradient(115deg, #e6e8ea, #b9bdc2 48%, #dcdfe2 70%, #c2c6ca);
-      box-shadow: 0 6px 14px rgba(0,0,0,.35), 0 0 0 1px #6f747a, inset 0 0 0 2px rgba(255,255,255,.7), inset 0 0 0 3px rgba(0,0,0,.12); }
-    .pins { position: absolute; left: 3px; top: 70px; width: 9px; height: 200px; border-radius: 2px; background: repeating-linear-gradient(#c9a23a 0 3px, #2f6a43 3px 9px); box-shadow: 0 0 0 1px #1f4a2e; }
-    .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fafafa, #747980 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.2); }
-    .screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 4px; height: 1px; background: #33363a; transform: rotate(35deg); }
-    .fine { position: absolute; font-size: 6.5px; font-weight: 700; letter-spacing: .13em; color: #2b2e32; white-space: nowrap; }
-    .hair { position: absolute; border-top: 1px solid #2b2e32; opacity: .6; }
-    .seatn { position: absolute; top: 22px; width: 216px; height: 216px; border-radius: 50%; background: radial-gradient(circle, #9da2a8 0 20px, #c6cace 20px 100px, #b0b5ba 100px); box-shadow: inset 0 2px 5px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.8); }
-    .guide { position: absolute; left: 285px; top: 14px; width: 30px; height: 62px; border-radius: 3px 3px 12px 12px; background: linear-gradient(90deg, #aeb3b9, #f4f5f6 45%, #a3a8ae); box-shadow: 0 2px 4px rgba(0,0,0,.4), 0 0 0 1px #6f747a; }
-    .guide::after { content: ''; position: absolute; left: 9px; top: 10px; width: 12px; height: 38px; border-radius: 2px; background: linear-gradient(#2b2e32 0 2px, transparent 2px 10px, #2b2e32 10px 12px, transparent 12px 26px, #2b2e32 26px 28px, transparent 28px); }
-    .arcn { position: absolute; left: 262px; top: 78px; width: 76px; height: 76px; border-radius: 50%; border: 1px solid #2b2e32; opacity: .55; -webkit-mask-image: linear-gradient(#000 0 34%, transparent 34%); }
-    .band { position: absolute; left: 196px; top: 236px; width: 208px; height: 18px; border: 1.5px solid #47322a; border-top: none; border-radius: 0 0 20px 20px; }
-    .label { position: absolute; left: 150px; top: 258px; width: 320px; height: 26px; border-radius: 2px; background: #f3f1ea; box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.18); }
-    .label::before { content: ''; position: absolute; left: 0; top: 0; width: 7px; height: 100%; background: #d8262d; }
-    .dialn { position: absolute; left: 512px; top: 262px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, #f3f1ea 0 30px, #1b1d20 30px 31px, #cfd2d5 31px 35px, #8d9299 35px 37px, #e6e8ea 37px); box-shadow: 0 3px 5px rgba(0,0,0,.4), 0 0 0 1px #6f747a; }
-    .post { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #7d8288 70%); box-shadow: 0 2px 3px rgba(0,0,0,.5), 0 0 0 1px #5d6166; }
-    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #4a342a 0 1.5px, #38271f 1.5px 3px); }
-    .disc { position: absolute; inset: 0; border-radius: 50%; -webkit-mask-image: ${holes(210, 62, 22)}; -webkit-mask-composite: source-in; filter: drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
-    .disc.mint { background: radial-gradient(circle, #7fc4a6 0 30px, #9bdcc0 30px 99px, #6fb596 99px 102px, #8fd0b4 102px); }
-    .disc.red { background: radial-gradient(circle, #b81d22 0 30px, #e02b31 30px 99px, #9c1a1e 99px 102px, #cf262c 102px); }
-    .boss { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px; border-radius: 50%; background: radial-gradient(circle, #33363a 0 4px, #f6f6f4 4px 11px, #9a9fa5 11px 12.5px, #f1f1ee 12.5px); box-shadow: 0 1px 3px rgba(0,0,0,.45), 0 0 0 1px #7c8188; }
-    .boss i { position: absolute; left: 24px; top: 5px; width: 6px; height: 44px; background: radial-gradient(circle at 50% 4px, #33363a 2.6px, transparent 3px), radial-gradient(circle at 50% 40px, #33363a 2.6px, transparent 3px); }
-    .boss i:nth-child(2) { transform: rotate(60deg); } .boss i:nth-child(3) { transform: rotate(120deg); }
-    .mark { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); font: 800 9px ${HELVETICA}; letter-spacing: .12em; color: rgba(255,255,255,.92); }
-    .mark.mint { color: #1f5a41; }
-    ${beds('#8f959c', '#f3f1ea', true)}
+    body { background: linear-gradient(#ecedee, #dadbdd); font-family: ${HELVETICA}; }
+    .plate { position: absolute; left: 12px; top: 20px; width: 616px; height: 426px; border-radius: 16px;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.13) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2px), linear-gradient(100deg, #b6b9ba, #a6a9aa 46%, #b3b6b7 72%, #a4a7a8);
+      box-shadow: 0 7px 14px rgba(0,0,0,.4), 0 0 0 1px #6b6e70, inset 0 1px 0 1px rgba(255,255,255,.55), inset 0 -2px 0 1px rgba(0,0,0,.18); }
+    .socket { position: absolute; left: 4px; width: 9px; border-radius: 2px 0 0 2px; background: repeating-linear-gradient(#2c7a59 0 7px, #1d5a40 7px 9px); box-shadow: 0 0 0 1px #184a35; }
+    .tab { position: absolute; left: 288px; top: 13px; width: 64px; height: 8px; border-radius: 2px 2px 0 0; background: linear-gradient(#d9dbdc, #a9acae); box-shadow: 0 0 0 1px #6b6e70; }
+    .jack { position: absolute; left: 5px; top: 52px; width: 8px; height: 16px; border-radius: 2px; background: repeating-linear-gradient(#e9eaea 0 1px, #85888a 1px 2px); box-shadow: 0 0 0 1px #5d6062; }
+    .works { position: absolute; left: 0; top: 0; }
+    .cast { position: absolute; top: 20px; width: 236px; height: 236px; border-radius: 50%; box-shadow: 0 5px 9px rgba(0,0,0,.4); }
+    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #33251e 0 1.2px, #241a15 1.2px 2.4px); box-shadow: inset 0 0 0 1px #17110e; }
+    .flange { position: absolute; left: 0; top: 0; filter: drop-shadow(0 0 2px rgba(0,0,0,.5)); }
+    .hand { position: absolute; left: 1px; top: 0; width: 1.5px; height: 100%; border-radius: 1px; background: #17181a; }
+    ${beds('#85888a', '#f3f1ea', true)}
+    .slot { border-radius: 3px; }
     .well { border-radius: 3px; box-shadow: inset 0 1px 3px rgba(0,0,0,.35), 0 1px 0 #fff; }
-    .face { color: #23262a; } .face svg { width: 17px; height: 17px; }
-    .puck { border-radius: 50%; background: radial-gradient(circle, #5d6166 0 3px, #f6f7f8 3px 8px, #9a9fa5 8px 9.5px, #e3e5e8 9.5px 62%, #9da2a8 62% 66%, #eff0f2 66%); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #5d6166; }
-    .puck svg { margin-top: 26px; width: 13px; height: 13px; }
-    .puck.go { color: #fff; background: radial-gradient(circle, #e7373d 0 62%, #9c1a1e 62% 66%, #cf262c 66%); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #6d1114; }
-    .puck.go svg { margin-top: 0; width: 26px; height: 26px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.3)); }
-    .block { border-radius: 3px; background: linear-gradient(145deg, #f4f5f6, #b4b8bd 60%, #d5d8db); box-shadow: 0 2px 4px rgba(0,0,0,.4), 0 0 0 1px #5d6166, inset 0 0 0 1px rgba(255,255,255,.7); }
-    .block::before { content: ''; position: absolute; right: 5px; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: #6a2a2a; box-shadow: inset 0 1px 1px rgba(0,0,0,.5); }
-    .small { border-radius: 50%; background: radial-gradient(circle at 38% 30%, #fff, #a3a8ae 68%, #7d8288); box-shadow: 0 2px 3px rgba(0,0,0,.45), 0 0 0 1px #5d6166; }
+    .face { color: ${NANO_INK}; } .face svg { position: relative; width: 16px; height: 16px; }
+    .roller { border-radius: 50%; color: #f4f0e2; background: radial-gradient(circle, #2a2c2e 0 9.5px, #8d8a7c 9.5px 10.5px, #f6f2e4 10.5px 17px, #cfcab8 17px 18px, #f8f5ea 18px 24.5px, #cdc8b6 24.5px); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #77746a; }
+    .roller svg { width: 12px; height: 12px; }
+    .knob { border-radius: 50%; color: #fff; background: radial-gradient(circle at 40% 35%, #f0565b, #c2181f 70%, #8f1116); box-shadow: 0 2px 3px rgba(0,0,0,.5), 0 0 0 1px #6d0d11; }
+    .knob svg { width: 14px; height: 14px; }
+    .padk { border-radius: 3px 3px 13px 13px; color: #eceded; background: linear-gradient(#f1f2f2 0 12px, #6b6e70 12px 13px, #1d1e20 13px, #0f1011); box-shadow: 0 2px 4px rgba(0,0,0,.5), 0 0 0 1px #55585a; }
+    .padk svg { margin-top: 12px; }
+    .head { border-radius: 4px 4px 9px 9px; background: linear-gradient(160deg, #f1f2f2, #c9cbcc); box-shadow: 0 2px 4px rgba(0,0,0,.45), 0 0 0 1px #6f7274; }
+    .head::before { content: ''; position: absolute; left: 9px; right: 9px; top: 13px; bottom: 0; border-radius: 4px 4px 11px 11px;
+      background: repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 .5px, transparent .5px 2px), linear-gradient(90deg, #8e9193, #b9bcbd 40%, #84878a); box-shadow: 0 0 0 1px #5d6062, inset 0 1px 0 rgba(255,255,255,.5); }
+    .head::after { content: ''; position: absolute; left: 3px; right: 3px; top: 3px; height: 8px;
+      background: radial-gradient(circle at 4px 4px, #3a3c3e 0 .8px, #e3e4e5 1px 3px, #6f7274 3px 3.6px, transparent 3.8px), radial-gradient(circle at calc(100% - 4px) 4px, #3a3c3e 0 .8px, #e3e4e5 1px 3px, #6f7274 3px 3.6px, transparent 3.8px); }
+    .head svg { margin-top: 12px; }
+    .head.a { transform: rotate(-5deg); } .head.a svg { transform: rotate(5deg); }
+    .head.b { transform: rotate(6deg); } .head.b svg { transform: rotate(-6deg); }
+    .pinch { border-radius: 50%; background: radial-gradient(circle, #55585a 0 2px, transparent 2.5px), conic-gradient(from 20deg, #f3f4f4, #a5a8aa, #ecedee, #989b9d, #f3f4f4, #a5a8aa, #ecedee, #989b9d, #f3f4f4);
+      box-shadow: 0 3px 6px rgba(0,0,0,.5), 0 0 0 1px #5d6062, inset 0 0 0 7px rgba(255,255,255,.2), inset 0 0 0 8px rgba(0,0,0,.16); }
+    .pinch svg { width: 26px; height: 26px; }
+    .stud { border-radius: 50%; background: radial-gradient(circle at 38% 30%, #fafafa, #b3b6b8 65%, #86898b); box-shadow: 0 2px 3px rgba(0,0,0,.45), 0 0 0 1px #5d6062; }
+    .stud svg { width: 15px; height: 15px; }
     ${STATES}
-    .pressed .puck, .pressed .block, .pressed .small { box-shadow: 0 0 0 1px #5d6166, inset 0 3px 5px rgba(0,0,0,.4); }
-    .active .puck.go { box-shadow: 0 0 0 1px #6d1114, 0 0 0 3px #c9ccd0, 0 0 0 4.5px #e02b31, 0 0 12px 3px rgba(224,43,49,.45); }
-    .active .block::before { background: #ff3b30; box-shadow: 0 0 5px 1px rgba(255,59,48,.9); }
-    .active .block { color: #a31d16; }
+    .pressed .head.a svg { transform: rotate(5deg) translateY(1px); } .pressed .head.b svg { transform: rotate(-6deg) translateY(1px); }
+    .pressed .roller, .pressed .knob, .pressed .pinch, .pressed .stud { box-shadow: 0 0 0 1px #5d6062, inset 0 2px 4px rgba(0,0,0,.4); }
+    .active .pinch { box-shadow: 0 0 0 1px #5d6062, 0 0 0 3px #d8232a, 0 0 10px 2px rgba(216,35,42,.5), inset 0 0 0 7px rgba(255,255,255,.2), inset 0 0 0 8px rgba(0,0,0,.16); }
+    .active .stud { color: #b3141b; box-shadow: 0 0 0 1px #5d6062, 0 0 0 2.5px #d8232a; }
   `,
-  art: `<div class="plate"><div class="pins"></div></div>
-    ${[[22, 18], [589, 18], [22, 378], [589, 378], [300, 222]].map(([x, y]) => `<div class="screw" style="left:${x}px;top:${y}px"></div>`).join('')}
-    <div class="seatn" style="left:82px"></div><div class="seatn" style="left:322px"></div>
-    <div class="guide"></div><div class="arcn"></div><div class="band"></div>
-    <div class="fine" style="left:46px;top:20px">SUPPLY REEL</div><div class="fine" style="left:520px;top:20px">TAKE-UP</div>
-    <div class="fine" style="left:28px;top:246px">MODE</div><div class="fine" style="left:514px;top:246px">LEVEL</div><div class="fine" style="left:482px;top:354px">VOLUME</div>
-    <div class="fine" style="left:28px;top:384px;opacity:.75">MINIATURE TAPE RECORDER · LOSSLESS</div>
-    <div class="post" style="left:176px;top:240px"></div><div class="post" style="left:428px;top:240px"></div>
-    <div class="label"></div><div class="dialn"></div>
-    <div class="slot" style="left:148px;top:309px;width:324px;height:14px"></div>
-    <div class="slot" style="left:480px;top:364px;width:116px;height:14px"></div>
-    <div class="well" style="left:10px;top:408px;width:600px;height:158px"></div>`,
+  art: NANO_ART,
   buttons: [
-    button('player.open', 'open', 168, 331, 54, 54, 'puck'),
-    button('player.previous', 'previous', 222, 331, 54, 54, 'puck'),
-    button('player.togglePlay', 'play', 276, 326, 68, 64, 'puck go', PLAY),
-    button('player.next', 'next', 344, 331, 54, 54, 'puck'),
-    button('player.stop', 'stop', 398, 331, 54, 54, 'puck'),
-    nanoBlock('player.repeat', 'repeat', 26, 256),
-    nanoBlock('player.shuffle', 'shuffle', 82, 256),
-    nanoBlock('window.equalizer', 'equalizer', 26, 302),
-    nanoBlock('app.playlist', 'list', 82, 302),
-    button('app.skins', 'skins', 60, 346, 40, 36, 'small'),
+    button('player.open', 'open', 20, 368, 60, 60, 'roller'),
+    button('app.skins', 'skins', 84, 314, 38, 38, 'knob'),
+    button('player.stop', 'stop', 122, 358, 68, 60, 'padk'),
+    button('player.previous', 'previous', 196, 340, 76, 76, 'head a'),
+    button('player.next', 'next', 280, 334, 76, 76, 'head b'),
+    button('player.togglePlay', 'play', 424, 338, 80, 80, 'pinch', PLAY),
+    nanoStud('player.repeat', 'repeat', 444),
+    nanoStud('player.shuffle', 'shuffle', 482),
+    nanoStud('window.equalizer', 'equalizer', 520),
+    nanoStud('app.playlist', 'list', 558),
   ],
   components: [
-    { type: 'text', source: 'track.title', x: 164, y: 260, width: 218, height: 22, fontSize: 14, color: '#1b1d20' },
-    { type: 'text', source: 'player.status', x: 386, y: 260, width: 78, height: 22, fontSize: 10, align: 'right', color: '#a31d16' },
-    { type: 'time', source: 'position', x: 150, y: 288, width: 70, height: 16, fontSize: 12, color: '#1b1d20' },
-    { type: 'text', source: 'track.artist', x: 222, y: 288, width: 176, height: 16, fontSize: 11, align: 'center', color: '#a31d16' },
-    { type: 'time', source: 'duration', x: 400, y: 288, width: 70, height: 16, fontSize: 12, align: 'right', color: '#44484d' },
-    { type: 'seekbar', x: 150, y: 312, width: 320, height: 8 },
-    { type: 'spectrum', x: 526, y: 286, width: 52, height: 30, color: '#44484d' },
-    { type: 'volume', x: 482, y: 367, width: 112, height: 8 },
-    { type: 'playlist', x: 16, y: 412, width: 588, height: 150 },
+    { type: 'text', source: 'track.title', x: 62, y: 260, width: 334, height: 20, fontSize: 15, color: '#1b1d20' },
+    { type: 'text', source: 'track.artist', x: 62, y: 280, width: 250, height: 16, fontSize: 11, color: '#8f1d16' },
+    { type: 'text', source: 'player.status', x: 300, y: 280, width: 96, height: 16, fontSize: 10, align: 'right', color: '#1b1d20' },
+    { type: 'time', source: 'position', x: 92, y: 424, width: 42, height: 14, fontSize: 11, align: 'right', color: '#1b1d20' },
+    { type: 'seekbar', x: 140, y: 427, width: 236, height: 8 },
+    { type: 'time', source: 'duration', x: 382, y: 424, width: 40, height: 14, fontSize: 11, color: '#1b1d20' },
+    { type: 'volume', x: 444, y: 427, width: 80, height: 8 },
+    { type: 'playlist', x: 18, y: 464, width: 604, height: 132 },
   ],
   packs: [
-    { name: 'tape-left', x: 95, y: 35, width: 190, height: 190, from: 190, to: 76, html: '<div class="wound"></div>' },
-    { name: 'tape-right', x: 335, y: 35, width: 190, height: 190, from: 76, to: 190, html: '<div class="wound"></div>' },
+    { name: 'tape-left', x: 56, y: 20, width: 228, height: 228, from: 226, to: 100, html: '<div class="wound"></div>' },
+    { name: 'tape-right', x: 356, y: 20, width: 228, height: 228, from: 100, to: 226, html: '<div class="wound"></div>' },
   ],
   spinners: [
-    { name: 'reel-left', x: 85, y: 25, width: 210, height: 210, period: 3200, html: nanoReel('mint') },
-    { name: 'reel-right', x: 325, y: 25, width: 210, height: 210, period: 3200, html: nanoReel('red') },
+    { name: 'reel-left', x: 50, y: 14, width: 240, height: 240, period: 3200, html: nanoReel(NANO_MINT) },
+    { name: 'reel-right', x: 350, y: 14, width: 240, height: 240, period: 3200, html: nanoReel(NANO_RED) },
   ],
+  needles: [{ name: 'hand', x: 570, y: 346, width: 4, height: 26, pivotX: 2, pivotY: 26, from: -46, to: 46, rest: -46, html: '<div class="hand"></div>' }],
 });
 
 // ---- "Silver": a silver front, smoked reels, a badge and knurled knobs

@@ -791,6 +791,7 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/equalizer-hover.png",
         "assets/equalizer-pressed.png",
         "assets/equalizer.png",
+        "assets/hand.png",
         "assets/next-hover.png",
         "assets/next-pressed.png",
         "assets/next.png",
