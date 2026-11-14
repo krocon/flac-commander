@@ -139,6 +139,24 @@ Braucht eine echte Sammlung: Ordner je Interpret und Album, Cover in den Tags un
 | B15 | Große Sammlung (> 10 000 Titel): Zeit bis „n Titel in m Ordnern" notieren; währenddessen Musik hören | **keine Aussetzer**; Zeit in die Ergebnistabelle |
 | B16 | Hauptfenster im Standard-Layout auf Mindestbreite | vier Knöpfe in einer Zeile, der Titel „FLAC Commander" weicht |
 
+## Mediensteuerung des Systems
+
+macOS: Kontrollzentrum → „Now Playing" (bzw. das Symbol in der Menüleiste) und die Tasten F7–F9. Windows: das
+Medien-Feld über dem Lautstärkeregler und die Medientasten. Linux: das Medien-Feld der Oberfläche oder
+`playerctl -p flac_commander metadata | play-pause | next | previous | position 60`.
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| N1 | Ordner mit getaggten Titeln und Cover abspielen, Kontrollzentrum öffnen | Titel, Interpret, Album, Cover; ⏸ statt ▶; die Zeit läuft mit der App mit, die Dauer stimmt |
+| N2 | Titel ohne Tags und ohne Cover | der Dateiname als Titel, kein Cover des vorigen Titels |
+| N3 | ⏯ im Kontrollzentrum; Taste F8 | Pause und Wiedergabe wie mit dem Knopf der App; Fenster und Kontrollzentrum zeigen dasselbe |
+| N4 | ⏭ und ⏮ im Kontrollzentrum; Tasten F9 und F7 | nächster bzw. voriger Titel (⏮ nach einigen Sekunden: Anfang des Titels); Titel und Cover wechseln, **ohne dass der Eintrag dazwischen verschwindet** |
+| N5 | Positionsregler im Kontrollzentrum ziehen; in der App springen | die Musik springt; das Kontrollzentrum zeigt nach einem Sprung in der App die neue Stelle |
+| N6 | Pause in der App, eine Minute warten | das Kontrollzentrum zeigt Pause, die Zeit steht |
+| N7 | Stopp in der App; letzten Titel zu Ende laufen lassen (Wiederholen aus) | der Eintrag verschwindet („Not Playing"); nach ▶ in der App ist er wieder da |
+| N8 | App beenden | der Eintrag verschwindet; die Medientasten gehen wieder an das Programm davor |
+| N9 | Bluetooth-Kopfhörer: Taste für Pause/Weiter | wie N3 und N4 |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
@@ -149,9 +167,10 @@ Braucht eine echte Sammlung: Ordner je Interpret und Album, Cover in den Tags un
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 4 in der gebündelten App: S1, S2, S7 | bestanden nach zwei Korrekturen (Fensterhöhe ohne Titelleiste, Regler und Playlist-Knöpfe im schmalen Skin). |
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 5: Neustart mit gespeichertem Playlist-Fenster (W5 teilweise) | bestanden laut Fensterliste und Protokoll: beide Fenster an ihrem Platz, beide Frontends melden „ready". **Nicht gesehen:** der Bildschirm war gesperrt, Aufnahmen der Fenster waren leer; W1–W4, W6, W7 offen. |
 | 2026-11-14 | macOS 27, Frontend im Browser ohne Backend (Testdaten statt Rust) | Bibliothek: nur das Aussehen – Ordnerliste, Raster, Album, Suche, hell und dunkel, 420 px Breite; B16 (Kopfzeile des Hauptfensters bei 380–640 px) | bestanden. **Nicht in der App geprüft:** Ordner-Dialog, Einlesen, echte Cover über `libcover://`, Abspielen, Fenster öffnen und Wiederherstellen (B1–B15). |
+| 2026-11-14 | macOS 27.2, Apple Silicon, `pnpm tauri dev` | Mediensteuerung: N1, N3–N5, N7, N8 – abgelesen und ausgelöst über die Schnittstelle, aus der das Kontrollzentrum liest (MediaRemote), nicht durch Hinsehen und Klicken | bestanden: Titel, Interpret, Album, Cover, Dauer, Wiedergabe/Pause; Pause, Wiedergabe, Umschalten, Nächster, Voriger und Sprung auf 1:00 kamen in der App an und zurück ins System; nach dem Ende der Liste und nach dem Beenden kein Eintrag. **Nicht geprüft:** das Feld im Kontrollzentrum mit den Augen, echte Tasten F7–F9 (simulierte Tastendrücke erreichten das System ohne Bedienungshilfen-Recht nicht), N2, N6, N9, Stopp-Knopf der App. |
 | – | Windows 10/11, WASAPI | – | **offen** |
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 
 Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7; Phase 3 L2, L3,
-L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9; Phase 5 W1–W4, W6, W7; Phase 6 A1–A8; Phase 7 K1–K6; Bibliothek B1–B15. Ab Phase 5
+L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9; Phase 5 W1–W4, W6, W7; Phase 6 A1–A8; Phase 7 K1–K6; Bibliothek B1–B15; Mediensteuerung N2, N6, N9 und alles mit Augen und echten Tasten. Ab Phase 5
 wurde nichts davon gesehen oder gehört – der Bildschirm war gesperrt; belegt ist es nur durch Tests.

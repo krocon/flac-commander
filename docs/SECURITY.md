@@ -31,6 +31,14 @@
 - `state.json` wird wie fremde Daten gelesen: Werte außerhalb ihres Bereichs werden korrigiert, höchstens 50 000
   Einträge, Unlesbares wird beiseitegelegt statt die App am Start zu hindern.
 
+## Mediensteuerung des Systems
+
+- Das System (Kontrollzentrum, Medientasten, unter Linux jedes Programm am Sitzungsbus über MPRIS) kann Wiedergabe,
+  Pause, Titelwechsel und Springen auslösen – dasselbe wie die Knöpfe der App, nicht mehr: kein Öffnen von Dateien
+  oder Adressen, keine Lautstärke, kein Beenden (`platform/media_controls.rs`, `action()`).
+- Es erfährt Titel, Interpret, Album, Dauer und Cover des laufenden Titels. Das Cover liegt dafür als eine Datei im
+  Cache-Ordner der App (`now-playing/`); sie wird beim Titelwechsel ersetzt, Reste entfernt der nächste Start.
+
 ## Bibliothek
 
 Das Bibliotheksfenster ist die eine Stelle, an der die WebView Pfade nennt: Sie bekommt die Pfade der Ordner und

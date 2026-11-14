@@ -6,6 +6,7 @@
 
 pub mod commands;
 pub mod events;
+pub mod platform;
 pub mod windows;
 
 use fc_core::audio::player::DefaultOutput;
@@ -172,6 +173,8 @@ pub fn run() {
             let shuffle_seed = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_or(1, |d| d.as_nanos() as u64);
+            // the system's media controls hear the player too (Control Center, media keys)
+            let (media_feed, media_inbox) = platform::media_controls::feed();
             // every window hears every state: that keeps several windows in step
             let session = Session::start(
                 DefaultOutput,
@@ -187,6 +190,7 @@ pub fn run() {
                     if let Err(e) = player_events.emit(events::PLAYER_STATE, state) {
                         log::error!("event {} could not be sent: {e}", events::PLAYER_STATE);
                     }
+                    media_feed.player(state);
                 },
                 move |playlist| {
                     if let Err(e) = playlist_events.emit(events::PLAYLIST_STATE, playlist) {
@@ -220,6 +224,12 @@ pub fn run() {
                     None
                 }
             };
+            platform::media_controls::start(
+                app.handle(),
+                session.clone(),
+                media_inbox,
+                app.path().app_cache_dir().ok().map(|folder| folder.join("now-playing")),
+            );
             let state = AppState {
                 library,
                 covers: Arc::new(CoverCache::new(covers_folder)),

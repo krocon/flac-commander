@@ -25,6 +25,8 @@ tauri = { version = "2.12.5", features = [] }
 tauri-plugin-dialog = "2"
 # Log file in the app's log folder, also for the frontend (`core/log/log-api.ts`).
 tauri-plugin-log = "2.10.2"
+# The media controls of the system: Now Playing (macOS), SMTC (Windows), MPRIS (Linux) – ADR 0012.
+souvlaki = "0.9.3"
 
 [lints]
 workspace = true
