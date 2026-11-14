@@ -157,6 +157,7 @@ const hifi = {
     button('player.repeat', 'repeat', 14, 222, 50, 34, 'key led', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 222, 50, 34, 'key led', TOGGLE),
     button('window.equalizer', 'equalizer', 118, 222, 50, 34, 'key led', TOGGLE),
+    button('app.playlist', 'list', 286, 222, 50, 34, 'key led', TOGGLE),
     button('app.skins', 'skins', 338, 222, 50, 34, 'key'),
   ],
   components: [
@@ -242,7 +243,7 @@ const neon = {
     <div class="floor"></div>
     <div class="panel" style="left:14px;top:14px;width:352px;height:118px"><div class="sun"></div></div>
     <div class="groove" style="left:11px;top:142px;width:358px;height:14px"></div>
-    <div class="groove" style="left:125px;top:249px;width:130px;height:14px"></div>
+    <div class="groove" style="left:165px;top:249px;width:100px;height:14px"></div>
     <div class="panel list" style="left:14px;top:290px;width:352px;height:236px"></div>
   `,
   buttons: [
@@ -251,10 +252,11 @@ const neon = {
     button('player.togglePlay', 'play', 157, 166, 66, 66, 'orb', PLAY),
     button('player.next', 'next', 223, 174, 50, 50, 'tile'),
     button('player.open', 'open', 273, 174, 50, 50, 'tile'),
-    button('player.repeat', 'repeat', 9, 236, 54, 40, 'tile small', TOGGLE),
-    button('player.shuffle', 'shuffle', 63, 236, 54, 40, 'tile small', TOGGLE),
-    button('window.equalizer', 'equalizer', 263, 236, 54, 40, 'tile small', TOGGLE),
-    button('app.skins', 'skins', 317, 236, 54, 40, 'tile small'),
+    button('player.repeat', 'repeat', 9, 236, 50, 40, 'tile small', TOGGLE),
+    button('player.shuffle', 'shuffle', 59, 236, 50, 40, 'tile small', TOGGLE),
+    button('window.equalizer', 'equalizer', 109, 236, 50, 40, 'tile small', TOGGLE),
+    button('app.playlist', 'list', 271, 236, 50, 40, 'tile small', TOGGLE),
+    button('app.skins', 'skins', 321, 236, 50, 40, 'tile small'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 28, y: 24, width: 232, height: 22, fontSize: 16, color: '#f6edff' },
@@ -264,7 +266,7 @@ const neon = {
     { type: 'text', source: 'player.status', x: 28, y: 112, width: 150, height: 14, fontSize: 10, color: '#b9a3da' },
     { type: 'time', source: 'duration', x: 190, y: 112, width: 66, height: 14, fontSize: 10, align: 'right', color: '#b9a3da' },
     { type: 'seekbar', x: 14, y: 145, width: 352, height: 8 },
-    { type: 'volume', x: 128, y: 252, width: 124, height: 8 },
+    { type: 'volume', x: 168, y: 252, width: 94, height: 8 },
     { type: 'playlist', x: 20, y: 296, width: 340, height: 224 },
   ],
 };
@@ -383,7 +385,7 @@ const tape = {
     <div class="slot" style="left:28px;top:226px;width:344px;height:14px"></div>
     <div class="bed"></div>
     <div class="caption" style="left:180px;top:303px">VOLUME</div>
-    <div class="slot" style="left:178px;top:314px;width:140px;height:14px"></div>
+    <div class="slot" style="left:178px;top:314px;width:92px;height:14px"></div>
     <div class="card" style="left:30px;top:346px;width:340px;height:180px"></div>
   `,
   buttons: [
@@ -395,6 +397,7 @@ const tape = {
     button('player.repeat', 'repeat', 28, 304, 48, 34, 'pill', TOGGLE),
     button('player.shuffle', 'shuffle', 76, 304, 48, 34, 'pill', TOGGLE),
     button('window.equalizer', 'equalizer', 124, 304, 48, 34, 'pill', TOGGLE),
+    button('app.playlist', 'list', 276, 304, 48, 34, 'pill', TOGGLE),
     button('app.skins', 'skins', 324, 304, 48, 34, 'pill'),
   ],
   components: [
@@ -405,7 +408,7 @@ const tape = {
     { type: 'text', source: 'player.status', x: 276, y: 190, width: 94, height: 14, fontSize: 10, align: 'right', color: '#655440' },
     { type: 'time', source: 'duration', x: 276, y: 206, width: 94, height: 14, fontSize: 11, align: 'right', color: '#655440' },
     { type: 'seekbar', x: 30, y: 228, width: 340, height: 10 },
-    { type: 'volume', x: 180, y: 316, width: 136, height: 10 },
+    { type: 'volume', x: 180, y: 316, width: 88, height: 10 },
     { type: 'playlist', x: 34, y: 350, width: 332, height: 172 },
   ],
   spinners: [hub('hub-left', 131, 112), hub('hub-right', 239, 112)],
@@ -610,8 +613,8 @@ const panel = {
     <div class="slot" style="left:22px;top:157px;width:296px;height:14px"></div>
     ${label('back', 30, 240, 56)}${label('play', 86, 240, 56)}${label('stop', 142, 240, 56)}${label('next', 198, 240, 56)}${label('open', 254, 240, 56)}
     <div class="rule" style="top:258px;opacity:.25"></div>
-    ${label('repeat', 22, 310, 44)}${label('shuffle', 66, 310, 44)}${label('eq', 110, 310, 44)}${label('volume', 164, 310, 100)}${label('skin', 274, 310, 44)}
-    <div class="slot" style="left:162px;top:281px;width:104px;height:14px"></div>
+    ${label('repeat', 22, 310, 42)}${label('shuffle', 64, 310, 42)}${label('eq', 106, 310, 42)}${label('volume', 152, 310, 78)}${label('list', 234, 310, 42)}${label('skin', 276, 310, 42)}
+    <div class="slot" style="left:152px;top:281px;width:78px;height:14px"></div>
     <div class="sheet"></div>
   `,
   buttons: [
@@ -620,10 +623,11 @@ const panel = {
     button('player.stop', 'stop', 142, 182, 56, 56, 'disc'),
     button('player.next', 'next', 198, 182, 56, 56, 'disc'),
     button('player.open', 'open', 254, 182, 56, 56, 'disc'),
-    button('player.repeat', 'repeat', 22, 266, 44, 44, 'disc', TOGGLE),
-    button('player.shuffle', 'shuffle', 66, 266, 44, 44, 'disc', TOGGLE),
-    button('window.equalizer', 'equalizer', 110, 266, 44, 44, 'disc', TOGGLE),
-    button('app.skins', 'skins', 274, 266, 44, 44, 'disc'),
+    button('player.repeat', 'repeat', 22, 267, 42, 42, 'disc', TOGGLE),
+    button('player.shuffle', 'shuffle', 64, 267, 42, 42, 'disc', TOGGLE),
+    button('window.equalizer', 'equalizer', 106, 267, 42, 42, 'disc', TOGGLE),
+    button('app.playlist', 'list', 234, 267, 42, 42, 'disc', TOGGLE),
+    button('app.skins', 'skins', 276, 267, 42, 42, 'disc'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 24, y: 22, width: 232, height: 24, fontSize: 17, color: '#1c1c1a' },
@@ -633,7 +637,7 @@ const panel = {
     { type: 'text', source: 'player.status', x: 24, y: 136, width: 200, height: 14, fontSize: 10, color: '#595854' },
     { type: 'time', source: 'duration', x: 236, y: 136, width: 80, height: 14, fontSize: 10, align: 'right', color: '#595854' },
     { type: 'seekbar', x: 24, y: 160, width: 292, height: 8 },
-    { type: 'volume', x: 164, y: 284, width: 100, height: 8 },
+    { type: 'volume', x: 154, y: 284, width: 74, height: 8 },
     { type: 'playlist', x: 28, y: 336, width: 284, height: 200 },
   ],
 };
@@ -827,10 +831,11 @@ const recorder = {
     button('player.togglePlay', 'play', 79, 289, 66, 66, 'cap silver', PLAY),
     button('player.next', 'next', 148, 300, 44, 44, 'cap'),
     button('player.stop', 'stop', 90, 358, 44, 44, 'cap'),
-    button('player.repeat', 'repeat', 210, 250, 50, 50, 'cap', TOGGLE),
-    button('player.shuffle', 'shuffle', 262, 250, 50, 50, 'cap', TOGGLE),
-    button('window.equalizer', 'equalizer', 210, 306, 50, 50, 'cap', TOGGLE),
-    button('app.skins', 'skins', 262, 306, 50, 50, 'cap'),
+    button('player.repeat', 'repeat', 214, 242, 46, 46, 'cap', TOGGLE),
+    button('player.shuffle', 'shuffle', 262, 242, 46, 46, 'cap', TOGGLE),
+    button('window.equalizer', 'equalizer', 214, 286, 46, 46, 'cap', TOGGLE),
+    button('app.playlist', 'list', 262, 286, 46, 46, 'cap', TOGGLE),
+    button('app.skins', 'skins', 238, 330, 46, 46, 'cap'),
   ],
   components: [
     { type: 'spectrum', x: 42, y: 70, width: 256, height: 30, color: '#e9eef0' },
@@ -926,7 +931,7 @@ const deck = {
     <div class="bay"></div>
     <div class="shell"><div class="band"></div><div class="stripe"></div><div class="glass"></div><div class="foot"></div></div>
     <div class="block"></div>
-    <div class="slot" style="left:164px;top:299px;width:140px;height:14px"></div>
+    <div class="slot" style="left:164px;top:299px;width:96px;height:14px"></div>
     <div class="slot" style="left:22px;top:355px;width:336px;height:14px"></div>
     <div class="well" style="left:24px;top:394px;width:332px;height:192px"></div>
   `,
@@ -939,12 +944,13 @@ const deck = {
     button('player.repeat', 'repeat', 24, 288, 44, 36, 'flat', TOGGLE),
     button('player.shuffle', 'shuffle', 68, 288, 44, 36, 'flat', TOGGLE),
     button('window.equalizer', 'equalizer', 112, 288, 44, 36, 'flat', TOGGLE),
+    button('app.playlist', 'list', 268, 288, 44, 36, 'flat', TOGGLE),
     button('app.skins', 'skins', 312, 288, 44, 36, 'flat'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 64, y: 42, width: 252, height: 24, fontSize: 16, color: '#f1f1ee' },
     { type: 'text', source: 'track.artist', x: 64, y: 66, width: 252, height: 18, fontSize: 12, color: '#ff8136' },
-    { type: 'volume', x: 166, y: 302, width: 136, height: 8 },
+    { type: 'volume', x: 166, y: 302, width: 92, height: 8 },
     { type: 'time', source: 'position', x: 24, y: 334, width: 70, height: 16, fontSize: 12, color: '#f1f1ee' },
     { type: 'text', source: 'player.status', x: 94, y: 334, width: 90, height: 16, fontSize: 10, color: '#b2b2ad' },
     { type: 'spectrum', x: 190, y: 332, width: 100, height: 18, color: '#ff8136' },
@@ -1025,7 +1031,7 @@ const walk = {
     <div class="slot" style="left:22px;top:253px;width:324px;height:14px"></div>
     <div class="bar"></div>
     <div class="tiny" style="left:172px;top:346px">VOLUME</div>
-    <div class="slot" style="left:170px;top:358px;width:124px;height:14px"></div>
+    <div class="slot" style="left:170px;top:358px;width:78px;height:14px"></div>
     <div class="box" style="left:24px;top:392px;width:320px;height:174px"></div>
   `,
   buttons: [
@@ -1037,6 +1043,7 @@ const walk = {
     button('player.repeat', 'repeat', 22, 344, 46, 36, 'chip', TOGGLE),
     button('player.shuffle', 'shuffle', 68, 344, 46, 36, 'chip', TOGGLE),
     button('window.equalizer', 'equalizer', 114, 344, 46, 36, 'chip', TOGGLE),
+    button('app.playlist', 'list', 254, 344, 46, 36, 'chip', TOGGLE),
     button('app.skins', 'skins', 300, 344, 46, 36, 'chip'),
   ],
   components: [
@@ -1047,7 +1054,7 @@ const walk = {
     { type: 'text', source: 'player.status', x: 176, y: 118, width: 90, height: 14, fontSize: 10, color: '#b9b0a1' },
     { type: 'time', source: 'duration', x: 266, y: 118, width: 64, height: 14, fontSize: 11, align: 'right', color: '#b9b0a1' },
     { type: 'seekbar', x: 24, y: 256, width: 320, height: 8 },
-    { type: 'volume', x: 172, y: 361, width: 120, height: 8 },
+    { type: 'volume', x: 172, y: 361, width: 74, height: 8 },
     { type: 'playlist', x: 28, y: 396, width: 312, height: 166 },
   ],
   spinners: [bigHub('hub-left', 184, 150), bigHub('hub-right', 288, 150)],
@@ -1112,7 +1119,7 @@ const meter = {
     <div class="bay"></div>
     <div class="shell"><div class="band"></div><div class="glass"></div><div class="foot"></div></div>
     <div class="slot" style="left:22px;top:315px;width:336px;height:14px"></div>
-    <div class="slot" style="left:170px;top:441px;width:132px;height:14px"></div>
+    <div class="slot" style="left:170px;top:441px;width:88px;height:14px"></div>
     <div class="well" style="left:24px;top:476px;width:332px;height:150px"></div>
   `,
   buttons: [
@@ -1124,6 +1131,7 @@ const meter = {
     button('player.repeat', 'repeat', 24, 430, 46, 36, 'tab', TOGGLE),
     button('player.shuffle', 'shuffle', 70, 430, 46, 36, 'tab', TOGGLE),
     button('window.equalizer', 'equalizer', 116, 430, 46, 36, 'tab', TOGGLE),
+    button('app.playlist', 'list', 264, 430, 46, 36, 'tab', TOGGLE),
     button('app.skins', 'skins', 310, 430, 46, 36, 'tab'),
   ],
   components: [
@@ -1134,7 +1142,7 @@ const meter = {
     { type: 'text', source: 'player.status', x: 24, y: 294, width: 200, height: 16, fontSize: 10, color: '#a9b4be' },
     { type: 'time', source: 'duration', x: 276, y: 294, width: 80, height: 16, fontSize: 11, align: 'right', color: '#a9b4be' },
     { type: 'seekbar', x: 24, y: 318, width: 332, height: 8 },
-    { type: 'volume', x: 172, y: 444, width: 128, height: 8 },
+    { type: 'volume', x: 172, y: 444, width: 84, height: 8 },
     { type: 'playlist', x: 28, y: 480, width: 324, height: 142 },
   ],
   spinners: [smallHub('hub-left', 140, 203), smallHub('hub-right', 232, 203)],
@@ -1198,7 +1206,7 @@ const ferro = {
       <div class="foot"></div>
     </div>
     <div class="slot" style="left:14px;top:285px;width:372px;height:14px"></div>
-    <div class="slot" style="left:168px;top:373px;width:150px;height:14px"></div>
+    <div class="slot" style="left:168px;top:373px;width:116px;height:14px"></div>
     <div class="well" style="left:16px;top:406px;width:368px;height:150px"></div>
   `,
   buttons: [
@@ -1210,6 +1218,7 @@ const ferro = {
     button('player.repeat', 'repeat', 18, 362, 46, 36, 'mini', TOGGLE),
     button('player.shuffle', 'shuffle', 64, 362, 46, 36, 'mini', TOGGLE),
     button('window.equalizer', 'equalizer', 110, 362, 46, 36, 'mini', TOGGLE),
+    button('app.playlist', 'list', 290, 362, 46, 36, 'mini', TOGGLE),
     button('app.skins', 'skins', 336, 362, 46, 36, 'mini'),
   ],
   components: [
@@ -1220,7 +1229,7 @@ const ferro = {
     { type: 'text', source: 'player.status', x: 100, y: 262, width: 200, height: 18, fontSize: 10, align: 'center', color: '#b1b1ad' },
     { type: 'time', source: 'duration', x: 304, y: 262, width: 80, height: 18, fontSize: 13, align: 'right', color: '#b1b1ad' },
     { type: 'seekbar', x: 16, y: 288, width: 368, height: 8 },
-    { type: 'volume', x: 170, y: 376, width: 146, height: 8 },
+    { type: 'volume', x: 170, y: 376, width: 112, height: 8 },
     { type: 'playlist', x: 20, y: 410, width: 360, height: 142 },
   ],
   spinners: [
@@ -1290,7 +1299,7 @@ const mixtape = {
       <div class="foot"></div>
     </div>
     <div class="slot" style="left:14px;top:285px;width:372px;height:14px"></div>
-    <div class="slot" style="left:176px;top:391px;width:140px;height:14px"></div>
+    <div class="slot" style="left:176px;top:391px;width:102px;height:14px"></div>
     <div class="card" style="left:18px;top:424px;width:360px;height:138px"></div>
   `,
   buttons: [
@@ -1302,6 +1311,7 @@ const mixtape = {
     button('player.repeat', 'repeat', 16, 380, 50, 38, 'tag', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 380, 50, 38, 'tag', TOGGLE),
     button('window.equalizer', 'equalizer', 116, 380, 50, 38, 'tag', TOGGLE),
+    button('app.playlist', 'list', 284, 380, 50, 38, 'tag', TOGGLE),
     button('app.skins', 'skins', 334, 380, 50, 38, 'tag'),
   ],
   components: [
@@ -1312,7 +1322,7 @@ const mixtape = {
     { type: 'spectrum', x: 200, y: 262, width: 100, height: 18, color: '#0a6a9e' },
     { type: 'time', source: 'duration', x: 304, y: 262, width: 80, height: 20, fontSize: 15, align: 'right', color: '#565656' },
     { type: 'seekbar', x: 16, y: 288, width: 368, height: 8 },
-    { type: 'volume', x: 178, y: 394, width: 136, height: 8 },
+    { type: 'volume', x: 178, y: 394, width: 98, height: 8 },
     { type: 'playlist', x: 22, y: 428, width: 352, height: 130 },
   ],
   spinners: [smallHub('hub-left', 136, 128), smallHub('hub-right', 222, 128)],
@@ -1380,6 +1390,7 @@ const systemSkin = {
     button('player.repeat', 'repeat', 22, 362, 46, 46, 'dot', TOGGLE),
     button('player.shuffle', 'shuffle', 68, 362, 46, 46, 'dot', TOGGLE),
     button('window.equalizer', 'equalizer', 114, 362, 46, 46, 'dot', TOGGLE),
+    button('app.playlist', 'list', 266, 362, 46, 46, 'dot', TOGGLE),
     button('app.skins', 'skins', 312, 362, 46, 46, 'dot'),
   ],
   components: [
@@ -1390,7 +1401,7 @@ const systemSkin = {
     { type: 'time', source: 'duration', x: 104, y: 162, width: 80, height: 14, fontSize: 10, align: 'right', color: '#a9a9a9' },
     { type: 'spectrum', x: 44, y: 190, width: 140, height: 60, color: '#f5f5f5' },
     { type: 'seekbar', x: 24, y: 276, width: 332, height: 6 },
-    { type: 'volume', x: 172, y: 382, width: 130, height: 6 },
+    { type: 'volume', x: 172, y: 382, width: 86, height: 6 },
     { type: 'playlist', x: 28, y: 422, width: 324, height: 166 },
   ],
   spinners: [
@@ -1442,7 +1453,7 @@ const consoleSkin = {
     <div class="lcd" style="left:22px;top:18px;width:356px;height:100px"></div>
     <div class="slot" style="left:22px;top:129px;width:356px;height:14px"></div>
     <div class="rail"></div>
-    <div class="tiny" style="left:22px;top:332px;width:70px">repeat</div><div class="tiny" style="left:93px;top:332px;width:70px">shuffle</div><div class="tiny" style="left:164px;top:332px;width:70px">eq</div><div class="tiny" style="left:235px;top:332px;width:70px">skin</div><div class="tiny" style="left:306px;top:332px;width:70px">stop</div>
+    <div class="tiny" style="left:23px;top:332px;width:59px">repeat</div><div class="tiny" style="left:82px;top:332px;width:59px">shuffle</div><div class="tiny" style="left:141px;top:332px;width:59px">eq</div><div class="tiny" style="left:200px;top:332px;width:59px">list</div><div class="tiny" style="left:259px;top:332px;width:59px">skin</div><div class="tiny" style="left:318px;top:332px;width:59px">stop</div>
     <div class="grill" style="left:24px;top:352px"></div><div class="tiny" style="left:48px;top:356px">volume</div>
     <div class="slot" style="left:96px;top:353px;width:282px;height:14px"></div>
     <div class="lcd" style="left:22px;top:380px;width:356px;height:184px"></div>
@@ -1452,11 +1463,12 @@ const consoleSkin = {
     button('player.togglePlay', 'play', 112, 150, 88, 106, 'bowl', PLAY),
     button('player.next', 'next', 200, 150, 88, 106, 'bowl'),
     button('player.open', 'open', 288, 150, 88, 106, 'bowl'),
-    button('player.repeat', 'repeat', 23, 264, 71, 62, 'cell', TOGGLE),
-    button('player.shuffle', 'shuffle', 94, 264, 71, 62, 'cell', TOGGLE),
-    button('window.equalizer', 'equalizer', 165, 264, 71, 62, 'cell', TOGGLE),
-    button('app.skins', 'skins', 236, 264, 71, 62, 'cell'),
-    button('player.stop', 'stop', 307, 264, 70, 62, 'cell red'),
+    button('player.repeat', 'repeat', 23, 264, 59, 62, 'cell', TOGGLE),
+    button('player.shuffle', 'shuffle', 82, 264, 59, 62, 'cell', TOGGLE),
+    button('window.equalizer', 'equalizer', 141, 264, 59, 62, 'cell', TOGGLE),
+    button('app.playlist', 'list', 200, 264, 59, 62, 'cell', TOGGLE),
+    button('app.skins', 'skins', 259, 264, 59, 62, 'cell'),
+    button('player.stop', 'stop', 318, 264, 59, 62, 'cell red'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 36, y: 26, width: 328, height: 24, fontSize: 16, color: '#1b1d1f' },
@@ -1519,8 +1531,8 @@ const dial = {
   art: `
     <div class="ticks"></div><div class="seat"></div><div class="shade"></div>
     <div class="sign" style="left:66px">–</div><div class="sign" style="right:66px">+</div>
-    <div class="cap" style="left:118px;top:473px">volume</div>
-    <div class="slot" style="left:116px;top:485px;width:128px;height:14px"></div>
+    <div class="cap" style="left:166px;top:473px">volume</div>
+    <div class="slot" style="left:164px;top:485px;width:80px;height:14px"></div>
     <div class="sheet" style="left:22px;top:516px;width:316px;height:148px"></div>
   `,
   buttons: [
@@ -1531,7 +1543,8 @@ const dial = {
     button('player.stop', 'stop', 282, 408, 52, 52, 'pad'),
     button('player.repeat', 'repeat', 20, 468, 46, 46, 'pad', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 468, 46, 46, 'pad', TOGGLE),
-    button('window.equalizer', 'equalizer', 248, 468, 46, 46, 'pad', TOGGLE),
+    button('window.equalizer', 'equalizer', 112, 468, 46, 46, 'pad', TOGGLE),
+    button('app.playlist', 'list', 248, 468, 46, 46, 'pad', TOGGLE),
     button('app.skins', 'skins', 294, 468, 46, 46, 'pad'),
   ],
   components: [
@@ -1541,7 +1554,7 @@ const dial = {
     { type: 'text', source: 'player.status', x: 24, y: 376, width: 90, height: 16, fontSize: 10, color: '#256b0c' },
     { type: 'spectrum', x: 120, y: 374, width: 120, height: 18, color: '#256b0c' },
     { type: 'time', source: 'duration', x: 246, y: 376, width: 90, height: 16, fontSize: 11, align: 'right', color: '#54575a' },
-    { type: 'volume', x: 118, y: 488, width: 124, height: 8 },
+    { type: 'volume', x: 166, y: 488, width: 76, height: 8 },
     { type: 'playlist', x: 26, y: 520, width: 308, height: 140 },
   ],
   needles: [

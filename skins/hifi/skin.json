@@ -225,6 +225,20 @@
         },
         {
           "type": "button",
+          "action": "app.playlist",
+          "x": 286,
+          "y": 222,
+          "width": 50,
+          "height": 34,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
           "action": "app.skins",
           "x": 338,
           "y": 222,

@@ -134,7 +134,7 @@
           "type": "volume",
           "x": 172,
           "y": 444,
-          "width": 128,
+          "width": 84,
           "height": 8
         },
         {
@@ -243,6 +243,20 @@
             "hover": "assets/equalizer-hover.png",
             "pressed": "assets/equalizer-pressed.png",
             "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 264,
+          "y": 430,
+          "width": 46,
+          "height": 36,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
           }
         },
         {
