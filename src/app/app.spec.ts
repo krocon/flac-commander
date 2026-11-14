@@ -114,6 +114,24 @@ describe('App', () => {
     expect(store.chooserOpen()).toBe(false);
   });
 
+  it('leaves the keys of a text field alone: what is typed arrives there', async () => {
+    windows.current = 'skins';
+    create();
+    await vi.waitFor(() => expect(el.querySelector('app-skin-chooser.page')).not.toBeNull());
+    const field = el.querySelector<HTMLInputElement>('app-skin-chooser input');
+    document.body.append(el);
+    try {
+      // a letter that is a shortcut elsewhere, one that is none, and Space
+      for (const key of ['v', 'y', ' ']) {
+        const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+        field?.dispatchEvent(event);
+        expect(event.defaultPrevented, `key "${key}"`).toBe(false);
+      }
+    } finally {
+      el.remove();
+    }
+  });
+
   it('the skins window shows the chooser and nothing else', async () => {
     windows.current = 'skins';
     create();

@@ -112,7 +112,7 @@ import { WindowsStore } from './features/windows/windows.store';
   styleUrl: './app.css',
   // the one keyboard listener of the app: shortcuts are actions (core/actions)
   host: {
-    '(document:keydown)': 'actions.handleKey($event)',
+    '(document:keydown)': 'onKey($event)',
     '(window:resize)': 'fitWindow()',
   },
 })
@@ -132,6 +132,14 @@ export class App {
     () => this.skins.listHidden() || this.windows.playlistDetached(),
   );
   protected readonly version = computed(() => this.diagnostics.info()?.app.version ?? null);
+
+  /**
+   * Passes a key on to the actions. Returns nothing on purpose: a listener that answers
+   * `false` has its event cancelled by Angular, and then no key reaches a text field.
+   */
+  protected onKey(event: KeyboardEvent): void {
+    this.actions.handleKey(event);
+  }
 
   /**
    * The native menu: every action a button can have, in three menus. It follows the language,
