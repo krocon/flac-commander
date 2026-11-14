@@ -1,4 +1,12 @@
 import { Unsubscribe } from '../app/core/backend/events';
+import { LibraryApi } from '../app/core/library/library-api';
+import {
+  EMPTY_LIBRARY_STATE,
+  EMPTY_LISTING,
+  LibraryFound,
+  LibraryListing,
+  LibraryState,
+} from '../app/core/library/library.models';
 import { LogApi } from '../app/core/log/log-api';
 import { PlayerApi } from '../app/core/player/player-api';
 import {
@@ -530,6 +538,166 @@ export class FakeSkinApi extends SkinApi {
     this.commands.push(text);
   }
 }
+
+export const LIBRARY_STATE: LibraryState = {
+  roots: [{ name: 'Music', path: '/music' }],
+  scan: { scanning: false, folders: 2, tracks: 3 },
+};
+
+/** `/music` → `Barbra` → `People` (2 tracks) and `Guilty` (1 track). */
+export const LIBRARY_FOLDERS: Readonly<Record<string, LibraryListing>> = {
+  '': {
+    folder: null,
+    crumbs: [],
+    folders: [{ name: 'Music', path: '/music', album: null, artist: null, tracks: 0 }],
+    tracks: [],
+  },
+  '/music': {
+    folder: { name: 'Music', path: '/music', album: null, artist: null, tracks: 0 },
+    crumbs: [{ name: 'Music', path: '/music' }],
+    folders: [{ name: 'Barbra', path: '/music/Barbra', album: null, artist: null, tracks: 0 }],
+    tracks: [],
+  },
+  '/music/Barbra': {
+    folder: { name: 'Barbra', path: '/music/Barbra', album: null, artist: null, tracks: 0 },
+    crumbs: [
+      { name: 'Music', path: '/music' },
+      { name: 'Barbra', path: '/music/Barbra' },
+    ],
+    folders: [
+      {
+        name: 'Guilty (1980)',
+        path: '/music/Barbra/Guilty (1980)',
+        album: 'Guilty',
+        artist: 'Barbra Streisand',
+        tracks: 1,
+      },
+      {
+        name: 'People',
+        path: '/music/Barbra/People',
+        album: 'People',
+        artist: null,
+        tracks: 2,
+      },
+    ],
+    tracks: [],
+  },
+  '/music/Barbra/People': {
+    folder: {
+      name: 'People',
+      path: '/music/Barbra/People',
+      album: 'People',
+      artist: 'Barbra Streisand',
+      tracks: 2,
+    },
+    crumbs: [
+      { name: 'Music', path: '/music' },
+      { name: 'Barbra', path: '/music/Barbra' },
+      { name: 'People', path: '/music/Barbra/People' },
+    ],
+    folders: [],
+    tracks: [
+      {
+        name: '11 Goodbyes.flac',
+        path: '/music/Barbra/People/11 Goodbyes.flac',
+        title: "Don't Like Goodbyes",
+        artist: 'Barbra Streisand',
+        album: 'People',
+        durationMs: 189_000,
+      },
+      {
+        name: '12 untagged.flac',
+        path: '/music/Barbra/People/12 untagged.flac',
+        title: null,
+        artist: null,
+        album: null,
+        durationMs: null,
+      },
+    ],
+  },
+};
+
+export const LIBRARY_FOUND: LibraryFound = {
+  albums: [LIBRARY_FOLDERS['/music/Barbra'].folders[1]],
+  tracks: [LIBRARY_FOLDERS['/music/Barbra/People'].tracks[0]],
+  more: true,
+};
+
+/** The backend's library: a small tree of folders; records the commands. */
+export class FakeLibraryApi extends LibraryApi {
+  readonly commands: string[] = [];
+  readonly handlers = new Set<(state: LibraryState) => void>();
+  snapshot: LibraryState = LIBRARY_STATE;
+  folders: Readonly<Record<string, LibraryListing>> = LIBRARY_FOLDERS;
+  /** What every search finds; a `Deferred` lets the test decide when it arrives. */
+  found: LibraryFound | Deferred<LibraryFound> = LIBRARY_FOUND;
+  /** How many tracks a play or add reports. */
+  played = 2;
+  failure: unknown = null;
+
+  override async state(): Promise<LibraryState> {
+    return this.snapshot;
+  }
+
+  override async addRoot(dialogTitle: string): Promise<boolean> {
+    this.command(`add root "${dialogTitle}"`);
+    return true;
+  }
+
+  override async removeRoot(path: string): Promise<void> {
+    this.command(`remove root ${path}`);
+  }
+
+  override async rescan(): Promise<void> {
+    this.command('rescan');
+  }
+
+  override async browse(path: string | null): Promise<LibraryListing> {
+    this.command(`browse ${path ?? '-'}`);
+    const listing = this.folders[path ?? ''];
+    if (!listing) {
+      throw { code: 'not_found', message: `${path}: no such folder` };
+    }
+    return listing;
+  }
+
+  override async search(query: string): Promise<LibraryFound> {
+    this.command(`search "${query}"`);
+    return this.found instanceof Deferred ? this.found.promise : this.found;
+  }
+
+  override async play(path: string, replace: boolean): Promise<number> {
+    this.command(`${replace ? 'play' : 'add'} ${path}`);
+    return this.played;
+  }
+
+  override async onState(handler: (state: LibraryState) => void): Promise<Unsubscribe> {
+    this.handlers.add(handler);
+    return () => this.handlers.delete(handler);
+  }
+
+  override coverUrl(path: string): string {
+    return `libcover://${path}`;
+  }
+
+  /** The backend reports folders or scan. */
+  emit(state: LibraryState): void {
+    this.snapshot = state;
+    for (const handler of this.handlers) {
+      handler(state);
+    }
+  }
+
+  private command(text: string): void {
+    if (this.failure) {
+      throw this.failure;
+    }
+    this.commands.push(text);
+  }
+}
+
+export const NO_LIBRARY: LibraryState = EMPTY_LIBRARY_STATE;
+export const NO_FOLDERS: Readonly<Record<string, LibraryListing>> = { '': EMPTY_LISTING };
 
 /** The app's windows: the test decides which window this is and which are open. */
 export class FakeWindowApi extends WindowApi {

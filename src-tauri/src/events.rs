@@ -21,6 +21,11 @@ pub const SKIN_ACTIVE: &str = "skins://active";
 /// A secondary window was opened or closed. Payload: `windows::WindowsState`.
 pub const WINDOWS_STATE: &str = "windows://state";
 
+/// The folders of the library changed, or the scan that reads them moved on. Payload:
+/// `fc_core::library::LibraryState`, mirrored in `core/library/library.models.ts`; its JSON form
+/// is tested in `fc-core/src/library/tests.rs`.
+pub const LIBRARY_STATE: &str = "library://state";
+
 /// Levels of the frequency bands for visualizers: an array of numbers in 0…1, about 25 times
 /// per second while music plays and a window asked for it (`player_set_spectrum`).
 pub const PLAYER_SPECTRUM: &str = "player://spectrum";

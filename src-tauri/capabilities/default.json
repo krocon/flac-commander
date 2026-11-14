@@ -6,7 +6,8 @@
     "main",
     "playlist",
     "equalizer",
-    "skins"
+    "skins",
+    "library"
   ],
   "permissions": [
     "core:default",

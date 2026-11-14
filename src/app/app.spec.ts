@@ -3,6 +3,7 @@ import { App } from './app';
 import { SkinStore } from './features/skins/skin.store';
 import { ActionService } from './core/actions/action.service';
 import { setLanguage } from './core/i18n/i18n';
+import { LibraryApi } from './core/library/library-api';
 import { LogApi } from './core/log/log-api';
 import { PlayerApi } from './core/player/player-api';
 import { PlaylistApi } from './core/playlist/playlist-api';
@@ -10,6 +11,7 @@ import { SkinApi } from './core/skins/skin-api';
 import { SystemApi } from './core/system/system-api';
 import { WindowApi } from './core/windows/window-api';
 import {
+  FakeLibraryApi,
   FakeLogApi,
   FakePlayerApi,
   FakePlaylistApi,
@@ -35,6 +37,7 @@ describe('App', () => {
         { provide: SkinApi, useValue: skins },
         { provide: WindowApi, useValue: windows },
         { provide: SystemApi, useValue: new FakeSystemApi() },
+        { provide: LibraryApi, useValue: new FakeLibraryApi() },
         { provide: LogApi, useValue: new FakeLogApi() },
       ],
     });
@@ -201,6 +204,33 @@ describe('App', () => {
     await vi.waitFor(() => expect(el.querySelector('.solo app-equalizer')).not.toBeNull());
     expect(el.querySelector('app-player')).toBeNull();
     expect(el.querySelector('app-playlist')).toBeNull();
+  });
+
+  it('opens the library window by button and key, and is the library alone in it', async () => {
+    create();
+    await vi.waitFor(() => expect(el.querySelector('.flow header')).not.toBeNull());
+    const buttons = [...el.querySelectorAll<HTMLButtonElement>('.flow header button')];
+    const library = buttons.find((b) => b.textContent?.includes('Bibliothek'));
+    library?.click();
+    await vi.waitFor(() => expect(windows.commands).toEqual(['toggle library']));
+    await vi.waitFor(() => expect(library?.getAttribute('aria-pressed')).toBe('true'));
+    press('b', mod);
+    await vi.waitFor(() => expect(windows.commands).toEqual(['toggle library', 'toggle library']));
+    // plain B is still "next track"
+    expect(TestBed.inject(ActionService).hint('window.library')).toMatch(/^Bibliothek \(.+B\)$/);
+    expect(el.querySelector('app-library')).toBeNull();
+
+    TestBed.resetTestingModule();
+    windows = new FakeWindowApi();
+    windows.current = 'library';
+    skins.snapshot = RETRO_SKIN;
+    create();
+    await vi.waitFor(() => expect(el.querySelector('app-library .grid')).not.toBeNull());
+    expect(el.querySelector('app-player')).toBeNull();
+    expect(el.querySelector('app-skinned-player')).toBeNull();
+    // shortcuts work in every window
+    press('ArrowUp');
+    await vi.waitFor(() => expect(player.commands).toEqual(['volume 1.00']));
   });
 
   it('shows where dropped files go while they are dragged over the window', async () => {

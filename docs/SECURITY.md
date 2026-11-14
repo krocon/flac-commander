@@ -5,13 +5,13 @@
 - **Keine Netzwerkzugriffe.** Die App verbindet sich mit nichts.
 - **Minimale Rechte der WebView** (`src-tauri/capabilities/default.json`): `core:default` (eigene Commands, Events)
   und `log:default` (Logzeilen anhängen). Kein Dateisystem-, Shell-, Dialog- oder HTTP-Plugin.
-- **Feste Fensterliste.** Die App kennt genau ihre eigenen Fenster (`main`, `playlist`, `equalizer`); ein Command kann kein
+- **Feste Fensterliste.** Die App kennt genau ihre eigenen Fenster (`main`, `playlist`, `equalizer`, `skins`, `library`); ein Command kann kein
   anderes öffnen, und jedes Fenster lädt nur das eigene Frontend. Alle Fenster haben dieselben minimalen Rechte.
 - **Strikte CSP** (`tauri.conf.json`): `default-src 'self'`, Skripte nur aus dem Bundle, Verbindungen nur zur IPC.
   Einzige Ausnahme: `style-src 'unsafe-inline'`, weil Angular Komponenten-Styles zur Laufzeit einfügt.
 - **Jede Fähigkeit ist ein eigener, schmaler Command.** `system_info` liest; `start_test_tone` spielt einen festen,
   leisen Ton; die `player_*`-Commands steuern die Engine und nehmen nur Zahlen entgegen (Position, Lautstärke).
-- **Die WebView nennt nie einen Dateipfad.** `playlist_open` zeigt den System-Dialog in Rust; fallengelassene
+- **Die WebView nennt keinen Dateipfad – außer in der Bibliothek** (nächster Abschnitt). `playlist_open` zeigt den System-Dialog in Rust; fallengelassene
   Dateien nimmt Rust aus dem Fensterereignis. Die Playlist-Commands nehmen nur Ids, einen Modus und einen Schalter.
   Die Wahl geht direkt an die Sitzung; das Dialog-Plugin hat keine WebView-Berechtigung. Der Titel des Dialogs kommt aus dem Frontend
   und wird gekürzt und von Steuerzeichen befreit.
@@ -30,6 +30,27 @@
 - Ordner werden begrenzt durchsucht (Tiefe 12, 20 000 Titel); symbolischen Links auf Ordner wird nicht gefolgt.
 - `state.json` wird wie fremde Daten gelesen: Werte außerhalb ihres Bereichs werden korrigiert, höchstens 50 000
   Einträge, Unlesbares wird beiseitegelegt statt die App am Start zu hindern.
+
+## Bibliothek
+
+Das Bibliotheksfenster ist die eine Stelle, an der die WebView Pfade nennt: Sie bekommt die Pfade der Ordner und
+Titel von Rust und schickt sie zurück (`library_browse`, `library_play`, `libcover://`).
+
+- **Nur gewählte Ordner.** Ein Wurzelordner kommt ausschließlich über den Ordner-Dialog des Systems in Rust
+  (`library_add_root`) oder aus `state.json` (dort nur absolute Pfade, höchstens 32). Kein Command nimmt einen
+  Wurzelordner als Text entgegen.
+- **Jeder Pfad wird geprüft.** `Library::resolve` macht ihn kanonisch (löst `..` und Links auf) und verlangt, dass
+  er in einem Wurzelordner liegt; sonst `permission_denied`, beim Cover 404 – ohne zu verraten, ob es die Datei gibt.
+  Tests: Pfade daneben, mit `..`, über Links.
+- **Links** werden beim Auflisten und Einlesen weder gezeigt noch verfolgt; versteckte Einträge (`.…`) auch nicht.
+- **Die WebView liest keine Datei.** Sie bekommt Namen, Tags und über `libcover://` ein neu kodiertes JPEG von
+  höchstens 360 px – nie die Originaldatei, nie etwas anderes als ein Bild. `img-src` der CSP nennt das Protokoll.
+- **Cover sind fremde Daten:** Dekodiert wird nur JPEG, PNG, WebP in reinem Rust (`image`), mit Grenzen für Seiten-
+  länge und Speicher; ein Fehler ergibt „kein Cover". Die Decoder sind neue Angriffsfläche für präparierte Bilder
+  in Musikdateien – dieselbe Klasse von Risiko wie die Audio-Decoder.
+- **Grenzen:** Pfade höchstens 4096 Zeichen, Suchtext 200, 5000 Einträge je Ordner, Tiefe 12, 200 000 Titel im Index.
+- **Cache:** Die kleinen Cover liegen im Cache-Ordner der App unter Namen aus einem Hash; sie verraten, welche
+  Cover die Sammlung enthält, nicht mehr.
 
 ## Skins
 
