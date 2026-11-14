@@ -157,16 +157,22 @@
         ></div>
       }
       @case ('pack') {
+        <!-- the window of a cassette cuts the box, the wound tape is the circle inside it -->
         <div
-          class="placed pack"
+          class="placed pack-window"
           aria-hidden="true"
           [style.left.px]="item.left"
           [style.top.px]="item.top"
           [style.width.px]="item.width"
           [style.height.px]="item.height"
-          [style.background-image]="item.normal"
-          [style.clip-path]="'circle(' + packDiameter(c) / 2 + 'px at 50% 50%)'"
-        ></div>
+          [style.clip-path]="packWindow(c)"
+        >
+          <div
+            class="pack"
+            [style.background-image]="item.normal"
+            [style.clip-path]="'circle(' + packDiameter(c) / 2 + 'px at 50% 50%)'"
+          ></div>
+        </div>
       }
       @case ('needle') {
         <div

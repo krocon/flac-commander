@@ -37,11 +37,50 @@
       "width": 380,
       "height": 560,
       "background": "assets/background.png",
+      "titleBar": "#fbf7ef",
       "collapsedHeight": 392,
       "resize": {
         "stretchY": 471
       },
       "components": [
+        {
+          "type": "pack",
+          "x": 178,
+          "y": 140,
+          "width": 76,
+          "height": 76,
+          "from": 76,
+          "to": 40,
+          "clip": {
+            "x": 18,
+            "y": 16,
+            "width": 58,
+            "height": 36,
+            "radius": 18
+          },
+          "states": {
+            "normal": "assets/tape-left.png"
+          }
+        },
+        {
+          "type": "pack",
+          "x": 268,
+          "y": 140,
+          "width": 76,
+          "height": 76,
+          "from": 40,
+          "to": 76,
+          "clip": {
+            "x": 0,
+            "y": 16,
+            "width": 50,
+            "height": 36,
+            "radius": 18
+          },
+          "states": {
+            "normal": "assets/tape-right.png"
+          }
+        },
         {
           "type": "spinner",
           "x": 202,

@@ -34,10 +34,12 @@
     "player": {
       "layout": "absolute",
       "width": 640,
-      "height": 430,
+      "height": 530,
       "background": "assets/background.png",
+      "titleBar": "#f0f0ed",
+      "collapsedHeight": 372,
       "resize": {
-        "stretchY": 364
+        "stretchY": 448
       },
       "components": [
         {
@@ -98,7 +100,7 @@
           "type": "text",
           "source": "track.title",
           "x": 24,
-          "y": 276,
+          "y": 270,
           "width": 282,
           "height": 24,
           "fontSize": 17,
@@ -108,7 +110,7 @@
           "type": "text",
           "source": "track.artist",
           "x": 24,
-          "y": 300,
+          "y": 294,
           "width": 282,
           "height": 18,
           "fontSize": 12,
@@ -118,7 +120,7 @@
           "type": "time",
           "source": "position",
           "x": 24,
-          "y": 324,
+          "y": 319,
           "width": 80,
           "height": 16,
           "fontSize": 12,
@@ -128,7 +130,7 @@
           "type": "text",
           "source": "player.status",
           "x": 104,
-          "y": 324,
+          "y": 319,
           "width": 122,
           "height": 16,
           "fontSize": 10,
@@ -139,7 +141,7 @@
           "type": "time",
           "source": "duration",
           "x": 226,
-          "y": 324,
+          "y": 319,
           "width": 80,
           "height": 16,
           "fontSize": 12,
@@ -149,24 +151,24 @@
         {
           "type": "seekbar",
           "x": 24,
-          "y": 346,
+          "y": 342,
           "width": 280,
           "height": 8
         },
         {
           "type": "volume",
-          "x": 378,
-          "y": 262,
-          "width": 238,
+          "x": 432,
+          "y": 340,
+          "width": 184,
           "height": 8
         },
         {
           "type": "button",
           "action": "player.previous",
-          "x": 22,
-          "y": 372,
-          "width": 52,
-          "height": 46,
+          "x": 332,
+          "y": 270,
+          "width": 57,
+          "height": 48,
           "states": {
             "normal": "assets/previous.png",
             "hover": "assets/previous-hover.png",
@@ -176,10 +178,10 @@
         {
           "type": "button",
           "action": "player.togglePlay",
-          "x": 74,
-          "y": 372,
-          "width": 52,
-          "height": 46,
+          "x": 389,
+          "y": 270,
+          "width": 57,
+          "height": 48,
           "states": {
             "normal": "assets/play.png",
             "hover": "assets/play-hover.png",
@@ -190,10 +192,10 @@
         {
           "type": "button",
           "action": "player.stop",
-          "x": 126,
-          "y": 372,
-          "width": 52,
-          "height": 46,
+          "x": 446,
+          "y": 270,
+          "width": 57,
+          "height": 48,
           "states": {
             "normal": "assets/stop.png",
             "hover": "assets/stop-hover.png",
@@ -203,10 +205,10 @@
         {
           "type": "button",
           "action": "player.next",
-          "x": 178,
-          "y": 372,
-          "width": 52,
-          "height": 46,
+          "x": 503,
+          "y": 270,
+          "width": 57,
+          "height": 48,
           "states": {
             "normal": "assets/next.png",
             "hover": "assets/next-hover.png",
@@ -216,14 +218,28 @@
         {
           "type": "button",
           "action": "player.open",
-          "x": 230,
-          "y": 372,
-          "width": 52,
-          "height": 46,
+          "x": 560,
+          "y": 270,
+          "width": 57,
+          "height": 48,
           "states": {
             "normal": "assets/open.png",
             "hover": "assets/open-hover.png",
             "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 332,
+          "y": 322,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
           }
         },
         {
@@ -283,10 +299,10 @@
         },
         {
           "type": "playlist",
-          "x": 334,
-          "y": 286,
-          "width": 280,
-          "height": 126
+          "x": 26,
+          "y": 380,
+          "width": 588,
+          "height": 134
         }
       ]
     }

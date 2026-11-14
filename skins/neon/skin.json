@@ -36,6 +36,7 @@
       "width": 380,
       "height": 540,
       "background": "assets/background.png",
+      "titleBar": "#3a1a6e",
       "collapsedHeight": 288,
       "resize": {
         "stretchY": 410
@@ -109,9 +110,9 @@
         },
         {
           "type": "volume",
-          "x": 128,
+          "x": 168,
           "y": 252,
-          "width": 124,
+          "width": 94,
           "height": 8
         },
         {
@@ -185,7 +186,7 @@
           "action": "player.repeat",
           "x": 9,
           "y": 236,
-          "width": 54,
+          "width": 50,
           "height": 40,
           "states": {
             "normal": "assets/repeat.png",
@@ -197,9 +198,9 @@
         {
           "type": "button",
           "action": "player.shuffle",
-          "x": 63,
+          "x": 59,
           "y": 236,
-          "width": 54,
+          "width": 50,
           "height": 40,
           "states": {
             "normal": "assets/shuffle.png",
@@ -211,9 +212,9 @@
         {
           "type": "button",
           "action": "window.equalizer",
-          "x": 263,
+          "x": 109,
           "y": 236,
-          "width": 54,
+          "width": 50,
           "height": 40,
           "states": {
             "normal": "assets/equalizer.png",
@@ -224,10 +225,24 @@
         },
         {
           "type": "button",
-          "action": "app.skins",
-          "x": 317,
+          "action": "app.playlist",
+          "x": 271,
           "y": 236,
-          "width": 54,
+          "width": 50,
+          "height": 40,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 321,
+          "y": 236,
+          "width": 50,
           "height": 40,
           "states": {
             "normal": "assets/skins.png",

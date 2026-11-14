@@ -72,6 +72,22 @@ const button = (action, icon, x, y, width, height, look, more = {}) => ({
   ...more,
 });
 const PLAY = { activeIcon: 'pause', toggle: true };
+
+/**
+ * The tape of a cassette: wound off the left hub and on to the right one as the track goes
+ * on, and seen only through `window` (in the coordinates of the skin).
+ */
+const cassettePacks = (window, hubs, big, small) =>
+  hubs.map(([cx, cy], n) => {
+    const x = Math.round(cx - big / 2);
+    const y = Math.round(cy - big / 2);
+    const left = Math.max(window.x, x);
+    const top = Math.max(window.y, y);
+    const width = Math.min(window.x + window.width, x + big) - left;
+    const height = Math.min(window.y + window.height, y + big) - top;
+    const radius = window.radius ? { radius: Math.min(window.radius, Math.floor(Math.min(width, height) / 2)) } : {};
+    return { name: n === 0 ? 'tape-left' : 'tape-right', x, y, width: big, height: big, from: n === 0 ? big : small, to: n === 0 ? small : big, clip: { x: left - x, y: top - y, width, height, ...radius }, html: '<div class="wound"></div>' };
+  });
 const TOGGLE = { toggle: true };
 
 const hifi = {
@@ -158,6 +174,7 @@ const hifi = {
     button('player.repeat', 'repeat', 14, 222, 50, 34, 'key led', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 222, 50, 34, 'key led', TOGGLE),
     button('window.equalizer', 'equalizer', 118, 222, 50, 34, 'key led', TOGGLE),
+    button('app.playlist', 'list', 286, 222, 50, 34, 'key led', TOGGLE),
     button('app.skins', 'skins', 338, 222, 50, 34, 'key'),
   ],
   components: [
@@ -243,7 +260,7 @@ const neon = {
     <div class="floor"></div>
     <div class="panel" style="left:14px;top:14px;width:352px;height:118px"><div class="sun"></div></div>
     <div class="groove" style="left:11px;top:142px;width:358px;height:14px"></div>
-    <div class="groove" style="left:125px;top:249px;width:130px;height:14px"></div>
+    <div class="groove" style="left:165px;top:249px;width:100px;height:14px"></div>
     <div class="panel list" style="left:14px;top:290px;width:352px;height:236px"></div>
   `,
   buttons: [
@@ -252,10 +269,11 @@ const neon = {
     button('player.togglePlay', 'play', 157, 166, 66, 66, 'orb', PLAY),
     button('player.next', 'next', 223, 174, 50, 50, 'tile'),
     button('player.open', 'open', 273, 174, 50, 50, 'tile'),
-    button('player.repeat', 'repeat', 9, 236, 54, 40, 'tile small', TOGGLE),
-    button('player.shuffle', 'shuffle', 63, 236, 54, 40, 'tile small', TOGGLE),
-    button('window.equalizer', 'equalizer', 263, 236, 54, 40, 'tile small', TOGGLE),
-    button('app.skins', 'skins', 317, 236, 54, 40, 'tile small'),
+    button('player.repeat', 'repeat', 9, 236, 50, 40, 'tile small', TOGGLE),
+    button('player.shuffle', 'shuffle', 59, 236, 50, 40, 'tile small', TOGGLE),
+    button('window.equalizer', 'equalizer', 109, 236, 50, 40, 'tile small', TOGGLE),
+    button('app.playlist', 'list', 271, 236, 50, 40, 'tile small', TOGGLE),
+    button('app.skins', 'skins', 321, 236, 50, 40, 'tile small'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 28, y: 24, width: 232, height: 22, fontSize: 16, color: '#f6edff' },
@@ -265,12 +283,11 @@ const neon = {
     { type: 'text', source: 'player.status', x: 28, y: 112, width: 150, height: 14, fontSize: 10, color: '#b9a3da' },
     { type: 'time', source: 'duration', x: 190, y: 112, width: 66, height: 14, fontSize: 10, align: 'right', color: '#b9a3da' },
     { type: 'seekbar', x: 14, y: 145, width: 352, height: 8 },
-    { type: 'volume', x: 128, y: 252, width: 124, height: 8 },
+    { type: 'volume', x: 168, y: 252, width: 94, height: 8 },
     { type: 'playlist', x: 20, y: 296, width: 340, height: 224 },
   ],
 };
 
-const reel = (cx) => `<div class="pack" style="left:${cx - 44}px"></div>`;
 const hub = (name, x, y) => ({
   name,
   x,
@@ -331,8 +348,6 @@ const tape = {
     .window { position: absolute; left: 62px; top: 88px; width: 216px; height: 50px; border-radius: 6px; overflow: hidden;
       background: linear-gradient(#1a1410, #0f0c0a); box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.18); }
     .window::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,.13) 0 30%, transparent 30.5%); }
-    .pack { position: absolute; top: -19px; width: 88px; height: 88px; border-radius: 50%;
-      background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); box-shadow: 0 0 0 1px #1c120c; }
     .hub { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: #efe7d6;
       box-shadow: inset 0 0 0 3px #efe7d6, inset 0 0 0 9px #17120e, 0 0 0 1px #17120e; }
     .hub i { position: absolute; left: 13px; top: 2px; width: 4px; height: 26px; background: linear-gradient(#efe7d6 0 7px, transparent 7px 19px, #efe7d6 19px); }
@@ -374,7 +389,7 @@ const tape = {
       <div class="screw" style="left:6px;top:6px"></div><div class="screw" style="right:6px;top:6px"></div>
       <div class="screw" style="left:6px;bottom:6px"></div><div class="screw" style="right:6px;bottom:6px"></div>
       <div class="label"><div class="side">SIDE A · LOSSLESS</div></div>
-      <div class="window">${reel(54)}${reel(162)}</div>
+      <div class="window"></div>
       <div class="feet"></div>
     </div>
     <div class="caption" style="left:30px;top:179px">COUNTER</div>
@@ -384,7 +399,7 @@ const tape = {
     <div class="slot" style="left:28px;top:226px;width:344px;height:14px"></div>
     <div class="bed"></div>
     <div class="caption" style="left:180px;top:303px">VOLUME</div>
-    <div class="slot" style="left:178px;top:314px;width:140px;height:14px"></div>
+    <div class="slot" style="left:178px;top:314px;width:92px;height:14px"></div>
     <div class="card" style="left:30px;top:346px;width:340px;height:180px"></div>
   `,
   buttons: [
@@ -396,6 +411,7 @@ const tape = {
     button('player.repeat', 'repeat', 28, 304, 48, 34, 'pill', TOGGLE),
     button('player.shuffle', 'shuffle', 76, 304, 48, 34, 'pill', TOGGLE),
     button('window.equalizer', 'equalizer', 124, 304, 48, 34, 'pill', TOGGLE),
+    button('app.playlist', 'list', 276, 304, 48, 34, 'pill', TOGGLE),
     button('app.skins', 'skins', 324, 304, 48, 34, 'pill'),
   ],
   components: [
@@ -406,9 +422,10 @@ const tape = {
     { type: 'text', source: 'player.status', x: 276, y: 190, width: 94, height: 14, fontSize: 10, align: 'right', color: '#655440' },
     { type: 'time', source: 'duration', x: 276, y: 206, width: 94, height: 14, fontSize: 11, align: 'right', color: '#655440' },
     { type: 'seekbar', x: 30, y: 228, width: 340, height: 10 },
-    { type: 'volume', x: 180, y: 316, width: 136, height: 10 },
+    { type: 'volume', x: 180, y: 316, width: 88, height: 10 },
     { type: 'playlist', x: 34, y: 350, width: 332, height: 172 },
   ],
+  packs: cassettePacks({ x: 92, y: 102, width: 216, height: 50, radius: 6 }, [[146, 127], [254, 127]], 86, 44),
   spinners: [hub('hub-left', 131, 112), hub('hub-right', 239, 112)],
 };
 
@@ -436,7 +453,7 @@ const vinyl = {
     },
   },
   width: 640,
-  height: 400,
+  height: 562,
   pad: 6,
   css: `
     body { background: linear-gradient(145deg, #272a30, #202327); }
@@ -498,31 +515,32 @@ const vinyl = {
   art: `
     <div class="platter"></div><div class="record"></div>
     <div class="pivot"></div>
-    <div class="well" style="left:341px;top:113px;width:286px;height:14px;border-radius:7px"></div>
-    <div class="well" style="left:435px;top:227px;width:102px;height:14px;border-radius:7px"></div>
-    <div class="well" style="left:340px;top:258px;width:288px;height:130px"></div>
+    <div class="well" style="left:341px;top:139px;width:286px;height:14px;border-radius:7px"></div>
+    <div class="well" style="left:341px;top:333px;width:286px;height:14px;border-radius:7px"></div>
+    <div class="well" style="left:12px;top:400px;width:616px;height:150px"></div>
   `,
   buttons: [
-    button('player.open', 'open', 346, 149, 46, 46, 'soft'),
-    button('player.previous', 'previous', 392, 144, 56, 56, 'soft'),
-    button('player.togglePlay', 'play', 448, 136, 72, 72, 'soft blue', PLAY),
-    button('player.next', 'next', 520, 144, 56, 56, 'soft'),
-    button('player.stop', 'stop', 576, 149, 46, 46, 'soft'),
-    button('player.repeat', 'repeat', 342, 212, 44, 44, 'soft', TOGGLE),
-    button('player.shuffle', 'shuffle', 386, 212, 44, 44, 'soft', TOGGLE),
-    button('window.equalizer', 'equalizer', 540, 212, 44, 44, 'soft', TOGGLE),
-    button('app.skins', 'skins', 584, 212, 44, 44, 'soft'),
+    button('player.open', 'open', 346, 183, 46, 46, 'soft'),
+    button('player.previous', 'previous', 392, 178, 56, 56, 'soft'),
+    button('player.togglePlay', 'play', 448, 170, 72, 72, 'soft blue', PLAY),
+    button('player.next', 'next', 520, 178, 56, 56, 'soft'),
+    button('player.stop', 'stop', 576, 183, 46, 46, 'soft'),
+    button('player.repeat', 'repeat', 341, 264, 46, 46, 'soft', TOGGLE),
+    button('player.shuffle', 'shuffle', 401, 264, 46, 46, 'soft', TOGGLE),
+    button('window.equalizer', 'equalizer', 461, 264, 46, 46, 'soft', TOGGLE),
+    button('app.playlist', 'list', 521, 264, 46, 46, 'soft', TOGGLE),
+    button('app.skins', 'skins', 581, 264, 46, 46, 'soft'),
   ],
   components: [
-    { type: 'text', source: 'track.title', x: 344, y: 22, width: 280, height: 26, fontSize: 18, color: '#e9ecf0' },
-    { type: 'text', source: 'track.artist', x: 344, y: 48, width: 280, height: 18, fontSize: 13, color: '#66b5f5' },
-    { type: 'text', source: 'player.status', x: 344, y: 70, width: 280, height: 14, fontSize: 10, color: '#a0a9b3' },
-    { type: 'time', source: 'position', x: 344, y: 94, width: 80, height: 14, fontSize: 11, color: '#a0a9b3' },
-    { type: 'time', source: 'duration', x: 544, y: 94, width: 80, height: 14, fontSize: 11, align: 'right', color: '#a0a9b3' },
-    { type: 'seekbar', x: 344, y: 116, width: 280, height: 8 },
-    { type: 'volume', x: 438, y: 230, width: 96, height: 8 },
+    { type: 'text', source: 'track.title', x: 344, y: 34, width: 280, height: 26, fontSize: 18, color: '#e9ecf0' },
+    { type: 'text', source: 'track.artist', x: 344, y: 62, width: 280, height: 18, fontSize: 13, color: '#66b5f5' },
+    { type: 'text', source: 'player.status', x: 344, y: 86, width: 280, height: 14, fontSize: 10, color: '#a0a9b3' },
+    { type: 'time', source: 'position', x: 344, y: 120, width: 80, height: 14, fontSize: 11, color: '#a0a9b3' },
+    { type: 'time', source: 'duration', x: 544, y: 120, width: 80, height: 14, fontSize: 11, align: 'right', color: '#a0a9b3' },
+    { type: 'seekbar', x: 344, y: 142, width: 280, height: 8 },
+    { type: 'volume', x: 344, y: 336, width: 280, height: 8 },
     { type: 'spectrum', x: 60, y: 350, width: 200, height: 30, color: '#66b5f5' },
-    { type: 'playlist', x: 346, y: 264, width: 276, height: 118 },
+    { type: 'playlist', x: 18, y: 406, width: 604, height: 138 },
   ],
   spinners: [{ name: 'label', x: 112, y: 134, width: 96, height: 96, period: 1800, source: 'track.cover', html: '<div class="disc-label"></div>' }],
   // the spindle stays on top of the cover
@@ -611,8 +629,8 @@ const panel = {
     <div class="slot" style="left:22px;top:157px;width:296px;height:14px"></div>
     ${label('back', 30, 240, 56)}${label('play', 86, 240, 56)}${label('stop', 142, 240, 56)}${label('next', 198, 240, 56)}${label('open', 254, 240, 56)}
     <div class="rule" style="top:258px;opacity:.25"></div>
-    ${label('repeat', 22, 310, 44)}${label('shuffle', 66, 310, 44)}${label('eq', 110, 310, 44)}${label('volume', 164, 310, 100)}${label('skin', 274, 310, 44)}
-    <div class="slot" style="left:162px;top:281px;width:104px;height:14px"></div>
+    ${label('repeat', 22, 310, 42)}${label('shuffle', 64, 310, 42)}${label('eq', 106, 310, 42)}${label('volume', 152, 310, 78)}${label('list', 234, 310, 42)}${label('skin', 276, 310, 42)}
+    <div class="slot" style="left:152px;top:281px;width:78px;height:14px"></div>
     <div class="sheet"></div>
   `,
   buttons: [
@@ -621,10 +639,11 @@ const panel = {
     button('player.stop', 'stop', 142, 182, 56, 56, 'disc'),
     button('player.next', 'next', 198, 182, 56, 56, 'disc'),
     button('player.open', 'open', 254, 182, 56, 56, 'disc'),
-    button('player.repeat', 'repeat', 22, 266, 44, 44, 'disc', TOGGLE),
-    button('player.shuffle', 'shuffle', 66, 266, 44, 44, 'disc', TOGGLE),
-    button('window.equalizer', 'equalizer', 110, 266, 44, 44, 'disc', TOGGLE),
-    button('app.skins', 'skins', 274, 266, 44, 44, 'disc'),
+    button('player.repeat', 'repeat', 22, 267, 42, 42, 'disc', TOGGLE),
+    button('player.shuffle', 'shuffle', 64, 267, 42, 42, 'disc', TOGGLE),
+    button('window.equalizer', 'equalizer', 106, 267, 42, 42, 'disc', TOGGLE),
+    button('app.playlist', 'list', 234, 267, 42, 42, 'disc', TOGGLE),
+    button('app.skins', 'skins', 276, 267, 42, 42, 'disc'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 24, y: 22, width: 232, height: 24, fontSize: 17, color: '#1c1c1a' },
@@ -634,7 +653,7 @@ const panel = {
     { type: 'text', source: 'player.status', x: 24, y: 136, width: 200, height: 14, fontSize: 10, color: '#595854' },
     { type: 'time', source: 'duration', x: 236, y: 136, width: 80, height: 14, fontSize: 10, align: 'right', color: '#595854' },
     { type: 'seekbar', x: 24, y: 160, width: 292, height: 8 },
-    { type: 'volume', x: 164, y: 284, width: 100, height: 8 },
+    { type: 'volume', x: 154, y: 284, width: 74, height: 8 },
     { type: 'playlist', x: 28, y: 336, width: 284, height: 200 },
   ],
 };
@@ -671,7 +690,7 @@ const reelDeck = {
     },
   },
   width: 640,
-  height: 430,
+  height: 530,
   pad: 4,
   css: `
     body { background: linear-gradient(170deg, #f1f1ee, #e2e2de); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -715,20 +734,21 @@ const reelDeck = {
   `,
   art: `
     <div class="screw" style="left:8px;top:8px"></div><div class="screw" style="right:8px;top:8px"></div>
-    <div class="screw" style="left:8px;bottom:8px"></div><div class="screw" style="right:8px;bottom:8px"></div>
+    <div class="screw" style="left:8px;top:356px"></div><div class="screw" style="right:8px;top:356px"></div>
     <div class="seat" style="left:34px;top:14px"></div><div class="seat" style="left:374px;top:14px"></div>
     <div class="path"></div><div class="head"></div>
-    <div class="slot" style="left:22px;top:343px;width:284px;height:14px"></div>
-    <div class="cap" style="left:332px;top:262px">volume</div>
-    <div class="slot" style="left:376px;top:259px;width:242px;height:14px"></div>
-    <div class="sheet" style="left:330px;top:282px;width:288px;height:134px"></div>
+    <div class="slot" style="left:22px;top:339px;width:284px;height:14px"></div>
+    <div class="cap" style="left:386px;top:340px">volume</div>
+    <div class="slot" style="left:430px;top:337px;width:188px;height:14px"></div>
+    <div class="sheet" style="left:22px;top:376px;width:596px;height:142px"></div>
   `,
   buttons: [
-    button('player.previous', 'previous', 22, 372, 52, 46, 'sq'),
-    button('player.togglePlay', 'play', 74, 372, 52, 46, 'sq go', PLAY),
-    button('player.stop', 'stop', 126, 372, 52, 46, 'sq'),
-    button('player.next', 'next', 178, 372, 52, 46, 'sq'),
-    button('player.open', 'open', 230, 372, 52, 46, 'sq'),
+    button('player.previous', 'previous', 332, 270, 57, 48, 'sq'),
+    button('player.togglePlay', 'play', 389, 270, 57, 48, 'sq go', PLAY),
+    button('player.stop', 'stop', 446, 270, 57, 48, 'sq'),
+    button('player.next', 'next', 503, 270, 57, 48, 'sq'),
+    button('player.open', 'open', 560, 270, 57, 48, 'sq'),
+    button('app.playlist', 'list', 332, 322, 44, 44, 'knob', TOGGLE),
     button('player.repeat', 'repeat', 298, 16, 44, 44, 'knob', TOGGLE),
     button('player.shuffle', 'shuffle', 298, 60, 44, 44, 'knob', TOGGLE),
     button('window.equalizer', 'equalizer', 298, 104, 44, 44, 'knob', TOGGLE),
@@ -736,14 +756,14 @@ const reelDeck = {
   ],
   components: [
     { type: 'spectrum', x: 266, y: 208, width: 108, height: 26, color: '#b73e0e' },
-    { type: 'text', source: 'track.title', x: 24, y: 276, width: 282, height: 24, fontSize: 17, color: '#1d1d1b' },
-    { type: 'text', source: 'track.artist', x: 24, y: 300, width: 282, height: 18, fontSize: 12, color: '#5a5a56' },
-    { type: 'time', source: 'position', x: 24, y: 324, width: 80, height: 16, fontSize: 12, color: '#1d1d1b' },
-    { type: 'text', source: 'player.status', x: 104, y: 324, width: 122, height: 16, fontSize: 10, align: 'center', color: '#5a5a56' },
-    { type: 'time', source: 'duration', x: 226, y: 324, width: 80, height: 16, fontSize: 12, align: 'right', color: '#5a5a56' },
-    { type: 'seekbar', x: 24, y: 346, width: 280, height: 8 },
-    { type: 'volume', x: 378, y: 262, width: 238, height: 8 },
-    { type: 'playlist', x: 334, y: 286, width: 280, height: 126 },
+    { type: 'text', source: 'track.title', x: 24, y: 270, width: 282, height: 24, fontSize: 17, color: '#1d1d1b' },
+    { type: 'text', source: 'track.artist', x: 24, y: 294, width: 282, height: 18, fontSize: 12, color: '#5a5a56' },
+    { type: 'time', source: 'position', x: 24, y: 319, width: 80, height: 16, fontSize: 12, color: '#1d1d1b' },
+    { type: 'text', source: 'player.status', x: 104, y: 319, width: 122, height: 16, fontSize: 10, align: 'center', color: '#5a5a56' },
+    { type: 'time', source: 'duration', x: 226, y: 319, width: 80, height: 16, fontSize: 12, align: 'right', color: '#5a5a56' },
+    { type: 'seekbar', x: 24, y: 342, width: 280, height: 8 },
+    { type: 'volume', x: 432, y: 340, width: 184, height: 8 },
+    { type: 'playlist', x: 26, y: 380, width: 588, height: 134 },
   ],
   spinners: [
     { name: 'reel-left', x: 38, y: 18, width: 224, height: 224, period: 3200, html: reelHtml() },
@@ -828,10 +848,11 @@ const recorder = {
     button('player.togglePlay', 'play', 79, 289, 66, 66, 'cap silver', PLAY),
     button('player.next', 'next', 148, 300, 44, 44, 'cap'),
     button('player.stop', 'stop', 90, 358, 44, 44, 'cap'),
-    button('player.repeat', 'repeat', 210, 250, 50, 50, 'cap', TOGGLE),
-    button('player.shuffle', 'shuffle', 262, 250, 50, 50, 'cap', TOGGLE),
-    button('window.equalizer', 'equalizer', 210, 306, 50, 50, 'cap', TOGGLE),
-    button('app.skins', 'skins', 262, 306, 50, 50, 'cap'),
+    button('player.repeat', 'repeat', 214, 242, 46, 46, 'cap', TOGGLE),
+    button('player.shuffle', 'shuffle', 262, 242, 46, 46, 'cap', TOGGLE),
+    button('window.equalizer', 'equalizer', 214, 286, 46, 46, 'cap', TOGGLE),
+    button('app.playlist', 'list', 262, 286, 46, 46, 'cap', TOGGLE),
+    button('app.skins', 'skins', 238, 330, 46, 46, 'cap'),
   ],
   components: [
     { type: 'spectrum', x: 42, y: 70, width: 256, height: 30, color: '#e9eef0' },
@@ -900,8 +921,6 @@ const deck = {
     .band { position: absolute; left: 14px; top: 12px; width: 272px; height: 58px; border-radius: 3px; background: #18191a; }
     .stripe { position: absolute; left: 14px; top: 74px; width: 272px; height: 9px; background: linear-gradient(90deg, #ff8136 0 70%, #f1ece0 70% 72%, #ff8136 72% 80%, #f1ece0 80% 82%, #ff8136 82%); }
     .glass { position: absolute; left: 66px; top: 92px; width: 168px; height: 46px; border-radius: 6px; background: linear-gradient(#211a15, #100d0b); box-shadow: inset 0 2px 5px #000; overflow: hidden; }
-    .glass::before, .glass::after { content: ''; position: absolute; top: -18px; width: 82px; height: 82px; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
-    .glass::before { left: -7px; } .glass::after { right: -19px; width: 70px; height: 70px; top: -12px; }
     .foot { position: absolute; left: 60px; bottom: 0; width: 180px; height: 34px; background: #cfc8b8; clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%); }
     .foot::after { content: ''; position: absolute; left: 30px; top: 12px; width: 120px; height: 10px; background: radial-gradient(circle, #18191a 3.5px, transparent 4px) 0 0 / 30px 10px; }
     .well { position: absolute; border-radius: 4px; background: #18191a; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.1); }
@@ -927,7 +946,7 @@ const deck = {
     <div class="bay"></div>
     <div class="shell"><div class="band"></div><div class="stripe"></div><div class="glass"></div><div class="foot"></div></div>
     <div class="block"></div>
-    <div class="slot" style="left:164px;top:299px;width:140px;height:14px"></div>
+    <div class="slot" style="left:164px;top:299px;width:96px;height:14px"></div>
     <div class="slot" style="left:22px;top:355px;width:336px;height:14px"></div>
     <div class="well" style="left:24px;top:394px;width:332px;height:192px"></div>
   `,
@@ -940,12 +959,13 @@ const deck = {
     button('player.repeat', 'repeat', 24, 288, 44, 36, 'flat', TOGGLE),
     button('player.shuffle', 'shuffle', 68, 288, 44, 36, 'flat', TOGGLE),
     button('window.equalizer', 'equalizer', 112, 288, 44, 36, 'flat', TOGGLE),
+    button('app.playlist', 'list', 268, 288, 44, 36, 'flat', TOGGLE),
     button('app.skins', 'skins', 312, 288, 44, 36, 'flat'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 64, y: 42, width: 252, height: 24, fontSize: 16, color: '#f1f1ee' },
     { type: 'text', source: 'track.artist', x: 64, y: 66, width: 252, height: 18, fontSize: 12, color: '#ff8136' },
-    { type: 'volume', x: 166, y: 302, width: 136, height: 8 },
+    { type: 'volume', x: 166, y: 302, width: 92, height: 8 },
     { type: 'time', source: 'position', x: 24, y: 334, width: 70, height: 16, fontSize: 12, color: '#f1f1ee' },
     { type: 'text', source: 'player.status', x: 94, y: 334, width: 90, height: 16, fontSize: 10, color: '#b2b2ad' },
     { type: 'spectrum', x: 190, y: 332, width: 100, height: 18, color: '#ff8136' },
@@ -953,6 +973,7 @@ const deck = {
     { type: 'seekbar', x: 24, y: 358, width: 332, height: 8 },
     { type: 'playlist', x: 28, y: 398, width: 324, height: 184 },
   ],
+  packs: cassettePacks({ x: 106, y: 116, width: 168, height: 46, radius: 6 }, [[150, 139], [246, 139]], 82, 42),
   spinners: [smallHub('hub-left', 136, 125), smallHub('hub-right', 232, 125)],
 };
 
@@ -1026,7 +1047,7 @@ const walk = {
     <div class="slot" style="left:22px;top:253px;width:324px;height:14px"></div>
     <div class="bar"></div>
     <div class="tiny" style="left:172px;top:346px">VOLUME</div>
-    <div class="slot" style="left:170px;top:358px;width:124px;height:14px"></div>
+    <div class="slot" style="left:170px;top:358px;width:78px;height:14px"></div>
     <div class="box" style="left:24px;top:392px;width:320px;height:174px"></div>
   `,
   buttons: [
@@ -1038,6 +1059,7 @@ const walk = {
     button('player.repeat', 'repeat', 22, 344, 46, 36, 'chip', TOGGLE),
     button('player.shuffle', 'shuffle', 68, 344, 46, 36, 'chip', TOGGLE),
     button('window.equalizer', 'equalizer', 114, 344, 46, 36, 'chip', TOGGLE),
+    button('app.playlist', 'list', 254, 344, 46, 36, 'chip', TOGGLE),
     button('app.skins', 'skins', 300, 344, 46, 36, 'chip'),
   ],
   components: [
@@ -1048,7 +1070,7 @@ const walk = {
     { type: 'text', source: 'player.status', x: 176, y: 118, width: 90, height: 14, fontSize: 10, color: '#b9b0a1' },
     { type: 'time', source: 'duration', x: 266, y: 118, width: 64, height: 14, fontSize: 11, align: 'right', color: '#b9b0a1' },
     { type: 'seekbar', x: 24, y: 256, width: 320, height: 8 },
-    { type: 'volume', x: 172, y: 361, width: 120, height: 8 },
+    { type: 'volume', x: 172, y: 361, width: 74, height: 8 },
     { type: 'playlist', x: 28, y: 396, width: 312, height: 166 },
   ],
   spinners: [bigHub('hub-left', 184, 150), bigHub('hub-right', 288, 150)],
@@ -1087,8 +1109,6 @@ const meter = {
       box-shadow: 0 3px 6px rgba(0,0,0,.6), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.3); }
     .band { position: absolute; left: 12px; top: 8px; width: 268px; height: 54px; border-radius: 3px; background: #151a1f; box-shadow: inset 0 -3px 0 #ff6b60; }
     .glass { position: absolute; left: 62px; top: 68px; width: 168px; height: 46px; border-radius: 23px; background: linear-gradient(#211a15, #0f0c0a); box-shadow: inset 0 2px 5px #000, 0 0 0 2px #8e959c; overflow: hidden; }
-    .glass::before, .glass::after { content: ''; position: absolute; top: -18px; width: 82px; height: 82px; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
-    .glass::before { left: -3px; } .glass::after { right: -15px; width: 70px; height: 70px; top: -12px; }
     .foot { position: absolute; left: 66px; bottom: 0; width: 160px; height: 26px; background: #9aa1a8; clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%); }
     .slot { position: absolute; border-radius: 7px; background: #12161a; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.12); }
     .well { position: absolute; border-radius: 4px; background: #151a1f; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.12); }
@@ -1113,7 +1133,7 @@ const meter = {
     <div class="bay"></div>
     <div class="shell"><div class="band"></div><div class="glass"></div><div class="foot"></div></div>
     <div class="slot" style="left:22px;top:315px;width:336px;height:14px"></div>
-    <div class="slot" style="left:170px;top:441px;width:132px;height:14px"></div>
+    <div class="slot" style="left:170px;top:441px;width:88px;height:14px"></div>
     <div class="well" style="left:24px;top:476px;width:332px;height:150px"></div>
   `,
   buttons: [
@@ -1125,6 +1145,7 @@ const meter = {
     button('player.repeat', 'repeat', 24, 430, 46, 36, 'tab', TOGGLE),
     button('player.shuffle', 'shuffle', 70, 430, 46, 36, 'tab', TOGGLE),
     button('window.equalizer', 'equalizer', 116, 430, 46, 36, 'tab', TOGGLE),
+    button('app.playlist', 'list', 264, 430, 46, 36, 'tab', TOGGLE),
     button('app.skins', 'skins', 310, 430, 46, 36, 'tab'),
   ],
   components: [
@@ -1135,9 +1156,10 @@ const meter = {
     { type: 'text', source: 'player.status', x: 24, y: 294, width: 200, height: 16, fontSize: 10, color: '#a9b4be' },
     { type: 'time', source: 'duration', x: 276, y: 294, width: 80, height: 16, fontSize: 11, align: 'right', color: '#a9b4be' },
     { type: 'seekbar', x: 24, y: 318, width: 332, height: 8 },
-    { type: 'volume', x: 172, y: 444, width: 128, height: 8 },
+    { type: 'volume', x: 172, y: 444, width: 84, height: 8 },
     { type: 'playlist', x: 28, y: 480, width: 324, height: 142 },
   ],
+  packs: cassettePacks({ x: 106, y: 194, width: 168, height: 46, radius: 23 }, [[154, 217], [246, 217]], 82, 42),
   spinners: [smallHub('hub-left', 140, 203), smallHub('hub-right', 232, 203)],
 };
 
@@ -1168,7 +1190,7 @@ const ferro = {
     .paper::before { content: 'SIDE A'; position: absolute; left: 8px; top: 4px; font-size: 8px; font-weight: 700; letter-spacing: .1em; color: #1b1b1c; }
     .band { position: absolute; left: 18px; top: 44px; width: 336px; height: 54px; background: #101011; }
     .eye { position: absolute; top: 112px; width: 60px; height: 50px; border-radius: 12px; background: #f3f3f0; box-shadow: inset 0 0 0 1px #000; }
-    .mid { position: absolute; left: 150px; top: 118px; width: 72px; height: 38px; border-radius: 4px; background: linear-gradient(90deg, #3a2417 0 55%, #f3f3f0 55% 75%, #1b1b1c 75%); box-shadow: inset 0 2px 4px #000, 0 0 0 1px #000; }
+    .mid { position: absolute; left: 150px; top: 118px; width: 72px; height: 38px; border-radius: 4px; background: linear-gradient(#211a15, #0f0c0a); box-shadow: inset 0 2px 4px #000, 0 0 0 1px #000; }
     .type { position: absolute; left: 22px; top: 176px; font-size: 21px; letter-spacing: .02em; color: #9d9d99; }
     .type b { font-weight: 800; color: #d4d4d0; }
     .num { position: absolute; right: 22px; top: 170px; font-size: 30px; font-weight: 300; color: #7dbdff; }
@@ -1199,7 +1221,7 @@ const ferro = {
       <div class="foot"></div>
     </div>
     <div class="slot" style="left:14px;top:285px;width:372px;height:14px"></div>
-    <div class="slot" style="left:168px;top:373px;width:150px;height:14px"></div>
+    <div class="slot" style="left:168px;top:373px;width:116px;height:14px"></div>
     <div class="well" style="left:16px;top:406px;width:368px;height:150px"></div>
   `,
   buttons: [
@@ -1211,6 +1233,7 @@ const ferro = {
     button('player.repeat', 'repeat', 18, 362, 46, 36, 'mini', TOGGLE),
     button('player.shuffle', 'shuffle', 64, 362, 46, 36, 'mini', TOGGLE),
     button('window.equalizer', 'equalizer', 110, 362, 46, 36, 'mini', TOGGLE),
+    button('app.playlist', 'list', 290, 362, 46, 36, 'mini', TOGGLE),
     button('app.skins', 'skins', 336, 362, 46, 36, 'mini'),
   ],
   components: [
@@ -1221,9 +1244,10 @@ const ferro = {
     { type: 'text', source: 'player.status', x: 100, y: 262, width: 200, height: 18, fontSize: 10, align: 'center', color: '#b1b1ad' },
     { type: 'time', source: 'duration', x: 304, y: 262, width: 80, height: 18, fontSize: 13, align: 'right', color: '#b1b1ad' },
     { type: 'seekbar', x: 16, y: 288, width: 368, height: 8 },
-    { type: 'volume', x: 170, y: 376, width: 146, height: 8 },
+    { type: 'volume', x: 170, y: 376, width: 112, height: 8 },
     { type: 'playlist', x: 20, y: 410, width: 360, height: 142 },
   ],
+  packs: cassettePacks({ x: 165, y: 133, width: 70, height: 36, radius: 3 }, [[128, 151], [272, 151]], 160, 68),
   spinners: [
     { name: 'hub-left', x: 110, y: 133, width: 36, height: 36, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
     { name: 'hub-right', x: 254, y: 133, width: 36, height: 36, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
@@ -1258,7 +1282,7 @@ const mixtape = {
     .c60 { position: absolute; right: 10px; top: 10px; width: 80px; height: 40px; background: #161616; color: #fff; font: 800 25px/40px "Helvetica Neue", Arial, sans-serif; text-align: center; letter-spacing: .02em; }
     .say { position: absolute; top: 96px; font: 800 20px/22px "Helvetica Neue", "Arial Narrow", Arial, sans-serif; color: #fff; letter-spacing: .01em; }
     .gap { position: absolute; left: 96px; top: 88px; width: 148px; height: 52px; border-radius: 6px; background: #e9e2d2; box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); }
-    .gap::after { content: ''; position: absolute; left: 48px; top: 10px; width: 52px; height: 26px; border-radius: 3px; background: linear-gradient(90deg, #5a2f22 0 60%, #1b1b1b 60%); box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
+    .gap::after { content: ''; position: absolute; left: 48px; top: 10px; width: 52px; height: 26px; border-radius: 3px; background: linear-gradient(#211a15, #0f0c0a); box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
     .base { position: absolute; left: 0; bottom: 0; width: 340px; height: 36px; border-radius: 0 0 6px 6px; background: #161616; color: #fff; font: 800 22px/36px "Helvetica Neue", "Arial Narrow", Arial, sans-serif; padding-left: 14px; letter-spacing: .04em; }
     .base i { position: absolute; right: 14px; top: 9px; padding: 0 8px; border: 1.5px solid #fff; font: italic 700 9px/15px "Helvetica Neue", Arial, sans-serif; letter-spacing: .1em; }
     .foot { position: absolute; left: 86px; bottom: 0; width: 196px; height: 30px; background: #cfc8b8; clip-path: polygon(6% 0, 94% 0, 100% 100%, 0 100%); }
@@ -1291,7 +1315,7 @@ const mixtape = {
       <div class="foot"></div>
     </div>
     <div class="slot" style="left:14px;top:285px;width:372px;height:14px"></div>
-    <div class="slot" style="left:176px;top:391px;width:140px;height:14px"></div>
+    <div class="slot" style="left:176px;top:391px;width:102px;height:14px"></div>
     <div class="card" style="left:18px;top:424px;width:360px;height:138px"></div>
   `,
   buttons: [
@@ -1303,6 +1327,7 @@ const mixtape = {
     button('player.repeat', 'repeat', 16, 380, 50, 38, 'tag', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 380, 50, 38, 'tag', TOGGLE),
     button('window.equalizer', 'equalizer', 116, 380, 50, 38, 'tag', TOGGLE),
+    button('app.playlist', 'list', 284, 380, 50, 38, 'tag', TOGGLE),
     button('app.skins', 'skins', 334, 380, 50, 38, 'tag'),
   ],
   components: [
@@ -1313,9 +1338,10 @@ const mixtape = {
     { type: 'spectrum', x: 200, y: 262, width: 100, height: 18, color: '#0a6a9e' },
     { type: 'time', source: 'duration', x: 304, y: 262, width: 80, height: 20, fontSize: 15, align: 'right', color: '#565656' },
     { type: 'seekbar', x: 16, y: 288, width: 368, height: 8 },
-    { type: 'volume', x: 178, y: 394, width: 136, height: 8 },
+    { type: 'volume', x: 178, y: 394, width: 98, height: 8 },
     { type: 'playlist', x: 22, y: 428, width: 352, height: 130 },
   ],
+  packs: cassettePacks({ x: 174, y: 126, width: 52, height: 26, radius: 3 }, [[150, 142], [236, 142]], 124, 44),
   spinners: [smallHub('hub-left', 136, 128), smallHub('hub-right', 222, 128)],
 };
 
@@ -1381,6 +1407,7 @@ const systemSkin = {
     button('player.repeat', 'repeat', 22, 362, 46, 46, 'dot', TOGGLE),
     button('player.shuffle', 'shuffle', 68, 362, 46, 46, 'dot', TOGGLE),
     button('window.equalizer', 'equalizer', 114, 362, 46, 46, 'dot', TOGGLE),
+    button('app.playlist', 'list', 266, 362, 46, 46, 'dot', TOGGLE),
     button('app.skins', 'skins', 312, 362, 46, 46, 'dot'),
   ],
   components: [
@@ -1391,7 +1418,7 @@ const systemSkin = {
     { type: 'time', source: 'duration', x: 104, y: 162, width: 80, height: 14, fontSize: 10, align: 'right', color: '#a9a9a9' },
     { type: 'spectrum', x: 44, y: 190, width: 140, height: 60, color: '#f5f5f5' },
     { type: 'seekbar', x: 24, y: 276, width: 332, height: 6 },
-    { type: 'volume', x: 172, y: 382, width: 130, height: 6 },
+    { type: 'volume', x: 172, y: 382, width: 86, height: 6 },
     { type: 'playlist', x: 28, y: 422, width: 324, height: 166 },
   ],
   spinners: [
@@ -1443,7 +1470,7 @@ const consoleSkin = {
     <div class="lcd" style="left:22px;top:18px;width:356px;height:100px"></div>
     <div class="slot" style="left:22px;top:129px;width:356px;height:14px"></div>
     <div class="rail"></div>
-    <div class="tiny" style="left:22px;top:332px;width:70px">repeat</div><div class="tiny" style="left:93px;top:332px;width:70px">shuffle</div><div class="tiny" style="left:164px;top:332px;width:70px">eq</div><div class="tiny" style="left:235px;top:332px;width:70px">skin</div><div class="tiny" style="left:306px;top:332px;width:70px">stop</div>
+    <div class="tiny" style="left:23px;top:332px;width:59px">repeat</div><div class="tiny" style="left:82px;top:332px;width:59px">shuffle</div><div class="tiny" style="left:141px;top:332px;width:59px">eq</div><div class="tiny" style="left:200px;top:332px;width:59px">list</div><div class="tiny" style="left:259px;top:332px;width:59px">skin</div><div class="tiny" style="left:318px;top:332px;width:59px">stop</div>
     <div class="grill" style="left:24px;top:352px"></div><div class="tiny" style="left:48px;top:356px">volume</div>
     <div class="slot" style="left:96px;top:353px;width:282px;height:14px"></div>
     <div class="lcd" style="left:22px;top:380px;width:356px;height:184px"></div>
@@ -1453,11 +1480,12 @@ const consoleSkin = {
     button('player.togglePlay', 'play', 112, 150, 88, 106, 'bowl', PLAY),
     button('player.next', 'next', 200, 150, 88, 106, 'bowl'),
     button('player.open', 'open', 288, 150, 88, 106, 'bowl'),
-    button('player.repeat', 'repeat', 23, 264, 71, 62, 'cell', TOGGLE),
-    button('player.shuffle', 'shuffle', 94, 264, 71, 62, 'cell', TOGGLE),
-    button('window.equalizer', 'equalizer', 165, 264, 71, 62, 'cell', TOGGLE),
-    button('app.skins', 'skins', 236, 264, 71, 62, 'cell'),
-    button('player.stop', 'stop', 307, 264, 70, 62, 'cell red'),
+    button('player.repeat', 'repeat', 23, 264, 59, 62, 'cell', TOGGLE),
+    button('player.shuffle', 'shuffle', 82, 264, 59, 62, 'cell', TOGGLE),
+    button('window.equalizer', 'equalizer', 141, 264, 59, 62, 'cell', TOGGLE),
+    button('app.playlist', 'list', 200, 264, 59, 62, 'cell', TOGGLE),
+    button('app.skins', 'skins', 259, 264, 59, 62, 'cell'),
+    button('player.stop', 'stop', 318, 264, 59, 62, 'cell red'),
   ],
   components: [
     { type: 'text', source: 'track.title', x: 36, y: 26, width: 328, height: 24, fontSize: 16, color: '#1b1d1f' },
@@ -1520,8 +1548,8 @@ const dial = {
   art: `
     <div class="ticks"></div><div class="seat"></div><div class="shade"></div>
     <div class="sign" style="left:66px">–</div><div class="sign" style="right:66px">+</div>
-    <div class="cap" style="left:118px;top:473px">volume</div>
-    <div class="slot" style="left:116px;top:485px;width:128px;height:14px"></div>
+    <div class="cap" style="left:166px;top:473px">volume</div>
+    <div class="slot" style="left:164px;top:485px;width:80px;height:14px"></div>
     <div class="sheet" style="left:22px;top:516px;width:316px;height:148px"></div>
   `,
   buttons: [
@@ -1532,7 +1560,8 @@ const dial = {
     button('player.stop', 'stop', 282, 408, 52, 52, 'pad'),
     button('player.repeat', 'repeat', 20, 468, 46, 46, 'pad', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 468, 46, 46, 'pad', TOGGLE),
-    button('window.equalizer', 'equalizer', 248, 468, 46, 46, 'pad', TOGGLE),
+    button('window.equalizer', 'equalizer', 112, 468, 46, 46, 'pad', TOGGLE),
+    button('app.playlist', 'list', 248, 468, 46, 46, 'pad', TOGGLE),
     button('app.skins', 'skins', 294, 468, 46, 46, 'pad'),
   ],
   components: [
@@ -1542,7 +1571,7 @@ const dial = {
     { type: 'text', source: 'player.status', x: 24, y: 376, width: 90, height: 16, fontSize: 10, color: '#256b0c' },
     { type: 'spectrum', x: 120, y: 374, width: 120, height: 18, color: '#256b0c' },
     { type: 'time', source: 'duration', x: 246, y: 376, width: 90, height: 16, fontSize: 11, align: 'right', color: '#54575a' },
-    { type: 'volume', x: 118, y: 488, width: 124, height: 8 },
+    { type: 'volume', x: 166, y: 488, width: 76, height: 8 },
     { type: 'playlist', x: 26, y: 520, width: 308, height: 140 },
   ],
   needles: [
@@ -1705,7 +1734,8 @@ const stripe = skin('stripe', 'Stripe', 'A flat drawing: black outlines on cream
       background: linear-gradient(#1f56b8 0 30%, #fff 30% 38%, #7fb2f0 38% 64%, #fff 64% 72%, #f08bb0 72%); }
     .tape { position: absolute; right: 18px; bottom: 18px; width: 170px; height: 100px; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 2.5px #14161a; }
     .tape::before { content: ''; position: absolute; left: 12px; right: 12px; top: 12px; height: 16px; background: repeating-linear-gradient(#14161a 0 2.5px, transparent 2.5px 6.5px); }
-    .tape::after { content: ''; position: absolute; left: 22px; right: 22px; bottom: 16px; height: 40px; border-radius: 20px; box-shadow: inset 0 0 0 2.5px #14161a; background: linear-gradient(90deg, transparent 0 42%, #14161a 42% 58%, transparent 58%); }
+    .tape::after { content: ''; position: absolute; left: 22px; right: 22px; bottom: 16px; height: 40px; border-radius: 20px; box-shadow: inset 0 0 0 2.5px #14161a; }
+    .wound { background: #14161a; }
     ${beds('#fff', '#fff', true)}
     .slot { box-shadow: inset 0 0 0 2px #14161a; } .well { border-radius: 12px; box-shadow: inset 0 0 0 2.5px #14161a; }
     .cog { position: absolute; inset: 0; border-radius: 50%; background: #14161a; }
@@ -1730,6 +1760,7 @@ const stripe = skin('stripe', 'Stripe', 'A flat drawing: black outlines on cream
     { type: 'spectrum', x: 36, y: 122, width: 100, height: 34, color: '#14161a' },
     ...stripeLow.components,
   ],
+  packs: cassettePacks({ x: 196, y: 156, width: 122, height: 36, radius: 18 }, [[216, 178], [306, 178]], 76, 40),
   spinners: [
     { name: 'hub-left', x: 202, y: 164, width: 28, height: 28, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
     { name: 'hub-right', x: 292, y: 164, width: 28, height: 28, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
@@ -1812,6 +1843,7 @@ const magnet = skin('magnet', 'Magnet', 'A silver radio recorder: a speaker gril
     { type: 'time', source: 'position', x: 206, y: 112, width: 100, height: 18, fontSize: 13, align: 'right', color: '#474b50' },
     ...magnetLow.components,
   ],
+  packs: cassettePacks({ x: 112, y: 146, width: 136, height: 36, radius: 18 }, [[142, 164], [218, 164]], 92, 44),
   spinners: [smallHub('hub-left', 128, 150), smallHub('hub-right', 204, 150)],
 });
 
@@ -1974,7 +2006,7 @@ const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen wit
   `,
   art: `<div class="screen"><div class="bar"><div class="cell"></div></div></div><div class="ringpad"></div>
     <div class="slot" style="left:40px;top:177px;width:260px;height:14px"></div>
-    <div class="slot" style="left:118px;top:497px;width:104px;height:14px"></div>
+    <div class="slot" style="left:160px;top:497px;width:66px;height:14px"></div>
     <div class="well" style="left:22px;top:530px;width:296px;height:156px"></div>`,
   buttons: [
     button('player.open', 'open', 140, 254, 60, 50, 'on'),
@@ -1984,7 +2016,8 @@ const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen wit
     button('player.stop', 'stop', 140, 416, 60, 50, 'on'),
     button('player.repeat', 'repeat', 22, 482, 44, 44, 'lite', TOGGLE),
     button('player.shuffle', 'shuffle', 66, 482, 44, 44, 'lite', TOGGLE),
-    button('window.equalizer', 'equalizer', 230, 482, 44, 44, 'lite', TOGGLE),
+    button('window.equalizer', 'equalizer', 110, 482, 44, 44, 'lite', TOGGLE),
+    button('app.playlist', 'list', 230, 482, 44, 44, 'lite', TOGGLE),
     button('app.skins', 'skins', 274, 482, 44, 44, 'lite'),
   ],
   components: [
@@ -1995,7 +2028,7 @@ const wheel = skin('wheel', 'Wheel', 'A white pocket player: a bright screen wit
     { type: 'seekbar', x: 42, y: 180, width: 256, height: 8 },
     { type: 'time', source: 'position', x: 42, y: 194, width: 80, height: 16, fontSize: 12, color: '#111417' },
     { type: 'time', source: 'duration', x: 218, y: 194, width: 80, height: 16, fontSize: 12, align: 'right', color: '#111417' },
-    { type: 'volume', x: 120, y: 500, width: 100, height: 8 },
+    { type: 'volume', x: 162, y: 500, width: 62, height: 8 },
     { type: 'playlist', x: 26, y: 534, width: 288, height: 148 },
   ],
   overlays: [{ name: 'cover', x: 40, y: 58, width: 88, height: 88, source: 'track.cover', html: NOTE }],
@@ -2026,110 +2059,205 @@ const belowReels = (c) => [
 
 // ---- "Nano": a miniature tape recorder cut from steel, seen from above
 //
-// The face is the machine and nothing else: two reels, the tape between them, machined keys.
-// The track list lies below it and can be hidden, which leaves the machine alone.
+// The face is the machine and nothing else: a steel plate in landscape, two reels that reach
+// over its edge, the tape path along the heads, a small round meter. The parts of the machine
+// are the keys: the roller loads, the pad stops, the two heads skip, the pinch roller plays.
+// The track list lies below the machine and can be hidden, which leaves the machine alone.
 
-const holes = (size, distance, radius, count = 6) =>
-  Array.from({ length: count }, (_, n) => (n * 2 * Math.PI) / count)
-    .map((a) => `radial-gradient(circle at ${(size / 2 + distance * Math.sin(a)).toFixed(1)}px ${(size / 2 - distance * Math.cos(a)).toFixed(1)}px, transparent 0 ${radius}px, #000 ${radius + 0.6}px)`)
-    .join(', ');
-const nanoReel = (colour) => `<div class="disc ${colour}"></div><div class="boss"><i></i><i></i><i></i></div><div class="mark ${colour}">FC·12</div>`;
-const nanoBlock = (action, icon, x, y) => button(action, icon, x, y, 54, 44, 'block', TOGGLE);
+const NANO_INK = '#1f2123';
+const nanoAt = (r, deg, cx = 120, cy = 120) => [cx + r * Math.sin((deg * Math.PI) / 180), cy - r * Math.cos((deg * Math.PI) / 180)];
+const nanoRing = (cx, cy, r) => `M${(cx - r).toFixed(1)} ${cy.toFixed(1)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
+const NANO_HOLES = [0, 60, 120, 180, 240, 300].map((a) => nanoRing(...nanoAt(76, a), 27)).join('');
+/** A flange with six holes, its hub with the locking bar, three brass pins. */
+const nanoReel = (c) => `<svg class="flange" width="240" height="240" viewBox="0 0 240 240">
+  <path fill-rule="evenodd" fill="${c.fill}" d="${nanoRing(120, 120, 119)}${NANO_HOLES}${nanoRing(120, 120, 38)}"/>
+  <circle cx="120" cy="120" r="118.3" fill="none" stroke="${c.edge}" stroke-width="1.4"/>
+  <circle cx="120" cy="120" r="114" fill="none" stroke="${c.dark}" stroke-width=".6" opacity=".5"/>
+  <path d="${NANO_HOLES}" fill="none" stroke="${c.dark}" stroke-width="1.6"/>
+  <path d="${NANO_HOLES}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width=".7" transform="translate(0 1.2)"/>
+  <circle cx="120" cy="120" r="38" fill="#dfe1e2" stroke="#6f7274"/>
+  <circle cx="120" cy="120" r="35" fill="none" stroke="#1f8a68" stroke-width="4.5"/>
+  <circle cx="120" cy="120" r="31.5" fill="#e9eaea" stroke="#8b8e90" stroke-width=".8"/>
+  <g transform="rotate(38 120 120)">
+    <rect x="108.5" y="88" width="23" height="64" rx="2.5" fill="#f7f7f7" stroke="#85888a" stroke-width=".8"/>
+    <rect x="108.5" y="88" width="5" height="64" rx="2" fill="rgba(0,0,0,.14)"/>
+    <circle cx="120" cy="120" r="6.5" fill="#55585a" stroke="#2e3032"/>
+    <rect x="114.5" y="119" width="11" height="2" fill="#17181a"/>
+  </g>
+  ${[30, 150, 270].map((a) => `<circle cx="${nanoAt(49, a)[0].toFixed(1)}" cy="${nanoAt(49, a)[1].toFixed(1)}" r="2.6" fill="#d9b86a" stroke="rgba(0,0,0,.35)" stroke-width=".6"/>`).join('')}
+  ${(c.marks ?? []).map(([text, a]) => `<text x="120" y="13.5" text-anchor="middle" transform="rotate(${a} 120 120)" font-family="'Marker Felt', 'Chalkboard SE', sans-serif" font-size="10" fill="${c.ink}">${text}</text>`).join('')}
+</svg>`;
+const NANO_MINT = { fill: '#79b99a', edge: '#b9dccb', dark: '#3f7d62', ink: '#14271f', marks: [['FC 12', -98], ['6 H', 82]] };
+const NANO_RED = { fill: '#d8232a', edge: '#e9e9e9', dark: '#8f1116', ink: '#fff' };
 
-const nano = skin('nano', 'Nano', 'A miniature tape recorder cut from steel, seen from above: a mint and a red reel, machined keys, print as fine as on a watch.', ['reel', 'steel', 'light', 'miniature', 'red', 'mint', 'landscape', 'skeuomorphic'], {
-  theme: theme({ background: '#d3d5d7', surface: '#f3f1ea', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#44484d', accent: '#a31d16', accentContrast: '#ffffff', border: '#7c8188', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
-  width: 620,
-  height: 576,
-  resize: { stretchY: 490 },
-  titleBar: '#c9ccd0',
+const nanoScrew = ([x, y], n) => `<g transform="translate(${x} ${y}) rotate(${(n * 47) % 180})"><circle r="3.6" fill="url(#nscrew)" stroke="#5d6062" stroke-width=".7"/><rect x="-3" y="-.6" width="6" height="1.2" fill="#2e3032"/></g>`;
+const nanoPrint = (text, x, y, size = 7, more = '') => `<text x="${x}" y="${y}" font-size="${size}" ${more}>${text}</text>`;
+/** A scale of minutes as it is printed beside the take-up reel. */
+const nanoScale = (x, y, turn, label) => `<g transform="translate(${x} ${y}) rotate(${turn})"><path d="M0 0h58" stroke="${NANO_INK}" stroke-width="1.4"/>${Array.from({ length: 15 }, (_, n) => `<path d="M${n * 4 + 1} 0v${n % 5 === 0 ? -6 : -3.5}" stroke="${NANO_INK}" stroke-width=".8"/>`).join('')}${nanoPrint(label, 20, 10, 8)}</g>`;
+const nanoStud = (action, icon, x) => button(action, icon, x, 259, 38, 38, 'stud', TOGGLE);
+
+const NANO_ART = `<div class="plate"></div>
+  <div class="socket" style="top:112px;height:92px"></div><div class="socket" style="top:226px;height:104px"></div>
+  <div class="tab"></div><div class="jack"></div>
+  <svg class="works" width="640" height="460" viewBox="0 0 640 460" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" fill="${NANO_INK}">
+    <defs>
+      <radialGradient id="nscrew" cx=".35" cy=".3"><stop offset="0" stop-color="#fafafa"/><stop offset="1" stop-color="#8e9193"/></radialGradient>
+      <linearGradient id="nlight" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f1f2f2"/><stop offset="1" stop-color="#c6c8c9"/></linearGradient>
+      <linearGradient id="nturn" x1="0" x2="1"><stop offset="0" stop-color="#9da0a2"/><stop offset=".45" stop-color="#f4f5f5"/><stop offset="1" stop-color="#8e9193"/></linearGradient>
+      <radialGradient id="nbrass" cx=".4" cy=".35"><stop offset="0" stop-color="#f3dc9a"/><stop offset="1" stop-color="#a47c2c"/></radialGradient>
+      <filter id="nsh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.4" flood-opacity=".45"/></filter>
+    </defs>
+    <!-- the bright cut-out under the supply reel, and what the reels sit on -->
+    <path d="M112 86h150a66 66 0 0 1 28 126h-58q-12 0-12 12v8h-108q-10 0-10-10v-126q0-10 10-10z" fill="#cfd1d2" stroke="#8b8e90"/>
+    <path d="M113 87h150" stroke="rgba(0,0,0,.25)" stroke-width="2"/>
+    <circle cx="170" cy="134" r="33" fill="url(#nlight)" stroke="#7b7e80"/>
+    <circle cx="470" cy="134" r="52" fill="#b9b39f" stroke="#7b7e80"/><circle cx="470" cy="134" r="45" fill="#cfd1d2" stroke="#8b8e90"/>
+    <circle cx="470" cy="134" r="33" fill="url(#nlight)" stroke="#7b7e80"/>
+    <!-- print -->
+    <path d="M30 62h14v-22" fill="none" stroke="${NANO_INK}" stroke-width="1.2"/><path d="M26 62l5-3v6z"/>
+    ${nanoPrint('PHONES 1 kΩ or less', 50, 44)}
+    ${nanoPrint('SUPPLY REEL', 110, 74, 11)}
+    ${nanoPrint('SPEED', 348, 62, 9)}${nanoPrint('High&#160;&#160;&#160;Low', 344, 76, 6.5)}
+    <circle cx="352" cy="84" r="1.2"/><circle cx="366" cy="84" r="1.2"/><circle cx="359" cy="94" r="5.5" fill="url(#nscrew)" stroke="#5d6062"/><path d="M355 96l8-4" stroke="#2e3032" stroke-width="1.3"/>
+    ${nanoPrint('FLAC COMMANDER', 618, 37, 9, 'letter-spacing="1" text-anchor="end"')}
+    ${nanoPrint('Lossless', 618, 47, 6.5, 'text-anchor="end"')}
+    ${nanoPrint('Standard Tape', 466, 78, 7)}${nanoPrint('Timing Min.', 466, 87, 7)}
+    ${nanoScale(506, 104, -22, '3¾″')}${nanoScale(512, 132, 0, '1⅞″')}${nanoScale(506, 160, 18, '15⁄16″')}
+    <path id="nrew" d="M392 188a62 62 0 0 1-36 34" fill="none"/>
+    <path d="M400 168a70 70 0 0 1-48 62" fill="none" stroke="${NANO_INK}" stroke-width="1.2"/><path d="M348 231l7-5 1 7z"/>
+    <text font-size="7"><textPath href="#nrew">REWIND</textPath></text>
+    ${nanoPrint('Pilot &amp; Remote', 0, 0, 6.5, 'transform="translate(27 198) rotate(-90)"')}
+    ${nanoPrint('Mike or Line', 0, 0, 6.5, 'transform="translate(27 318) rotate(-90)"')}
+    ${nanoPrint('▼ BATT', 0, 0, 7, 'transform="translate(622 252) rotate(-90)"')}
+    ${nanoPrint('Press to', 0, 0, 6.5, 'transform="translate(615 316) rotate(-90)"')}${nanoPrint('TEST', 0, 0, 6.5, 'transform="translate(623 310) rotate(-90)"')}
+    ${nanoPrint('MODE', 420, 284, 6)}
+    ${nanoPrint('LOAD', 22, 440, 6.5)}<path d="M44 437.5h12" stroke="${NANO_INK}" stroke-width="1.2"/><path d="M60 437.5l-6-3v6z"/>
+    ${nanoPrint('VOL', 426, 434, 6)}
+    ${nanoPrint('A.L.C', 86, 352, 5)}
+    <!-- the tape, from reel to reel along the heads -->
+    <path d="M62 190L37 318Q24 372 24 398A26 26 0 0 0 50 424L120 419H404Q417 419 417 404L415 350L398 196" fill="none" stroke="#3a2a22" stroke-width="1.6"/>
+    <!-- the guide between the reels -->
+    <g filter="url(#nsh)">
+      <path d="M284 22h72l-22 82q-2 8-10 8h-8q-8 0-10-8z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <rect x="313" y="34" width="14" height="52" rx="2" fill="#8e9193" stroke="#5d6062"/><rect x="317.5" y="40" width="5" height="40" rx="2.5" fill="url(#nturn)" stroke="#5d6062" stroke-width=".6"/>
+      <rect x="315" y="30" width="10" height="7" fill="#6f7274"/>
+      <rect x="308" y="96" width="24" height="26" rx="3" fill="url(#nlight)" stroke="#7b7e80"/><circle cx="320" cy="108" r="7" fill="#b9bbbc" stroke="#5d6062"/><circle cx="320" cy="108" r="3.5" fill="#e9eaea" stroke="#7b7e80"/>
+    </g>
+    <!-- post and wire at the left, lever, capstan and the arm of the pinch roller -->
+    <path d="M56 300q16 10 2 26t0 30" fill="none" stroke="#17181a" stroke-width="1.2"/>
+    <g filter="url(#nsh)">
+      <circle cx="40" cy="322" r="9" fill="#8e9193" stroke="#5d6062"/><circle cx="39" cy="320" r="5" fill="#a9acae"/>
+      <path d="M52 352h18q6 0 6 6v22h-30v-22q0-6 6-6z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <path d="M366 322l12-6 26 62-6 14-12 2z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <path d="M446 424l-20-18 12-22 66 8-6 28z" fill="url(#nlight)" stroke="#7b7e80"/>
+      <path d="M404 320l14-6 12 12-6 16-16 2-8-12z" fill="#c9cbcc" stroke="#7b7e80"/><circle cx="416" cy="330" r="7" fill="url(#nbrass)" stroke="#6d5420"/><circle cx="416" cy="330" r="2.5" fill="#6d5420"/>
+      <rect x="92" y="392" width="18" height="18" rx="2" fill="#e9eaea" stroke="#7b7e80"/>
+    </g>
+    <!-- the meter in its bracket -->
+    <g filter="url(#nsh)">
+      <rect x="530" y="326" width="84" height="84" rx="9" fill="url(#nlight)" stroke="#7b7e80"/>
+      <circle cx="524" cy="412" r="9" fill="#dfe1e2" stroke="#7b7e80"/><circle cx="524" cy="412" r="4" fill="#b9bbbc" stroke="#5d6062"/>
+    </g>
+    <circle cx="572" cy="368" r="38" fill="url(#nturn)" stroke="#5d6062"/>
+    <circle cx="572" cy="368" r="33.5" fill="#2a2420" stroke="#3a3c3e"/>
+    <circle cx="572" cy="380" r="19" fill="#7a2a22"/><circle cx="572" cy="380" r="14" fill="url(#nbrass)" stroke="#6d5420"/>
+    ${[0, 60, 120].map((a) => `<rect x="552" y="378.5" width="40" height="3" fill="#c9a347" stroke="#6d5420" stroke-width=".4" transform="rotate(${a} 572 380)"/>`).join('')}
+    <circle cx="572" cy="380" r="3.5" fill="#b3261e"/>
+    <path d="M540.5 368a31.5 31.5 0 0 1 63 0l-9 4h-45z" fill="#f6f4ec" stroke="#8b8e90" stroke-width=".6"/>
+    <path d="M${nanoAt(27, 12, 572, 372).map((v) => v.toFixed(1)).join(' ')}A27 27 0 0 1 ${nanoAt(27, 50, 572, 372).map((v) => v.toFixed(1)).join(' ')}" fill="none" stroke="#2f8a4a" stroke-width="2.6"/>
+    ${[-50, -37.5, -25, -12.5, 0, 12.5, 25, 37.5, 50].map((a, n) => `<path d="M${nanoAt(n % 2 ? 22 : 20.5, a, 572, 372).map((v) => v.toFixed(1)).join(' ')}L${nanoAt(24.5, a, 572, 372).map((v) => v.toFixed(1)).join(' ')}" stroke="${NANO_INK}" stroke-width=".7"/>`).join('')}
+    ${['0', '10', '20', '30'].map((t, n) => nanoPrint(t, ...nanoAt(15.5, -42 + n * 28, 572, 373).map((v) => v.toFixed(1)), 4.5, 'text-anchor="middle"')).join('')}
+    <path id="nlevel" d="M546 364a27 27 0 0 1 52 0" fill="none"/>
+    <path d="M548 352q24-20 48 0" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="5" stroke-linecap="round"/>
+    ${[[536, 332], [608, 332], [536, 404], [608, 404]].map(nanoScrew).join('')}
+    ${[[30, 84], [26, 240], [604, 64], [610, 232], [300, 150], [340, 160], [320, 196], [300, 236], [342, 244], [126, 104], [232, 100], [150, 204], [240, 176], [424, 96], [524, 200], [432, 196], [92, 300], [596, 306], [512, 334], [61, 362], [101, 401], [386, 380]].map(nanoScrew).join('')}
+  </svg>
+  <div class="cast" style="left:52px"></div><div class="cast" style="left:352px"></div>
+  <div class="slot" style="left:138px;top:424px;width:240px;height:14px"></div>
+  <div class="slot" style="left:442px;top:424px;width:84px;height:14px"></div>
+  <div class="well" style="left:12px;top:460px;width:616px;height:140px"></div>`;
+
+const nano = skin('nano', 'Nano', 'A miniature tape recorder cut from steel, seen from above: a mint and a red reel reach over its edge, and the heads, the roller and the pad are its keys.', ['reel', 'steel', 'light', 'miniature', 'red', 'mint', 'landscape', 'skeuomorphic'], {
+  theme: theme({ background: '#dcdddf', surface: '#f3f1ea', surfaceRaised: '#ffffff', foreground: '#1b1d20', muted: '#44484d', accent: '#a31d16', accentContrast: '#ffffff', border: '#6f7274', ok: '#0b5a2b', danger: '#8f1d16', focus: '#1f5fbf' }, HELVETICA, 2),
+  width: 640,
+  height: 610,
+  resize: { stretchY: 530 },
+  titleBar: '#ecedee',
   pad: 4,
   css: `
-    body { background: linear-gradient(#dfe1e3, #c9cbce); font-family: ${HELVETICA}; }
-    .plate { position: absolute; left: 10px; top: 8px; width: 600px; height: 390px; border-radius: 14px;
-      background: repeating-linear-gradient(0deg, rgba(255,255,255,.2) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2.5px), linear-gradient(115deg, #e6e8ea, #b9bdc2 48%, #dcdfe2 70%, #c2c6ca);
-      box-shadow: 0 6px 14px rgba(0,0,0,.35), 0 0 0 1px #6f747a, inset 0 0 0 2px rgba(255,255,255,.7), inset 0 0 0 3px rgba(0,0,0,.12); }
-    .pins { position: absolute; left: 3px; top: 70px; width: 9px; height: 200px; border-radius: 2px; background: repeating-linear-gradient(#c9a23a 0 3px, #2f6a43 3px 9px); box-shadow: 0 0 0 1px #1f4a2e; }
-    .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fafafa, #747980 75%); box-shadow: 0 0 0 1px rgba(0,0,0,.4), inset 0 0 0 3px rgba(255,255,255,.2); }
-    .screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 4px; height: 1px; background: #33363a; transform: rotate(35deg); }
-    .fine { position: absolute; font-size: 6.5px; font-weight: 700; letter-spacing: .13em; color: #2b2e32; white-space: nowrap; }
-    .hair { position: absolute; border-top: 1px solid #2b2e32; opacity: .6; }
-    .seatn { position: absolute; top: 22px; width: 216px; height: 216px; border-radius: 50%; background: radial-gradient(circle, #9da2a8 0 20px, #c6cace 20px 100px, #b0b5ba 100px); box-shadow: inset 0 2px 5px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.8); }
-    .guide { position: absolute; left: 285px; top: 14px; width: 30px; height: 62px; border-radius: 3px 3px 12px 12px; background: linear-gradient(90deg, #aeb3b9, #f4f5f6 45%, #a3a8ae); box-shadow: 0 2px 4px rgba(0,0,0,.4), 0 0 0 1px #6f747a; }
-    .guide::after { content: ''; position: absolute; left: 9px; top: 10px; width: 12px; height: 38px; border-radius: 2px; background: linear-gradient(#2b2e32 0 2px, transparent 2px 10px, #2b2e32 10px 12px, transparent 12px 26px, #2b2e32 26px 28px, transparent 28px); }
-    .arcn { position: absolute; left: 262px; top: 78px; width: 76px; height: 76px; border-radius: 50%; border: 1px solid #2b2e32; opacity: .55; -webkit-mask-image: linear-gradient(#000 0 34%, transparent 34%); }
-    .band { position: absolute; left: 196px; top: 236px; width: 208px; height: 18px; border: 1.5px solid #47322a; border-top: none; border-radius: 0 0 20px 20px; }
-    .label { position: absolute; left: 150px; top: 258px; width: 320px; height: 26px; border-radius: 2px; background: #f3f1ea; box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.18); }
-    .label::before { content: ''; position: absolute; left: 0; top: 0; width: 7px; height: 100%; background: #d8262d; }
-    .dialn { position: absolute; left: 512px; top: 262px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, #f3f1ea 0 30px, #1b1d20 30px 31px, #cfd2d5 31px 35px, #8d9299 35px 37px, #e6e8ea 37px); box-shadow: 0 3px 5px rgba(0,0,0,.4), 0 0 0 1px #6f747a; }
-    .post { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #7d8288 70%); box-shadow: 0 2px 3px rgba(0,0,0,.5), 0 0 0 1px #5d6166; }
-    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #4a342a 0 1.5px, #38271f 1.5px 3px); }
-    .disc { position: absolute; inset: 0; border-radius: 50%; -webkit-mask-image: ${holes(210, 62, 22)}; -webkit-mask-composite: source-in; filter: drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
-    .disc.mint { background: radial-gradient(circle, #7fc4a6 0 30px, #9bdcc0 30px 99px, #6fb596 99px 102px, #8fd0b4 102px); }
-    .disc.red { background: radial-gradient(circle, #b81d22 0 30px, #e02b31 30px 99px, #9c1a1e 99px 102px, #cf262c 102px); }
-    .boss { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px; border-radius: 50%; background: radial-gradient(circle, #33363a 0 4px, #f6f6f4 4px 11px, #9a9fa5 11px 12.5px, #f1f1ee 12.5px); box-shadow: 0 1px 3px rgba(0,0,0,.45), 0 0 0 1px #7c8188; }
-    .boss i { position: absolute; left: 24px; top: 5px; width: 6px; height: 44px; background: radial-gradient(circle at 50% 4px, #33363a 2.6px, transparent 3px), radial-gradient(circle at 50% 40px, #33363a 2.6px, transparent 3px); }
-    .boss i:nth-child(2) { transform: rotate(60deg); } .boss i:nth-child(3) { transform: rotate(120deg); }
-    .mark { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); font: 800 9px ${HELVETICA}; letter-spacing: .12em; color: rgba(255,255,255,.92); }
-    .mark.mint { color: #1f5a41; }
-    ${beds('#8f959c', '#f3f1ea', true)}
+    body { background: linear-gradient(#ecedee, #dadbdd); font-family: ${HELVETICA}; }
+    .plate { position: absolute; left: 12px; top: 20px; width: 616px; height: 426px; border-radius: 16px;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.13) 0 .5px, rgba(0,0,0,.05) .5px 1px, transparent 1px 2px), linear-gradient(100deg, #b6b9ba, #a6a9aa 46%, #b3b6b7 72%, #a4a7a8);
+      box-shadow: 0 7px 14px rgba(0,0,0,.4), 0 0 0 1px #6b6e70, inset 0 1px 0 1px rgba(255,255,255,.55), inset 0 -2px 0 1px rgba(0,0,0,.18); }
+    .socket { position: absolute; left: 4px; width: 9px; border-radius: 2px 0 0 2px; background: repeating-linear-gradient(#2c7a59 0 7px, #1d5a40 7px 9px); box-shadow: 0 0 0 1px #184a35; }
+    .tab { position: absolute; left: 288px; top: 13px; width: 64px; height: 8px; border-radius: 2px 2px 0 0; background: linear-gradient(#d9dbdc, #a9acae); box-shadow: 0 0 0 1px #6b6e70; }
+    .jack { position: absolute; left: 5px; top: 52px; width: 8px; height: 16px; border-radius: 2px; background: repeating-linear-gradient(#e9eaea 0 1px, #85888a 1px 2px); box-shadow: 0 0 0 1px #5d6062; }
+    .works { position: absolute; left: 0; top: 0; }
+    .cast { position: absolute; top: 20px; width: 236px; height: 236px; border-radius: 50%; box-shadow: 0 5px 9px rgba(0,0,0,.4); }
+    .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #33251e 0 1.2px, #241a15 1.2px 2.4px); box-shadow: inset 0 0 0 1px #17110e; }
+    .flange { position: absolute; left: 0; top: 0; filter: drop-shadow(0 0 2px rgba(0,0,0,.5)); }
+    .hand { position: absolute; left: 1px; top: 0; width: 1.5px; height: 100%; border-radius: 1px; background: #17181a; }
+    ${beds('#85888a', '#f3f1ea', true)}
+    .slot { border-radius: 3px; }
     .well { border-radius: 3px; box-shadow: inset 0 1px 3px rgba(0,0,0,.35), 0 1px 0 #fff; }
-    .face { color: #23262a; } .face svg { width: 17px; height: 17px; }
-    .puck { border-radius: 50%; background: radial-gradient(circle, #5d6166 0 3px, #f6f7f8 3px 8px, #9a9fa5 8px 9.5px, #e3e5e8 9.5px 62%, #9da2a8 62% 66%, #eff0f2 66%); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #5d6166; }
-    .puck svg { margin-top: 26px; width: 13px; height: 13px; }
-    .puck.go { color: #fff; background: radial-gradient(circle, #e7373d 0 62%, #9c1a1e 62% 66%, #cf262c 66%); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #6d1114; }
-    .puck.go svg { margin-top: 0; width: 26px; height: 26px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.3)); }
-    .block { border-radius: 3px; background: linear-gradient(145deg, #f4f5f6, #b4b8bd 60%, #d5d8db); box-shadow: 0 2px 4px rgba(0,0,0,.4), 0 0 0 1px #5d6166, inset 0 0 0 1px rgba(255,255,255,.7); }
-    .block::before { content: ''; position: absolute; right: 5px; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: #6a2a2a; box-shadow: inset 0 1px 1px rgba(0,0,0,.5); }
-    .small { border-radius: 50%; background: radial-gradient(circle at 38% 30%, #fff, #a3a8ae 68%, #7d8288); box-shadow: 0 2px 3px rgba(0,0,0,.45), 0 0 0 1px #5d6166; }
+    .face { color: ${NANO_INK}; } .face svg { position: relative; width: 16px; height: 16px; }
+    .roller { border-radius: 50%; color: #f4f0e2; background: radial-gradient(circle, #2a2c2e 0 9.5px, #8d8a7c 9.5px 10.5px, #f6f2e4 10.5px 17px, #cfcab8 17px 18px, #f8f5ea 18px 24.5px, #cdc8b6 24.5px); box-shadow: 0 3px 5px rgba(0,0,0,.45), 0 0 0 1px #77746a; }
+    .roller svg { width: 12px; height: 12px; }
+    .knob { border-radius: 50%; color: #fff; background: radial-gradient(circle at 40% 35%, #f0565b, #c2181f 70%, #8f1116); box-shadow: 0 2px 3px rgba(0,0,0,.5), 0 0 0 1px #6d0d11; }
+    .knob svg { width: 14px; height: 14px; }
+    .padk { border-radius: 3px 3px 13px 13px; color: #eceded; background: linear-gradient(#f1f2f2 0 12px, #6b6e70 12px 13px, #1d1e20 13px, #0f1011); box-shadow: 0 2px 4px rgba(0,0,0,.5), 0 0 0 1px #55585a; }
+    .padk svg { margin-top: 12px; }
+    .head { border-radius: 4px 4px 9px 9px; background: linear-gradient(160deg, #f1f2f2, #c9cbcc); box-shadow: 0 2px 4px rgba(0,0,0,.45), 0 0 0 1px #6f7274; }
+    .head::before { content: ''; position: absolute; left: 9px; right: 9px; top: 13px; bottom: 0; border-radius: 4px 4px 11px 11px;
+      background: repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 .5px, transparent .5px 2px), linear-gradient(90deg, #8e9193, #b9bcbd 40%, #84878a); box-shadow: 0 0 0 1px #5d6062, inset 0 1px 0 rgba(255,255,255,.5); }
+    .head::after { content: ''; position: absolute; left: 3px; right: 3px; top: 3px; height: 8px;
+      background: radial-gradient(circle at 4px 4px, #3a3c3e 0 .8px, #e3e4e5 1px 3px, #6f7274 3px 3.6px, transparent 3.8px), radial-gradient(circle at calc(100% - 4px) 4px, #3a3c3e 0 .8px, #e3e4e5 1px 3px, #6f7274 3px 3.6px, transparent 3.8px); }
+    .head svg { margin-top: 12px; }
+    .head.a { transform: rotate(-5deg); } .head.a svg { transform: rotate(5deg); }
+    .head.b { transform: rotate(6deg); } .head.b svg { transform: rotate(-6deg); }
+    .pinch { border-radius: 50%; background: radial-gradient(circle, #55585a 0 2px, transparent 2.5px), conic-gradient(from 20deg, #f3f4f4, #a5a8aa, #ecedee, #989b9d, #f3f4f4, #a5a8aa, #ecedee, #989b9d, #f3f4f4);
+      box-shadow: 0 3px 6px rgba(0,0,0,.5), 0 0 0 1px #5d6062, inset 0 0 0 7px rgba(255,255,255,.2), inset 0 0 0 8px rgba(0,0,0,.16); }
+    .pinch svg { width: 26px; height: 26px; }
+    .stud { border-radius: 50%; background: radial-gradient(circle at 38% 30%, #fafafa, #b3b6b8 65%, #86898b); box-shadow: 0 2px 3px rgba(0,0,0,.45), 0 0 0 1px #5d6062; }
+    .stud svg { width: 15px; height: 15px; }
     ${STATES}
-    .pressed .puck, .pressed .block, .pressed .small { box-shadow: 0 0 0 1px #5d6166, inset 0 3px 5px rgba(0,0,0,.4); }
-    .active .puck.go { box-shadow: 0 0 0 1px #6d1114, 0 0 0 3px #c9ccd0, 0 0 0 4.5px #e02b31, 0 0 12px 3px rgba(224,43,49,.45); }
-    .active .block::before { background: #ff3b30; box-shadow: 0 0 5px 1px rgba(255,59,48,.9); }
-    .active .block { color: #a31d16; }
+    .pressed .head.a svg { transform: rotate(5deg) translateY(1px); } .pressed .head.b svg { transform: rotate(-6deg) translateY(1px); }
+    .pressed .roller, .pressed .knob, .pressed .pinch, .pressed .stud { box-shadow: 0 0 0 1px #5d6062, inset 0 2px 4px rgba(0,0,0,.4); }
+    .active .pinch { box-shadow: 0 0 0 1px #5d6062, 0 0 0 3px #d8232a, 0 0 10px 2px rgba(216,35,42,.5), inset 0 0 0 7px rgba(255,255,255,.2), inset 0 0 0 8px rgba(0,0,0,.16); }
+    .active .stud { color: #b3141b; box-shadow: 0 0 0 1px #5d6062, 0 0 0 2.5px #d8232a; }
   `,
-  art: `<div class="plate"><div class="pins"></div></div>
-    ${[[22, 18], [589, 18], [22, 378], [589, 378], [300, 222]].map(([x, y]) => `<div class="screw" style="left:${x}px;top:${y}px"></div>`).join('')}
-    <div class="seatn" style="left:82px"></div><div class="seatn" style="left:322px"></div>
-    <div class="guide"></div><div class="arcn"></div><div class="band"></div>
-    <div class="fine" style="left:46px;top:20px">SUPPLY REEL</div><div class="fine" style="left:520px;top:20px">TAKE-UP</div>
-    <div class="fine" style="left:28px;top:246px">MODE</div><div class="fine" style="left:514px;top:246px">LEVEL</div><div class="fine" style="left:482px;top:354px">VOLUME</div>
-    <div class="fine" style="left:28px;top:384px;opacity:.75">MINIATURE TAPE RECORDER · LOSSLESS</div>
-    <div class="post" style="left:176px;top:240px"></div><div class="post" style="left:428px;top:240px"></div>
-    <div class="label"></div><div class="dialn"></div>
-    <div class="slot" style="left:148px;top:309px;width:324px;height:14px"></div>
-    <div class="slot" style="left:480px;top:364px;width:116px;height:14px"></div>
-    <div class="well" style="left:10px;top:408px;width:600px;height:158px"></div>`,
+  art: NANO_ART,
   buttons: [
-    button('player.open', 'open', 168, 331, 54, 54, 'puck'),
-    button('player.previous', 'previous', 222, 331, 54, 54, 'puck'),
-    button('player.togglePlay', 'play', 276, 326, 68, 64, 'puck go', PLAY),
-    button('player.next', 'next', 344, 331, 54, 54, 'puck'),
-    button('player.stop', 'stop', 398, 331, 54, 54, 'puck'),
-    nanoBlock('player.repeat', 'repeat', 26, 256),
-    nanoBlock('player.shuffle', 'shuffle', 82, 256),
-    nanoBlock('window.equalizer', 'equalizer', 26, 302),
-    nanoBlock('app.playlist', 'list', 82, 302),
-    button('app.skins', 'skins', 60, 346, 40, 36, 'small'),
+    button('player.open', 'open', 20, 368, 60, 60, 'roller'),
+    button('app.skins', 'skins', 84, 314, 38, 38, 'knob'),
+    button('player.stop', 'stop', 122, 358, 68, 60, 'padk'),
+    button('player.previous', 'previous', 196, 340, 76, 76, 'head a'),
+    button('player.next', 'next', 280, 334, 76, 76, 'head b'),
+    button('player.togglePlay', 'play', 424, 338, 80, 80, 'pinch', PLAY),
+    nanoStud('player.repeat', 'repeat', 444),
+    nanoStud('player.shuffle', 'shuffle', 482),
+    nanoStud('window.equalizer', 'equalizer', 520),
+    nanoStud('app.playlist', 'list', 558),
   ],
   components: [
-    { type: 'text', source: 'track.title', x: 164, y: 260, width: 218, height: 22, fontSize: 14, color: '#1b1d20' },
-    { type: 'text', source: 'player.status', x: 386, y: 260, width: 78, height: 22, fontSize: 10, align: 'right', color: '#a31d16' },
-    { type: 'time', source: 'position', x: 150, y: 288, width: 70, height: 16, fontSize: 12, color: '#1b1d20' },
-    { type: 'text', source: 'track.artist', x: 222, y: 288, width: 176, height: 16, fontSize: 11, align: 'center', color: '#a31d16' },
-    { type: 'time', source: 'duration', x: 400, y: 288, width: 70, height: 16, fontSize: 12, align: 'right', color: '#44484d' },
-    { type: 'seekbar', x: 150, y: 312, width: 320, height: 8 },
-    { type: 'spectrum', x: 526, y: 286, width: 52, height: 30, color: '#44484d' },
-    { type: 'volume', x: 482, y: 367, width: 112, height: 8 },
-    { type: 'playlist', x: 16, y: 412, width: 588, height: 150 },
+    { type: 'text', source: 'track.title', x: 62, y: 260, width: 334, height: 20, fontSize: 15, color: '#1b1d20' },
+    { type: 'text', source: 'track.artist', x: 62, y: 280, width: 250, height: 16, fontSize: 11, color: '#8f1d16' },
+    { type: 'text', source: 'player.status', x: 300, y: 280, width: 96, height: 16, fontSize: 10, align: 'right', color: '#1b1d20' },
+    { type: 'time', source: 'position', x: 92, y: 424, width: 42, height: 14, fontSize: 11, align: 'right', color: '#1b1d20' },
+    { type: 'seekbar', x: 140, y: 427, width: 236, height: 8 },
+    { type: 'time', source: 'duration', x: 382, y: 424, width: 40, height: 14, fontSize: 11, color: '#1b1d20' },
+    { type: 'volume', x: 444, y: 427, width: 80, height: 8 },
+    { type: 'playlist', x: 18, y: 464, width: 604, height: 132 },
   ],
   packs: [
-    { name: 'tape-left', x: 95, y: 35, width: 190, height: 190, from: 190, to: 76, html: '<div class="wound"></div>' },
-    { name: 'tape-right', x: 335, y: 35, width: 190, height: 190, from: 76, to: 190, html: '<div class="wound"></div>' },
+    { name: 'tape-left', x: 56, y: 20, width: 228, height: 228, from: 226, to: 100, html: '<div class="wound"></div>' },
+    { name: 'tape-right', x: 356, y: 20, width: 228, height: 228, from: 100, to: 226, html: '<div class="wound"></div>' },
   ],
   spinners: [
-    { name: 'reel-left', x: 85, y: 25, width: 210, height: 210, period: 3200, html: nanoReel('mint') },
-    { name: 'reel-right', x: 325, y: 25, width: 210, height: 210, period: 3200, html: nanoReel('red') },
+    { name: 'reel-left', x: 50, y: 14, width: 240, height: 240, period: 3200, html: nanoReel(NANO_MINT) },
+    { name: 'reel-right', x: 350, y: 14, width: 240, height: 240, period: 3200, html: nanoReel(NANO_RED) },
   ],
+  needles: [{ name: 'hand', x: 570, y: 346, width: 4, height: 26, pivotX: 2, pivotY: 26, from: -46, to: 46, rest: -46, html: '<div class="hand"></div>' }],
 });
 
 // ---- "Silver": a silver front, smoked reels, a badge and knurled knobs
@@ -2365,6 +2493,7 @@ const chromeSkin = skin('chrome', 'Chrome', 'A smoke-grey cassette on black: the
     { type: 'text', source: 'player.status', x: 136, y: 184, width: 128, height: 14, fontSize: 10, align: 'center', color: '#49d6b6' },
     ...chromeLow.components,
   ],
+  packs: cassettePacks({ x: 106, y: 126, width: 188, height: 60, radius: 30 }, [[136, 156], [264, 156]], 120, 58),
   spinners: [
     { name: 'hub-left', x: 114, y: 134, width: 44, height: 44, period: 2600, html: '<div class="gear"></div>' },
     { name: 'hub-right', x: 242, y: 134, width: 44, height: 44, period: 2600, html: '<div class="gear"></div>' },
@@ -2552,6 +2681,7 @@ const classic = skin('classic', 'Classic', 'An olive-grey cassette player: the t
     ...classicLow.components,
   ],
   overlays: [{ name: 'cover', x: 44, y: 136, width: 38, height: 38, source: 'track.cover', html: NOTE }],
+  packs: cassettePacks({ x: 106, y: 184, width: 150, height: 40, radius: 20 }, [[132, 204], [194, 204]], 76, 40),
   spinners: [smallHub('hub-left', 118, 190), smallHub('hub-right', 180, 190)],
 });
 
@@ -2645,15 +2775,79 @@ const needleSkin = skin('needle', 'Needle', 'Black leather and one wide white me
   needles: [{ name: 'pointer', x: 186, y: 54, width: 8, height: 106, pivotX: 4, pivotY: 106, from: -38, to: 38, rest: -38, html: '<div class="pointer"></div>' }],
 });
 
+// ---- "Dub": two white meters in black leather, a turned steel knob in a lime arc
+//
+// Both needles and the knob show where the track is; pulling a needle or turning the knob seeks.
+
+const dubLow = lower({ width: 380, y: 352, look: 'lug', playLook: 'lug steel', toggleLook: 'lug small', big: 72, mid: 56, toggle: [46, 46], list: 150, seek: false });
+const dubMeter = (x, side) => `<div class="frame" style="left:${x}px"><div class="dialw"><div class="vu">VU</div><div class="side">${side}</div><div class="humph"></div></div></div>`;
+const dubNeedle = (name, x) => ({ name, x: x + 79, y: 44, width: 6, height: 92, pivotX: 3, pivotY: 92, from: -40, to: 40, rest: -40, html: '<div class="pointer"></div>' });
+const dub = skin('dub', 'Dub', 'Two white meters side by side in black leather, a large turned steel knob in a lime arc and round keys below.', ['meter', 'leather', 'dark', 'knob', 'lime', 'steel', 'skeuomorphic'], {
+  theme: theme({ background: '#1d1e20', surface: '#0c0c0d', surfaceRaised: '#33353a', foreground: '#f4f4f1', muted: '#b4b5b1', accent: '#cfe84a', accentContrast: '#1a1f00', border: '#000000', ok: '#9fd96a', danger: '#ff9d94', focus: '#7fc4ff' }, HELVETICA, 2, '"Menlo", "Consolas", "Courier New", monospace'),
+  width: 380,
+  height: dubLow.height,
+  resize: dubLow.resize,
+  pad: 5,
+  css: `
+    body { background: radial-gradient(circle, rgba(255,255,255,.05) .7px, transparent 1px) 0 0 / 4px 4px, radial-gradient(circle, rgba(0,0,0,.5) .7px, transparent 1px) 2px 2px / 4px 4px, linear-gradient(#2a2b2e, #17181a); font-family: ${HELVETICA}; }
+    .stitch { position: absolute; left: 8px; top: 8px; right: 8px; height: 330px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.16); }
+    .frame { position: absolute; top: 18px; width: 164px; height: 110px; border-radius: 7px; background: linear-gradient(#e9eaeb, #8d9094 45%, #c9cbcd); box-shadow: 0 0 0 1px #000, 0 3px 6px rgba(0,0,0,.6); }
+    .dialw { position: absolute; left: 5px; top: 5px; width: 154px; height: 100px; border-radius: 3px; background: linear-gradient(#ffffff, #eceae0); box-shadow: inset 0 2px 6px rgba(0,0,0,.4), 0 0 0 1px #3a3c40; overflow: hidden; }
+    .dialw::before { content: ''; position: absolute; inset: 0; background: repeating-conic-gradient(from -42.4deg at 50% 121%, #17181a 0 .8deg, transparent .8deg 7deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 121%, transparent 0 82px, #000 82px 92px, transparent 92px), conic-gradient(from -44deg at 50% 121%, #000 0 88deg, transparent 88deg); -webkit-mask-composite: source-in; }
+    .dialw::after { content: ''; position: absolute; inset: 0; background: conic-gradient(from 16deg at 50% 121%, #d2372b 0 26deg, transparent 26deg);
+      -webkit-mask-image: radial-gradient(circle at 50% 121%, transparent 0 74px, #000 74px 79px, transparent 79px); }
+    .humph { position: absolute; left: 55px; top: 80px; width: 44px; height: 44px; border-radius: 50%; background: #17181a; }
+    .vu { position: absolute; left: 0; right: 0; top: 50px; text-align: center; font: 700 12px ${HELVETICA}; color: #17181a; }
+    .side { position: absolute; left: 9px; top: 7px; font: 700 8px ${HELVETICA}; letter-spacing: .1em; color: #55585c; }
+    .pointer { position: absolute; left: 2px; top: 0; width: 1.6px; height: calc(100% - 14px); background: #17181a; border-radius: 1px; }
+    .arc { position: absolute; left: 108px; top: 188px; width: 164px; height: 164px; border-radius: 50%; background: conic-gradient(from 220deg, #cfe84a 0 280deg, transparent 280deg);
+      -webkit-mask-image: radial-gradient(circle, transparent 0 76px, #000 76.5px 80px, transparent 80.5px); filter: drop-shadow(0 0 4px rgba(207,232,74,.55)); }
+    .seat { position: absolute; left: 122px; top: 202px; width: 136px; height: 136px; border-radius: 50%; background: #0c0c0d; box-shadow: 0 0 0 1px #000, 0 1px 0 1px rgba(255,255,255,.12), 0 10px 14px rgba(0,0,0,.6); }
+    .mini { position: absolute; top: 322px; font: 700 8px ${HELVETICA}; letter-spacing: .12em; color: #b4b5b1; }
+    .turn { position: absolute; inset: 0; border-radius: 50%;
+      background: repeating-conic-gradient(from 0deg, rgba(0,0,0,.28) 0 2deg, rgba(255,255,255,.2) 2deg 4deg), linear-gradient(#d9dbdd, #7d8185);
+      box-shadow: inset 0 0 0 1px #2a2b2e; }
+    .turn::before { content: ''; position: absolute; inset: 9px; border-radius: 50%;
+      background: conic-gradient(from 0deg, #fdfdfd, #9da0a4 12%, #f1f2f3 25%, #8f9296 37%, #fdfdfd 50%, #9da0a4 62%, #f1f2f3 75%, #8f9296 87%, #fdfdfd);
+      box-shadow: 0 0 0 1px #55585c, inset 0 0 0 1px rgba(255,255,255,.7), inset 0 0 0 16px rgba(255,255,255,.1), inset 0 0 0 17px rgba(0,0,0,.14); }
+    .turn::after { content: ''; position: absolute; left: 50%; top: 14px; width: 5px; height: 26px; margin-left: -2.5px; border-radius: 3px; background: #b6d42a; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    ${beds('#0c0c0d', '#0c0c0d', false)}
+    .face { color: #f4f4f1; } .face svg { width: 18px; height: 18px; }
+    .lug { border-radius: 50%; background: radial-gradient(circle at 50% 22%, #6a6d72, #26282b 75%); box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4px #000, 0 4px 6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.3); }
+    .lug.steel { background: conic-gradient(from 30deg, #e9ebed, #84888d, #dfe1e4, #7a7e83, #e9ebed, #84888d, #dfe1e4, #7a7e83, #e9ebed); }
+    .lug.steel svg { width: 28px; height: 28px; color: #2a2d31; }
+    .lug.small svg { width: 15px; height: 15px; }
+    ${STATES}
+    .pressed .lug { box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4px #000, inset 0 3px 6px rgba(0,0,0,.6); }
+    .active .lug.steel { box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4.5px #cfe84a, 0 0 12px 2px rgba(207,232,74,.45), inset 0 1px 0 rgba(255,255,255,.3); }
+    .active .lug.steel svg { color: #4a5a00; }
+    .active .lug.small { color: #cfe84a; box-shadow: 0 0 0 1px #000, 0 0 0 3px #1c1d1f, 0 0 0 4.5px #cfe84a, inset 0 1px 0 rgba(255,255,255,.3); }
+  `,
+  art: `<div class="stitch"></div>${dubMeter(20, 'L')}${dubMeter(196, 'R')}<div class="arc"></div><div class="seat"></div>
+    <div class="mini" style="left:100px">0</div><div class="mini" style="left:268px">END</div>${dubLow.art}`,
+  buttons: dubLow.buttons,
+  components: [
+    { type: 'text', source: 'track.title', x: 24, y: 138, width: 332, height: 22, fontSize: 15, align: 'center', color: '#f4f4f1' },
+    { type: 'text', source: 'track.artist', x: 24, y: 160, width: 332, height: 16, fontSize: 11, align: 'center', color: '#b4b5b1' },
+    { type: 'time', source: 'position', x: 20, y: 252, width: 84, height: 30, fontSize: 22, align: 'center', color: '#f4f4f1' },
+    { type: 'text', source: 'player.status', x: 20, y: 284, width: 84, height: 14, fontSize: 10, align: 'center', color: '#cfe84a' },
+    { type: 'time', source: 'duration', x: 276, y: 252, width: 84, height: 30, fontSize: 22, align: 'center', color: '#b4b5b1' },
+    { type: 'spectrum', x: 286, y: 284, width: 64, height: 14, color: '#cfe84a' },
+    ...dubLow.components,
+  ],
+  needles: [dubNeedle('pointer-left', 20), dubNeedle('pointer-right', 196), { name: 'knob', x: 126, y: 206, width: 128, height: 128, pivotX: 64, pivotY: 64, from: -140, to: 140, rest: -140, html: '<div class="turn"></div>' }],
+});
+
 // What every skin says about itself beyond its looks: words to find it by, and the row of
 // its background that is drawn out when the window is made taller (it runs through the playlist).
 const MORE = {
   hifi: { keywords: ['hi-fi', 'receiver', 'aluminium', 'amber', 'dark', 'skeuomorphic'], resize: { stretchY: 400 } },
   neon: { keywords: ['neon', 'synthwave', 'retro', 'dark', 'glow', 'eighties'], resize: { stretchY: 410 } },
   tape: { keywords: ['cassette', 'tape', 'light', 'seventies', 'orange', 'skeuomorphic'], resize: { stretchY: 440 } },
-  vinyl: { keywords: ['turntable', 'record', 'vinyl', 'dark', 'soft', 'neumorphic', 'landscape'], resize: { stretchY: 340 } },
+  vinyl: { keywords: ['turntable', 'record', 'vinyl', 'dark', 'soft', 'neumorphic', 'landscape'], resize: { stretchY: 475 } },
   panel: { keywords: ['minimal', 'light', 'functional', 'sixties', 'red'], resize: { stretchY: 440 } },
-  reel: { keywords: ['reel', 'tape machine', 'light', 'minimal', 'landscape', 'sixties'], resize: { stretchY: 364 } },
+  reel: { keywords: ['reel', 'tape machine', 'light', 'minimal', 'landscape', 'sixties'], resize: { stretchY: 448 } },
   recorder: { keywords: ['recorder', 'pocket', 'dark', 'display', 'red'], resize: { stretchY: 500 } },
   deck: { keywords: ['cassette', 'deck', 'metal', 'dark', 'orange', 'skeuomorphic'], resize: { stretchY: 490 } },
   walk: { keywords: ['cassette', 'portable', 'orange', 'eighties', 'dark'], resize: { stretchY: 480 } },
@@ -2665,7 +2859,7 @@ const MORE = {
   dial: { keywords: ['dial', 'knob', 'aluminium', 'light', 'minimal', 'green'], resize: { stretchY: 590 } },
 };
 
-const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial, pocket, beat, stripe, amp, magnet, studio, crimson, mono, wheel, nano, silver, lever, keysSkin, split, patch, chromeSkin, switchSkin, gauge, ember, click, classic, radar, needleSkin];
+const DESIGNS = [hifi, neon, tape, vinyl, panel, reelDeck, recorder, deck, walk, meter, ferro, mixtape, systemSkin, consoleSkin, dial, pocket, beat, stripe, amp, magnet, studio, crimson, mono, wheel, nano, silver, lever, keysSkin, split, patch, chromeSkin, switchSkin, gauge, ember, click, classic, radar, needleSkin, dub];
 
 // ---------------------------------------------------------------- rendering
 
@@ -2675,6 +2869,7 @@ const BASE_CSS = `
   body { position: relative; }
   .btn { position: absolute; }
   .face { position: absolute; display: grid; place-items: center; }
+  .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
   svg { display: block; }
 `;
 
@@ -2868,6 +3063,19 @@ function cut(image, x, y, width, height, alpha = false) {
   ]);
 }
 
+/**
+ * The colour of the top edge of a picture as `#rrggbb`: the middle one, by brightness, of a
+ * row just below any bevel. A texture or a gradient gives its typical colour, not a mixture.
+ */
+function topEdgeColour(image) {
+  const row = 3 * SCALE;
+  const colours = Array.from({ length: image.width }, (_, x) => {
+    const at = (row * image.width + x) * 4;
+    return [image.pixels[at], image.pixels[at + 1], image.pixels[at + 2]];
+  }).sort((a, b) => a[0] * 2 + a[1] * 7 + a[2] - (b[0] * 2 + b[1] * 7 + b[2]));
+  return `#${colours[colours.length >> 1].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 // ---------------------------------------------------------------- one skin
 
 function build(design, mockDir) {
@@ -2879,11 +3087,14 @@ function build(design, mockDir) {
     decodePng(screenshot(page(design, state, extra), design.width, design.height, scale, work));
   const whole = (image) => cut(image, 0, 0, image.width, image.height);
 
-  writeFileSync(join(out, 'assets/background.png'), whole(shot('none')));
+  const background = shot('none');
+  writeFileSync(join(out, 'assets/background.png'), whole(background));
+  // the title bar takes the colour of the top edge of the body, unless the design names one
+  const titleBar = design.titleBar ?? topEdgeColour(background);
 
-  // without its track list a skin ends just above it; the two wide ones keep their list
+  // without its track list a skin ends just above it
   const list = design.components.find((c) => c.type === 'playlist');
-  const collapsedHeight = ['vinyl', 'reel'].includes(design.folder) || !list ? null : list.y - 8;
+  const collapsedHeight = list ? list.y - 8 : null;
 
   const states = {};
   for (const state of ['normal', 'hover', 'pressed', 'active']) {
@@ -2918,7 +3129,13 @@ function build(design, mockDir) {
   const overlays = loose('image')(design.overlays);
   const needles = loose('needle')(design.needles);
   const turned =
-    (design.packs ?? []).map((n) => `<div style="clip-path:circle(${(n.from + n.to) / 4}px at ${n.x + n.width / 2}px ${n.y + n.height / 2}px)">${needleHtml(n, 0)}</div>`).join('') +
+    (design.packs ?? [])
+      .map((n) => {
+        const c = n.clip ?? { x: 0, y: 0, width: n.width, height: n.height };
+        const inset = `inset(${c.y}px ${n.width - c.x - c.width}px ${n.height - c.y - c.height}px ${c.x}px round ${c.radius ?? 0}px)`;
+        return `<div style="position:absolute;left:${n.x}px;top:${n.y}px;width:${n.width}px;height:${n.height}px;clip-path:${inset}"><div style="position:absolute;inset:0;clip-path:circle(${(n.from + n.to) / 4}px at 50% 50%)">${n.html}</div></div>`;
+      })
+      .join('') +
     (design.spinners ?? []).map((n) => needleHtml(n, 25)).join('') +
     (design.overlays ?? []).map((n) => needleHtml(n, 0)).join('') +
     (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');
@@ -2950,7 +3167,7 @@ function build(design, mockDir) {
         width: design.width,
         height: design.height,
         background: 'assets/background.png',
-        ...(design.titleBar ? { titleBar: design.titleBar } : {}),
+        titleBar,
         ...(collapsedHeight ? { collapsedHeight } : {}),
         resize: design.resize ?? MORE[design.folder]?.resize,
         components: [...packs, ...spinners, ...overlays, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],

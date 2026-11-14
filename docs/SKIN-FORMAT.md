@@ -120,7 +120,7 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `spectrum` | `color` | Balken, die der Musik folgen (ohne `color` in der Akzentfarbe). |
 | `needle` | `states.normal`, `pivotX`, `pivotY`, `from`, `to` (alle Pflicht), `rest` | Ein Bild, das sich um einen Drehpunkt dreht: bei Titelbeginn um `from` Grad, am Ende um `to` Grad (im Uhrzeigersinn, −360 bis 360), ohne Titel um `rest`. Ziehen spult; per Tastatur ein Regler (Pfeiltasten ±5 s). Beispiel: Tonarm. |
 | `spinner` | `states.normal`, `period` (Pflicht, 500–120000 ms je Umdrehung) | Ein Bild, das sich um seine Mitte dreht, solange Musik läuft. Beispiel: Spule, Plattenetikett. Ist der Kasten nicht quadratisch, dreht sich das Bild als Kreis und wird auf den Kasten gestaucht – so sieht eine schräg fotografierte Spule aus. Mit `"source": "track.cover"` zeigt es das Cover des Titels, rund beschnitten (Vinyl). |
-| `pack` | `states.normal`, `from`, `to` (Pflicht), `rest` | Ein rundes Bild, von dem ein Kreis um die Mitte gezeigt wird. Sein Durchmesser (CSS-Pixel, höchstens die Kastengröße) geht mit dem Fortschritt des Titels von `from` nach `to`; ohne Titel `rest`. Beispiel: das Band auf einer Spule – links `from` groß und `to` klein, rechts umgekehrt. |
+| `pack` | `states.normal`, `from`, `to` (Pflicht), `rest`, `clip` | Ein rundes Bild, von dem ein Kreis um die Mitte gezeigt wird. Sein Durchmesser (CSS-Pixel, höchstens die Kastengröße) geht mit dem Fortschritt des Titels von `from` nach `to`; ohne Titel `rest`. Beispiel: das Band auf einer Spule – links `from` groß und `to` klein, rechts umgekehrt. `clip` (`{ "x", "y", "width", "height", "radius" }`, CSS-Pixel ab der linken oberen Ecke des Kastens, muss mit Größe ganz im Kasten liegen; `radius` rundet die Ecken, höchstens die halbe kürzere Seite) schneidet den Kreis zusätzlich auf ein Rechteck zu: das Fenster einer Kassette, hinter dem der Wickel verschwindet. |
 
 **Aktionen** (`action`): `player.togglePlay`, `player.play`, `player.pause`, `player.stop`, `player.next`, `player.previous`, `player.open`,
 `player.repeat`, `player.shuffle`, `app.skins`, `app.playlist` (Titelliste aus- und einblenden, ⌘J / Strg+J), `window.playlist` (Titelliste in eigenem Fenster, ⌘L / Strg+L), `window.equalizer`, `window.library` (Bibliothek-Fenster, ⌘B / Strg+B). Es gibt keine frei definierbaren Aktionen.
@@ -169,9 +169,9 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 | **Hi-Fi** (`io.github.krocon.hifi`) | `absolute`, 400 × 528 | gebürstetes Aluminium, gedrehte Knöpfe, bernsteinfarbenes Display |
 | **Neon** (`io.github.krocon.neon`) | `absolute`, 380 × 540 | leuchtende Röhren in Cyan und Magenta über einem Gitter, Sonne im Display |
 | **Tape** (`io.github.krocon.tape`) | `absolute`, 400 × 540 | heller Skin: Kassette mit Papieretikett, Klaviertasten, Creme und Orange |
-| **Vinyl** (`io.github.krocon.vinyl`) | `absolute`, 640 × 400 | **der Standard.** Weicher dunkler Plattenspieler im Querformat; der Tonarm zeigt die Position und lässt sich ziehen, das Etikett dreht sich |
+| **Vinyl** (`io.github.krocon.vinyl`) | `absolute`, 640 × 562 | **der Standard.** Weicher dunkler Plattenspieler im Querformat; der Tonarm zeigt die Position und lässt sich ziehen, das Etikett dreht sich. Ohne Titelliste 640 × 398 |
 | **Panel** (`io.github.krocon.panel`) | `absolute`, 340 × 560 | heller Skin: matte Frontplatte, runde Drucktasten, eine einzige rote |
-| **Reel** (`io.github.krocon.reel`) | `absolute`, 640 × 430 | heller Skin: Tonbandgerät mit weißer Front, zwei Spulen, die sich drehen |
+| **Reel** (`io.github.krocon.reel`) | `absolute`, 640 × 530 | heller Skin: Tonbandgerät mit weißer Front, zwei Spulen, die sich drehen. Ohne Titelliste 640 × 372 |
 | **Recorder** (`io.github.krocon.recorder`) | `absolute`, 340 × 600 | Taschenrekorder: schwarzes Gehäuse, leuchtendes Display, Tastenring um Play |
 | **Deck** (`io.github.krocon.deck`) | `absolute`, 380 × 600 | Kassette auf dunklem gebürstetem Metall, geriffelte Silbertasten |
 | **Walk** (`io.github.krocon.walk`) | `absolute`, 360 × 580 | tragbarer Kassettenspieler in Orange und Schwarz |
@@ -182,15 +182,19 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 | **Console** (`io.github.krocon.console`) | `absolute`, 400 × 580 | heller Skin: mattes Grau, Mulden-Tasten, eine rote |
 | **Dial** (`io.github.krocon.dial`) | `absolute`, 360 × 680 | heller Skin: ein großer Drehknopf zeigt die Position und spult |
 
-Dazu kommen 23 weitere, alle `absolute` und aus demselben Generator: **Pocket**, **Keys** (Taschenrechner), **Beat**
+Dazu kommen 24 weitere, alle `absolute` und aus demselben Generator: **Pocket**, **Keys** (Taschenrechner), **Beat**
 (Drum-Machine), **Stripe** (flache Zeichnung), **Amp**, **Lever**, **Switch**, **Patch** (schlichte Fronten), **Magnet**,
-**Classic**, **Radar**, **Chrome** (Kassettengeräte), **Studio**, **Needle**, **Gauge** (Zeigerinstrumente; in Needle zeigt
-der Zeiger die Position und lässt sich ziehen), **Crimson**, **Nano**, **Silver** (Tonbandgeräte mit Bandwickel),
+**Classic**, **Radar**, **Chrome** (Kassettengeräte), **Studio**, **Needle**, **Dub**, **Gauge** (Zeigerinstrumente; in Needle zeigt
+der Zeiger die Position und lässt sich ziehen, in Dub tun das beide Zeiger und der große Drehknopf), **Crimson**, **Nano**, **Silver** (Tonbandgeräte mit Bandwickel),
 **Mono**, **Split** (grafisch), **Wheel**, **Click** (Taschenplayer mit Tastenring) und **Ember** (Bernstein auf Schwarz).
 Mono, Wheel und Classic zeigen das Cover des Titels.
 
 Alle mitgelieferten Skins lassen sich nach unten aufziehen (`resize.stretchY` durch die Titelliste) und tragen
-Stichwörter. In Reel folgt das aufgewickelte Band dem Fortschritt (`pack`).
+Stichwörter. Alle außer Retro haben eine Taste, die die Titelliste aus- und einblendet (`app.playlist`), und nennen ihre
+Höhe ohne Liste (`collapsedHeight`); die Liste liegt dafür in jedem Skin unter dem Gerät, auch in Vinyl und Reel.
+Jeder dieser Skins färbt die Titelleiste (`titleBar`) in der Farbe seiner Oberkante; der Generator liest sie aus dem
+Hintergrundbild, wenn das Design keine nennt. In den Kassetten-Skins (Tape, Deck, Meter, Ferro, Mixtape, Magnet,
+Classic, Chrome, Stripe) wandert das Band mit dem Titel von der linken auf die rechte Nabe (`pack` mit `clip`). In Reel folgt das aufgewickelte Band dem Fortschritt (`pack`).
 
 Die Grafiken aller Skins außer Retro beschreibt `scripts/make-designer-skins.mjs` als HTML und CSS; ein
 Headless-Chrome rendert sie in doppelter Auflösung, das Skript schneidet die Tasten je Zustand aus. Es sind eigene

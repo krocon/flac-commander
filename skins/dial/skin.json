@@ -36,6 +36,7 @@
       "width": 360,
       "height": 680,
       "background": "assets/background.png",
+      "titleBar": "#f0f1f2",
       "collapsedHeight": 512,
       "resize": {
         "stretchY": 590
@@ -105,9 +106,9 @@
         },
         {
           "type": "volume",
-          "x": 118,
+          "x": 166,
           "y": 488,
-          "width": 124,
+          "width": 76,
           "height": 8
         },
         {
@@ -207,7 +208,7 @@
         {
           "type": "button",
           "action": "window.equalizer",
-          "x": 248,
+          "x": 112,
           "y": 468,
           "width": 46,
           "height": 46,
@@ -216,6 +217,20 @@
             "hover": "assets/equalizer-hover.png",
             "pressed": "assets/equalizer-pressed.png",
             "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 248,
+          "y": 468,
+          "width": 46,
+          "height": 46,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
           }
         },
         {

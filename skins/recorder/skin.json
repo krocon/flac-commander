@@ -35,6 +35,7 @@
       "width": 340,
       "height": 600,
       "background": "assets/background.png",
+      "titleBar": "#d4d6d8",
       "collapsedHeight": 416,
       "resize": {
         "stretchY": 500
@@ -182,10 +183,10 @@
         {
           "type": "button",
           "action": "player.repeat",
-          "x": 210,
-          "y": 250,
-          "width": 50,
-          "height": 50,
+          "x": 214,
+          "y": 242,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/repeat.png",
             "hover": "assets/repeat-hover.png",
@@ -197,9 +198,9 @@
           "type": "button",
           "action": "player.shuffle",
           "x": 262,
-          "y": 250,
-          "width": 50,
-          "height": 50,
+          "y": 242,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/shuffle.png",
             "hover": "assets/shuffle-hover.png",
@@ -210,10 +211,10 @@
         {
           "type": "button",
           "action": "window.equalizer",
-          "x": 210,
-          "y": 306,
-          "width": 50,
-          "height": 50,
+          "x": 214,
+          "y": 286,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/equalizer.png",
             "hover": "assets/equalizer-hover.png",
@@ -223,11 +224,25 @@
         },
         {
           "type": "button",
-          "action": "app.skins",
+          "action": "app.playlist",
           "x": 262,
-          "y": 306,
-          "width": 50,
-          "height": 50,
+          "y": 286,
+          "width": 46,
+          "height": 46,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 238,
+          "y": 330,
+          "width": 46,
+          "height": 46,
           "states": {
             "normal": "assets/skins.png",
             "hover": "assets/skins-hover.png",
