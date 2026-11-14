@@ -71,6 +71,22 @@ const button = (action, icon, x, y, width, height, look, more = {}) => ({
   ...more,
 });
 const PLAY = { activeIcon: 'pause', toggle: true };
+
+/**
+ * The tape of a cassette: wound off the left hub and on to the right one as the track goes
+ * on, and seen only through `window` (in the coordinates of the skin).
+ */
+const cassettePacks = (window, hubs, big, small) =>
+  hubs.map(([cx, cy], n) => {
+    const x = Math.round(cx - big / 2);
+    const y = Math.round(cy - big / 2);
+    const left = Math.max(window.x, x);
+    const top = Math.max(window.y, y);
+    const width = Math.min(window.x + window.width, x + big) - left;
+    const height = Math.min(window.y + window.height, y + big) - top;
+    const radius = window.radius ? { radius: Math.min(window.radius, Math.floor(Math.min(width, height) / 2)) } : {};
+    return { name: n === 0 ? 'tape-left' : 'tape-right', x, y, width: big, height: big, from: n === 0 ? big : small, to: n === 0 ? small : big, clip: { x: left - x, y: top - y, width, height, ...radius }, html: '<div class="wound"></div>' };
+  });
 const TOGGLE = { toggle: true };
 
 const hifi = {
@@ -271,7 +287,6 @@ const neon = {
   ],
 };
 
-const reel = (cx) => `<div class="pack" style="left:${cx - 44}px"></div>`;
 const hub = (name, x, y) => ({
   name,
   x,
@@ -332,8 +347,6 @@ const tape = {
     .window { position: absolute; left: 62px; top: 88px; width: 216px; height: 50px; border-radius: 6px; overflow: hidden;
       background: linear-gradient(#1a1410, #0f0c0a); box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.18); }
     .window::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,.13) 0 30%, transparent 30.5%); }
-    .pack { position: absolute; top: -19px; width: 88px; height: 88px; border-radius: 50%;
-      background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); box-shadow: 0 0 0 1px #1c120c; }
     .hub { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: #efe7d6;
       box-shadow: inset 0 0 0 3px #efe7d6, inset 0 0 0 9px #17120e, 0 0 0 1px #17120e; }
     .hub i { position: absolute; left: 13px; top: 2px; width: 4px; height: 26px; background: linear-gradient(#efe7d6 0 7px, transparent 7px 19px, #efe7d6 19px); }
@@ -375,7 +388,7 @@ const tape = {
       <div class="screw" style="left:6px;top:6px"></div><div class="screw" style="right:6px;top:6px"></div>
       <div class="screw" style="left:6px;bottom:6px"></div><div class="screw" style="right:6px;bottom:6px"></div>
       <div class="label"><div class="side">SIDE A · LOSSLESS</div></div>
-      <div class="window">${reel(54)}${reel(162)}</div>
+      <div class="window"></div>
       <div class="feet"></div>
     </div>
     <div class="caption" style="left:30px;top:179px">COUNTER</div>
@@ -411,6 +424,7 @@ const tape = {
     { type: 'volume', x: 180, y: 316, width: 88, height: 10 },
     { type: 'playlist', x: 34, y: 350, width: 332, height: 172 },
   ],
+  packs: cassettePacks({ x: 92, y: 102, width: 216, height: 50, radius: 6 }, [[146, 127], [254, 127]], 86, 44),
   spinners: [hub('hub-left', 131, 112), hub('hub-right', 239, 112)],
 };
 
@@ -906,8 +920,6 @@ const deck = {
     .band { position: absolute; left: 14px; top: 12px; width: 272px; height: 58px; border-radius: 3px; background: #18191a; }
     .stripe { position: absolute; left: 14px; top: 74px; width: 272px; height: 9px; background: linear-gradient(90deg, #ff8136 0 70%, #f1ece0 70% 72%, #ff8136 72% 80%, #f1ece0 80% 82%, #ff8136 82%); }
     .glass { position: absolute; left: 66px; top: 92px; width: 168px; height: 46px; border-radius: 6px; background: linear-gradient(#211a15, #100d0b); box-shadow: inset 0 2px 5px #000; overflow: hidden; }
-    .glass::before, .glass::after { content: ''; position: absolute; top: -18px; width: 82px; height: 82px; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
-    .glass::before { left: -7px; } .glass::after { right: -19px; width: 70px; height: 70px; top: -12px; }
     .foot { position: absolute; left: 60px; bottom: 0; width: 180px; height: 34px; background: #cfc8b8; clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%); }
     .foot::after { content: ''; position: absolute; left: 30px; top: 12px; width: 120px; height: 10px; background: radial-gradient(circle, #18191a 3.5px, transparent 4px) 0 0 / 30px 10px; }
     .well { position: absolute; border-radius: 4px; background: #18191a; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.1); }
@@ -960,6 +972,7 @@ const deck = {
     { type: 'seekbar', x: 24, y: 358, width: 332, height: 8 },
     { type: 'playlist', x: 28, y: 398, width: 324, height: 184 },
   ],
+  packs: cassettePacks({ x: 106, y: 116, width: 168, height: 46, radius: 6 }, [[150, 139], [246, 139]], 82, 42),
   spinners: [smallHub('hub-left', 136, 125), smallHub('hub-right', 232, 125)],
 };
 
@@ -1095,8 +1108,6 @@ const meter = {
       box-shadow: 0 3px 6px rgba(0,0,0,.6), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.3); }
     .band { position: absolute; left: 12px; top: 8px; width: 268px; height: 54px; border-radius: 3px; background: #151a1f; box-shadow: inset 0 -3px 0 #ff6b60; }
     .glass { position: absolute; left: 62px; top: 68px; width: 168px; height: 46px; border-radius: 23px; background: linear-gradient(#211a15, #0f0c0a); box-shadow: inset 0 2px 5px #000, 0 0 0 2px #8e959c; overflow: hidden; }
-    .glass::before, .glass::after { content: ''; position: absolute; top: -18px; width: 82px; height: 82px; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
-    .glass::before { left: -3px; } .glass::after { right: -15px; width: 70px; height: 70px; top: -12px; }
     .foot { position: absolute; left: 66px; bottom: 0; width: 160px; height: 26px; background: #9aa1a8; clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%); }
     .slot { position: absolute; border-radius: 7px; background: #12161a; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.12); }
     .well { position: absolute; border-radius: 4px; background: #151a1f; box-shadow: inset 0 2px 5px #000, 0 1px 0 rgba(255,255,255,.12); }
@@ -1147,6 +1158,7 @@ const meter = {
     { type: 'volume', x: 172, y: 444, width: 84, height: 8 },
     { type: 'playlist', x: 28, y: 480, width: 324, height: 142 },
   ],
+  packs: cassettePacks({ x: 106, y: 194, width: 168, height: 46, radius: 23 }, [[154, 217], [246, 217]], 82, 42),
   spinners: [smallHub('hub-left', 140, 203), smallHub('hub-right', 232, 203)],
 };
 
@@ -1177,7 +1189,7 @@ const ferro = {
     .paper::before { content: 'SIDE A'; position: absolute; left: 8px; top: 4px; font-size: 8px; font-weight: 700; letter-spacing: .1em; color: #1b1b1c; }
     .band { position: absolute; left: 18px; top: 44px; width: 336px; height: 54px; background: #101011; }
     .eye { position: absolute; top: 112px; width: 60px; height: 50px; border-radius: 12px; background: #f3f3f0; box-shadow: inset 0 0 0 1px #000; }
-    .mid { position: absolute; left: 150px; top: 118px; width: 72px; height: 38px; border-radius: 4px; background: linear-gradient(90deg, #3a2417 0 55%, #f3f3f0 55% 75%, #1b1b1c 75%); box-shadow: inset 0 2px 4px #000, 0 0 0 1px #000; }
+    .mid { position: absolute; left: 150px; top: 118px; width: 72px; height: 38px; border-radius: 4px; background: linear-gradient(#211a15, #0f0c0a); box-shadow: inset 0 2px 4px #000, 0 0 0 1px #000; }
     .type { position: absolute; left: 22px; top: 176px; font-size: 21px; letter-spacing: .02em; color: #9d9d99; }
     .type b { font-weight: 800; color: #d4d4d0; }
     .num { position: absolute; right: 22px; top: 170px; font-size: 30px; font-weight: 300; color: #7dbdff; }
@@ -1234,6 +1246,7 @@ const ferro = {
     { type: 'volume', x: 170, y: 376, width: 112, height: 8 },
     { type: 'playlist', x: 20, y: 410, width: 360, height: 142 },
   ],
+  packs: cassettePacks({ x: 165, y: 133, width: 70, height: 36, radius: 3 }, [[128, 151], [272, 151]], 160, 68),
   spinners: [
     { name: 'hub-left', x: 110, y: 133, width: 36, height: 36, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
     { name: 'hub-right', x: 254, y: 133, width: 36, height: 36, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
@@ -1268,7 +1281,7 @@ const mixtape = {
     .c60 { position: absolute; right: 10px; top: 10px; width: 80px; height: 40px; background: #161616; color: #fff; font: 800 25px/40px "Helvetica Neue", Arial, sans-serif; text-align: center; letter-spacing: .02em; }
     .say { position: absolute; top: 96px; font: 800 20px/22px "Helvetica Neue", "Arial Narrow", Arial, sans-serif; color: #fff; letter-spacing: .01em; }
     .gap { position: absolute; left: 96px; top: 88px; width: 148px; height: 52px; border-radius: 6px; background: #e9e2d2; box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); }
-    .gap::after { content: ''; position: absolute; left: 48px; top: 10px; width: 52px; height: 26px; border-radius: 3px; background: linear-gradient(90deg, #5a2f22 0 60%, #1b1b1b 60%); box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
+    .gap::after { content: ''; position: absolute; left: 48px; top: 10px; width: 52px; height: 26px; border-radius: 3px; background: linear-gradient(#211a15, #0f0c0a); box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
     .base { position: absolute; left: 0; bottom: 0; width: 340px; height: 36px; border-radius: 0 0 6px 6px; background: #161616; color: #fff; font: 800 22px/36px "Helvetica Neue", "Arial Narrow", Arial, sans-serif; padding-left: 14px; letter-spacing: .04em; }
     .base i { position: absolute; right: 14px; top: 9px; padding: 0 8px; border: 1.5px solid #fff; font: italic 700 9px/15px "Helvetica Neue", Arial, sans-serif; letter-spacing: .1em; }
     .foot { position: absolute; left: 86px; bottom: 0; width: 196px; height: 30px; background: #cfc8b8; clip-path: polygon(6% 0, 94% 0, 100% 100%, 0 100%); }
@@ -1327,6 +1340,7 @@ const mixtape = {
     { type: 'volume', x: 178, y: 394, width: 98, height: 8 },
     { type: 'playlist', x: 22, y: 428, width: 352, height: 130 },
   ],
+  packs: cassettePacks({ x: 174, y: 126, width: 52, height: 26, radius: 3 }, [[150, 142], [236, 142]], 124, 44),
   spinners: [smallHub('hub-left', 136, 128), smallHub('hub-right', 222, 128)],
 };
 
@@ -1719,7 +1733,8 @@ const stripe = skin('stripe', 'Stripe', 'A flat drawing: black outlines on cream
       background: linear-gradient(#1f56b8 0 30%, #fff 30% 38%, #7fb2f0 38% 64%, #fff 64% 72%, #f08bb0 72%); }
     .tape { position: absolute; right: 18px; bottom: 18px; width: 170px; height: 100px; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 2.5px #14161a; }
     .tape::before { content: ''; position: absolute; left: 12px; right: 12px; top: 12px; height: 16px; background: repeating-linear-gradient(#14161a 0 2.5px, transparent 2.5px 6.5px); }
-    .tape::after { content: ''; position: absolute; left: 22px; right: 22px; bottom: 16px; height: 40px; border-radius: 20px; box-shadow: inset 0 0 0 2.5px #14161a; background: linear-gradient(90deg, transparent 0 42%, #14161a 42% 58%, transparent 58%); }
+    .tape::after { content: ''; position: absolute; left: 22px; right: 22px; bottom: 16px; height: 40px; border-radius: 20px; box-shadow: inset 0 0 0 2.5px #14161a; }
+    .wound { background: #14161a; }
     ${beds('#fff', '#fff', true)}
     .slot { box-shadow: inset 0 0 0 2px #14161a; } .well { border-radius: 12px; box-shadow: inset 0 0 0 2.5px #14161a; }
     .cog { position: absolute; inset: 0; border-radius: 50%; background: #14161a; }
@@ -1744,6 +1759,7 @@ const stripe = skin('stripe', 'Stripe', 'A flat drawing: black outlines on cream
     { type: 'spectrum', x: 36, y: 122, width: 100, height: 34, color: '#14161a' },
     ...stripeLow.components,
   ],
+  packs: cassettePacks({ x: 196, y: 156, width: 122, height: 36, radius: 18 }, [[216, 178], [306, 178]], 76, 40),
   spinners: [
     { name: 'hub-left', x: 202, y: 164, width: 28, height: 28, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
     { name: 'hub-right', x: 292, y: 164, width: 28, height: 28, period: 2600, html: '<div class="cog"><i></i><i></i><i></i></div>' },
@@ -1826,6 +1842,7 @@ const magnet = skin('magnet', 'Magnet', 'A silver radio recorder: a speaker gril
     { type: 'time', source: 'position', x: 206, y: 112, width: 100, height: 18, fontSize: 13, align: 'right', color: '#474b50' },
     ...magnetLow.components,
   ],
+  packs: cassettePacks({ x: 112, y: 146, width: 136, height: 36, radius: 18 }, [[142, 164], [218, 164]], 92, 44),
   spinners: [smallHub('hub-left', 128, 150), smallHub('hub-right', 204, 150)],
 });
 
@@ -2475,6 +2492,7 @@ const chromeSkin = skin('chrome', 'Chrome', 'A smoke-grey cassette on black: the
     { type: 'text', source: 'player.status', x: 136, y: 184, width: 128, height: 14, fontSize: 10, align: 'center', color: '#49d6b6' },
     ...chromeLow.components,
   ],
+  packs: cassettePacks({ x: 106, y: 126, width: 188, height: 60, radius: 30 }, [[136, 156], [264, 156]], 120, 58),
   spinners: [
     { name: 'hub-left', x: 114, y: 134, width: 44, height: 44, period: 2600, html: '<div class="gear"></div>' },
     { name: 'hub-right', x: 242, y: 134, width: 44, height: 44, period: 2600, html: '<div class="gear"></div>' },
@@ -2662,6 +2680,7 @@ const classic = skin('classic', 'Classic', 'An olive-grey cassette player: the t
     ...classicLow.components,
   ],
   overlays: [{ name: 'cover', x: 44, y: 136, width: 38, height: 38, source: 'track.cover', html: NOTE }],
+  packs: cassettePacks({ x: 106, y: 184, width: 150, height: 40, radius: 20 }, [[132, 204], [194, 204]], 76, 40),
   spinners: [smallHub('hub-left', 118, 190), smallHub('hub-right', 180, 190)],
 });
 
@@ -2849,6 +2868,7 @@ const BASE_CSS = `
   body { position: relative; }
   .btn { position: absolute; }
   .face { position: absolute; display: grid; place-items: center; }
+  .wound { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #4a2f1f 0 1.5px, #3a2417 1.5px 3px); }
   svg { display: block; }
 `;
 
@@ -3092,7 +3112,13 @@ function build(design, mockDir) {
   const overlays = loose('image')(design.overlays);
   const needles = loose('needle')(design.needles);
   const turned =
-    (design.packs ?? []).map((n) => `<div style="clip-path:circle(${(n.from + n.to) / 4}px at ${n.x + n.width / 2}px ${n.y + n.height / 2}px)">${needleHtml(n, 0)}</div>`).join('') +
+    (design.packs ?? [])
+      .map((n) => {
+        const c = n.clip ?? { x: 0, y: 0, width: n.width, height: n.height };
+        const inset = `inset(${c.y}px ${n.width - c.x - c.width}px ${n.height - c.y - c.height}px ${c.x}px round ${c.radius ?? 0}px)`;
+        return `<div style="position:absolute;left:${n.x}px;top:${n.y}px;width:${n.width}px;height:${n.height}px;clip-path:${inset}"><div style="position:absolute;inset:0;clip-path:circle(${(n.from + n.to) / 4}px at 50% 50%)">${n.html}</div></div>`;
+      })
+      .join('') +
     (design.spinners ?? []).map((n) => needleHtml(n, 25)).join('') +
     (design.overlays ?? []).map((n) => needleHtml(n, 0)).join('') +
     (design.needles ?? []).map((n) => needleHtml(n, (n.from + n.to) / 2)).join('');

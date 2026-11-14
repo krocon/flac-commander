@@ -230,6 +230,18 @@ export class SkinnedPlayer {
     return from + ((c.to ?? from) - from) * this.fraction();
   }
 
+  /** The part of a `pack` that is seen at all, as a clip of its box; all of it without `clip`. */
+  protected packWindow(c: SkinComponent): string | null {
+    const clip = c.clip;
+    if (!clip) {
+      return null;
+    }
+    const right = c.width - clip.x - clip.width;
+    const bottom = c.height - clip.y - clip.height;
+    const round = clip.radius ? ` round ${clip.radius}px` : '';
+    return `inset(${clip.y}px ${right}px ${bottom}px ${clip.x}px${round})`;
+  }
+
   protected needleDown(event: PointerEvent, c: SkinComponent): void {
     if (!this.view.seekable() || event.button !== 0) {
       return;

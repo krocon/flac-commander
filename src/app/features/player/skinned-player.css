@@ -197,7 +197,13 @@ button.grip {
 }
 
 /* a round picture of which more or less is shown as the track goes on (tape on a reel) */
+.pack-window {
+  pointer-events: none;
+}
+
 .pack {
+  position: absolute;
+  inset: 0;
   background-repeat: no-repeat;
   background-size: 100% 100%;
   pointer-events: none;

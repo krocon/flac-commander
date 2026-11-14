@@ -43,6 +43,44 @@
       },
       "components": [
         {
+          "type": "pack",
+          "x": 94,
+          "y": 166,
+          "width": 76,
+          "height": 76,
+          "from": 76,
+          "to": 40,
+          "clip": {
+            "x": 12,
+            "y": 18,
+            "width": 64,
+            "height": 40,
+            "radius": 20
+          },
+          "states": {
+            "normal": "assets/tape-left.png"
+          }
+        },
+        {
+          "type": "pack",
+          "x": 156,
+          "y": 166,
+          "width": 76,
+          "height": 76,
+          "from": 40,
+          "to": 76,
+          "clip": {
+            "x": 0,
+            "y": 18,
+            "width": 76,
+            "height": 40,
+            "radius": 20
+          },
+          "states": {
+            "normal": "assets/tape-right.png"
+          }
+        },
+        {
           "type": "spinner",
           "x": 118,
           "y": 190,

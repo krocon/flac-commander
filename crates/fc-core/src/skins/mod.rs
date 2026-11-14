@@ -155,6 +155,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("classic":
         "skin.json",
@@ -198,6 +200,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("click":
         "skin.json",
@@ -364,6 +368,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("dial":
         "skin.json",
@@ -530,6 +536,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("gauge":
         "skin.json",
@@ -732,6 +740,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("meter":
         "skin.json",
@@ -774,6 +784,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("mixtape":
         "skin.json",
@@ -816,6 +828,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("mono":
         "skin.json",
@@ -1381,6 +1395,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("studio":
         "skin.json",
@@ -1544,6 +1560,8 @@ const BUILT_IN: &[&[(&str, &[u8])]] = &[
         "assets/stop-hover.png",
         "assets/stop-pressed.png",
         "assets/stop.png",
+        "assets/tape-left.png",
+        "assets/tape-right.png",
     ),
     embedded!("vinyl":
         "skin.json",

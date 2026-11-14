@@ -255,6 +255,22 @@ pub struct Component {
     /// Milliseconds a `spinner` takes for one turn.
     #[serde(default)]
     pub period: Option<u32>,
+    /// The part of a `pack` that is seen at all: the window of a cassette.
+    #[serde(default)]
+    pub clip: Option<Clip>,
+}
+
+/// A rectangle inside the box of a component, in CSS pixels from its top left.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Clip {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    /// Rounds the corners, at most half of the shorter side: the pill of a cassette window.
+    #[serde(default)]
+    pub radius: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -556,6 +572,16 @@ fn check_component(
             if c.rest.is_some() && !fits(c.rest) {
                 r.add(format!("{at}.rest"), "must be a diameter that fits the box");
             }
+            let inside = |clip: &Clip| {
+                clip.width >= 1
+                    && clip.height >= 1
+                    && u64::from(clip.x) + u64::from(clip.width) <= u64::from(c.width)
+                    && u64::from(clip.y) + u64::from(clip.height) <= u64::from(c.height)
+                    && clip.radius.is_none_or(|r| r <= clip.width.min(clip.height) / 2)
+            };
+            if c.clip.as_ref().is_some_and(|clip| !inside(clip)) {
+                r.add(format!("{at}.clip"), "must have a size, lie inside the box of the pack and round at most half its shorter side");
+            }
         }
         ComponentType::Spinner => {
             if c.states.as_ref().and_then(|s| s.normal.as_ref()).is_none() {
@@ -586,6 +612,9 @@ fn check_component(
     }
     if c.kind != ComponentType::Spinner && c.period.is_some() {
         r.add(format!("{at}.period"), "only a spinner has a period");
+    }
+    if c.kind != ComponentType::Pack && c.clip.is_some() {
+        r.add(format!("{at}.clip"), "only a pack has a clip");
     }
     if let Some(states) = &c.states {
         if !matches!(

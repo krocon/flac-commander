@@ -179,6 +179,43 @@ fn a_pack_needs_a_picture_and_two_diameters_that_fit() {
 }
 
 #[test]
+fn a_pack_may_be_cut_to_a_window_inside_its_box() {
+    let clipped = |kind: &'static str, clip: serde_json::Value| {
+        problems_of(move |j| {
+            let c = component(j, 3);
+            *c = if kind == "pack" {
+                serde_json::json!({
+                    "type": "pack", "x": 10, "y": 80, "width": 100, "height": 100,
+                    "states": { "normal": "play.png" }, "from": 100, "to": 40
+                })
+            } else {
+                serde_json::json!({
+                    "type": "image", "x": 10, "y": 80, "width": 100, "height": 100,
+                    "states": { "normal": "play.png" }
+                })
+            };
+            c["clip"] = clip;
+        })
+    };
+    let at = "windows.player.components[3].clip";
+    let rect = |x: u32, y: u32, width: u32, height: u32| serde_json::json!({ "x": x, "y": y, "width": width, "height": height });
+    assert_eq!(clipped("pack", rect(0, 30, 100, 40)), [""; 0]);
+    assert_eq!(clipped("pack", rect(20, 30, 81, 40)), [at]);
+    assert_eq!(clipped("pack", rect(0, 61, 100, 40)), [at]);
+    assert_eq!(clipped("pack", rect(0, 30, 0, 40)), [at]);
+    assert_eq!(clipped("pack", rect(u32::MAX, 0, u32::MAX, 1)), [at]);
+    let round = |radius: u32| {
+        let mut clip = rect(0, 30, 100, 40);
+        clip["radius"] = radius.into();
+        clip
+    };
+    assert_eq!(clipped("pack", round(20)), [""; 0]);
+    assert_eq!(clipped("pack", round(21)), [at]);
+    // nothing else is cut
+    assert_eq!(clipped("image", rect(0, 30, 100, 40)), [at]);
+}
+
+#[test]
 fn keywords_and_the_stretch_line_are_checked() {
     assert_eq!(problems_of(|j| j["keywords"] = serde_json::json!(["dark", "tape"])), [""; 0]);
     assert_eq!(problems_of(|j| j["keywords"] = serde_json::json!(["", "tape"])), ["keywords[0]"]);
