@@ -91,6 +91,17 @@ pub fn fit_window(window: &WebviewWindow, skin: &Skin) {
     if let Err(e) = result {
         log::warn!("window not fitted to the skin {}: {e}", skin.id());
     }
+    // the title bar is see-through where the system allows it (macOS): it takes this colour
+    if let Err(e) = window.set_background_color(title_bar_colour(skin)) {
+        log::warn!("title bar not coloured for the skin {}: {e}", skin.id());
+    }
+}
+
+/// The colour a skin wants its title bar in; `None` leaves it to the system.
+fn title_bar_colour(skin: &Skin) -> Option<tauri::window::Color> {
+    let colour = skin.manifest.windows.player.as_ref()?.title_bar.as_deref()?;
+    let part = |at: usize| u8::from_str_radix(colour.get(at..at + 2)?, 16).ok();
+    Some(tauri::window::Color(part(1)?, part(3)?, part(5)?, 255))
 }
 
 /// The largest size the skin lets its window grow to; its own size where a side is fixed.
@@ -410,6 +421,14 @@ mod tests {
         .unwrap();
         assert_eq!(fixed_size(&flow), None);
         assert!(fixed_size(&library.get(DEFAULT_SKIN).unwrap()).is_some());
+    }
+
+    #[test]
+    fn a_skin_may_colour_its_title_bar() {
+        let library = SkinLibrary::load(None, "0.1.0");
+        let walk = library.get("io.github.krocon.walk").unwrap();
+        assert_eq!(title_bar_colour(&walk), Some(tauri::window::Color(0xe9, 0x62, 0x1a, 255)));
+        assert_eq!(title_bar_colour(&library.get("io.github.krocon.retro").unwrap()), None);
     }
 
     #[test]

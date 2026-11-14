@@ -18,7 +18,8 @@
         "height": 720,
         "minWidth": 380,
         "minHeight": 420,
-        "resizable": true
+        "resizable": true,
+        "titleBarStyle": "Transparent"
       }
     ],
     "security": {

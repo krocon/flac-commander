@@ -190,6 +190,14 @@ fn keywords_and_the_stretch_line_are_checked() {
 }
 
 #[test]
+fn the_colour_of_the_title_bar_is_six_digits() {
+    let at = "windows.player.titleBar";
+    assert_eq!(problems_of(|j| j["windows"]["player"]["titleBar"] = "#e9621a".into()), [""; 0]);
+    assert_eq!(problems_of(|j| j["windows"]["player"]["titleBar"] = "#e62".into()), [at]);
+    assert_eq!(problems_of(|j| j["windows"]["player"]["titleBar"] = "orange".into()), [at]);
+}
+
+#[test]
 fn the_rules_for_resizing_are_checked() {
     let resize =
         |rules: serde_json::Value| problems_of(move |j| j["windows"]["player"]["resize"] = rules);

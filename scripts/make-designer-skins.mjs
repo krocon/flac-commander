@@ -983,6 +983,7 @@ const walk = {
   },
   width: 360,
   height: 580,
+  titleBar: '#e9621a',
   pad: 2,
   css: `
     body { background:
@@ -990,7 +991,6 @@ const walk = {
         radial-gradient(circle, rgba(255,255,255,.10) .6px, transparent .9px) 2px 3px / 7px 7px,
         linear-gradient(160deg, #f7742a, #e55a12);
       font-family: "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", sans-serif; }
-    .edge { position: absolute; left: 0; top: 0; width: 12px; height: 100%; background: linear-gradient(90deg, #8d8d8a, #b9b9b5 50%, #777774); box-shadow: 1px 0 2px rgba(0,0,0,.35); }
     .panel { position: absolute; left: 24px; top: 18px; width: 320px; height: 222px; background: #121110; clip-path: polygon(0 0, 100% 0, 100% 100%, 40% 100%, 0 52%); }
     .rim { position: absolute; left: 24px; top: 18px; width: 320px; height: 222px; }
     .rim::after { content: ''; position: absolute; left: 148px; top: 130px; width: 160px; height: 76px; border-radius: 5px; background: linear-gradient(#f5efe4, #dcd4c4); box-shadow: 0 0 0 1px #000; }
@@ -1017,7 +1017,6 @@ const walk = {
     .active .chip { color: #1c0a00; background: linear-gradient(#fff3e6, #ffd9b8); box-shadow: 0 2px 3px rgba(0,0,0,.4), inset 0 0 0 1px #fff; }
   `,
   art: `
-    <div class="edge"></div>
     <div class="panel"></div><div class="rim"></div>
     <div class="word">STEREO</div>
     <div class="hole" style="left:182px"></div><div class="hole" style="left:286px"></div>
@@ -2877,6 +2876,7 @@ function build(design, mockDir) {
         width: design.width,
         height: design.height,
         background: 'assets/background.png',
+        ...(design.titleBar ? { titleBar: design.titleBar } : {}),
         resize: design.resize ?? MORE[design.folder]?.resize,
         components: [...packs, ...spinners, ...overlays, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
       },

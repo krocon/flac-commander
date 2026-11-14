@@ -35,6 +35,7 @@
       "width": 360,
       "height": 580,
       "background": "assets/background.png",
+      "titleBar": "#e9621a",
       "resize": {
         "stretchY": 480
       },

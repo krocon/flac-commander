@@ -113,6 +113,9 @@ pub struct PlayerWindow {
     /// Scale images without smoothing (pixel art).
     #[serde(default)]
     pub pixelated: bool,
+    /// Colour of the title bar of the window, where the system lets an app choose it.
+    #[serde(default)]
+    pub title_bar: Option<String>,
     /// How the window may be resized (`absolute` layout only). Without it the size is fixed.
     #[serde(default)]
     pub resize: Option<Resize>,
@@ -381,8 +384,12 @@ pub fn validate(
 fn check_player(r: &mut Report, player: &PlayerWindow, file: &dyn Fn(&str) -> Option<Vec<u8>>) {
     let at = "windows.player";
     if player.layout == Layout::Flow {
-        if !player.components.is_empty() || player.background.is_some() || player.resize.is_some() {
-            r.add(at, "components, background and resize need \"layout\": \"absolute\"");
+        let absolute_only = !player.components.is_empty()
+            || player.background.is_some()
+            || player.resize.is_some()
+            || player.title_bar.is_some();
+        if absolute_only {
+            r.add(at, "components, background, titleBar and resize need \"layout\": \"absolute\"");
         }
         return;
     }
@@ -395,6 +402,10 @@ fn check_player(r: &mut Report, player: &PlayerWindow, file: &dyn Fn(&str) -> Op
     }
     if let Some(background) = &player.background {
         check_image(r, &format!("{at}.background"), background, file);
+    }
+    // opaque, six digits: the system takes no other
+    if player.title_bar.as_ref().is_some_and(|c| !is_colour(c) || c.len() != 7) {
+        r.add(format!("{at}.titleBar"), "must be a colour like #rrggbb");
     }
     if let Some(resize) = &player.resize {
         let axes = [

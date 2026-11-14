@@ -84,6 +84,7 @@ mitbringen; er nennt Schriften, die das System hat.
 | `width`, `height` | nur bei `absolute`, dann Pflicht: 200–2000 × 100–2000 CSS-Pixel. Das ist die Größe des Fensterinhalts. |
 | `background` | Bild im Paket, füllt das Fenster. |
 | `pixelated` | `true`: Bilder ohne Glättung skalieren (Pixel-Art). |
+| `titleBar` | Farbe der Titelleiste des Fensters, `#rrggbb`. Wirkt, wo das System es zulässt (macOS: durchsichtige Titelleiste); sonst bleibt die Titelleiste, wie das System sie zeichnet. Nur bei `absolute`. |
 | `resize` | Regeln, nach denen das Fenster wachsen darf – siehe unten. Nur bei `absolute`; ohne `resize` ist die Größe fest. |
 | `components` | Liste der Bausteine, höchstens 200. Nur bei `absolute`. |
 
