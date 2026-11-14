@@ -1,3 +1,4 @@
+import { MenuApi, MenuEntry, MenuModel } from '../app/core/menu/menu-api';
 import { Unsubscribe } from '../app/core/backend/events';
 import { LibraryApi } from '../app/core/library/library-api';
 import {
@@ -752,5 +753,39 @@ export class FakeLogApi extends LogApi {
 
   override error(message: string): void {
     this.lines.push(`error ${message}`);
+  }
+}
+
+/** The native menu: keeps what it was told and lets the test choose an item. */
+export class FakeMenuApi extends MenuApi {
+  /** Every model that was set, the latest last. */
+  readonly models: MenuModel[] = [];
+  private handler: ((actionId: string) => void) | null = null;
+
+  override async set(model: MenuModel): Promise<void> {
+    this.models.push(model);
+  }
+
+  override async onAction(handler: (actionId: string) => void): Promise<Unsubscribe> {
+    this.handler = handler;
+    return () => (this.handler = null);
+  }
+
+  /** The user chooses the item of this action in the menu. */
+  choose(actionId: string): void {
+    this.handler?.(actionId);
+  }
+
+  /** The latest items of all menus, by action id. */
+  items(): ReadonlyMap<string, Extract<MenuEntry, { kind: 'action' }>> {
+    const items = new Map<string, Extract<MenuEntry, { kind: 'action' }>>();
+    for (const group of this.models.at(-1)?.groups ?? []) {
+      for (const entry of group.items) {
+        if (entry.kind === 'action') {
+          items.set(entry.id, entry);
+        }
+      }
+    }
+    return items;
   }
 }

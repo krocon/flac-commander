@@ -9,6 +9,11 @@ export const APP_TEXTS_EN = {
   playlistDocked: 'Playlist in the main window',
   hideList: 'Hide track list',
   showList: 'Show track list',
+  menuFile: 'File',
+  menuPlayback: 'Playback',
+  menuView: 'View',
+  menuEdit: 'Edit',
+  menuWindow: 'Window',
 };
 
 export const APP_TEXTS = translatable('app', APP_TEXTS_EN, { de: APP_TEXTS_DE });

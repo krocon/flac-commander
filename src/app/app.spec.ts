@@ -1,3 +1,4 @@
+import { MenuApi } from './core/menu/menu-api';
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { SkinStore } from './features/skins/skin.store';
@@ -17,6 +18,7 @@ import {
   FakePlaylistApi,
   FakeSkinApi,
   FakeSystemApi,
+  FakeMenuApi,
   FakeWindowApi,
   MODERN_SKIN,
   RETRO_SKIN,
@@ -27,6 +29,7 @@ describe('App', () => {
   let playlist: FakePlaylistApi;
   let player: FakePlayerApi;
   let windows: FakeWindowApi;
+  let menu: FakeMenuApi;
   let el: HTMLElement;
 
   function create(): void {
@@ -39,6 +42,7 @@ describe('App', () => {
         { provide: SystemApi, useValue: new FakeSystemApi() },
         { provide: LibraryApi, useValue: new FakeLibraryApi() },
         { provide: LogApi, useValue: new FakeLogApi() },
+        { provide: MenuApi, useValue: menu },
       ],
     });
     el = TestBed.createComponent(App).nativeElement as HTMLElement;
@@ -59,6 +63,7 @@ describe('App', () => {
     playlist = new FakePlaylistApi();
     player = new FakePlayerApi();
     windows = new FakeWindowApi();
+    menu = new FakeMenuApi();
   });
 
   afterEach(() => setLanguage('en'));
@@ -257,5 +262,78 @@ describe('App', () => {
     await vi.waitFor(() => expect(el.querySelector('app-playlist')).not.toBeNull());
     expect(skins.commands.at(-1)).toBe('list shown');
     localStorage.removeItem('fc.listHidden');
+  });
+
+  it('puts every action into the native menu, with its shortcut, tick and whether it is possible', async () => {
+    localStorage.removeItem('fc.listHidden');
+    create();
+    await vi.waitFor(() => expect(menu.items().has('player.next')).toBe(true));
+    // nothing in the list yet: there is no next track to go to
+    expect(menu.items().get('player.next')?.enabled).toBe(false);
+    expect(menu.items().get('player.open')?.enabled).toBe(true);
+    const model = menu.models.at(-1);
+    expect(model?.groups.map((group) => group.title)).toEqual(['Datei', 'Wiedergabe', 'Ansicht']);
+    expect([model?.editTitle, model?.windowTitle]).toEqual(['Bearbeiten', 'Fenster']);
+    const items = menu.items();
+    // every action a skin can put on a button is there
+    for (const id of [
+      'player.togglePlay',
+      'player.play',
+      'player.pause',
+      'player.stop',
+      'player.next',
+      'player.previous',
+      'player.open',
+      'player.repeat',
+      'player.shuffle',
+      'app.skins',
+      'app.playlist',
+      'window.playlist',
+      'window.equalizer',
+      'window.library',
+    ]) {
+      expect(items.has(id), id).toBe(true);
+    }
+    // shortcuts with the command key are the menu's; a bare key stays the window's and is named
+    expect(items.get('app.skins')?.accelerator).toBe('CmdOrCtrl+K');
+    expect(items.get('app.resetSkin')?.accelerator).toBe('CmdOrCtrl+0');
+    expect(items.get('player.open')?.accelerator).toBe('CmdOrCtrl+O');
+    expect(items.get('player.stop')?.accelerator).toBeNull();
+    expect(items.get('player.stop')?.label).toMatch(/\(V\)$/);
+    expect(items.get('player.togglePlay')?.label).toMatch(/\(Space\)$/);
+    // a tick for what switches something, none for the rest
+    expect(items.get('player.shuffle')?.checked).toBe(false);
+    expect(items.get('app.playlist')?.checked).toBe(true);
+    expect(items.get('player.next')?.checked).toBeNull();
+  });
+
+  it('runs what is chosen in the menu, and the menu follows', async () => {
+    localStorage.removeItem('fc.listHidden');
+    create();
+    await vi.waitFor(() => expect(menu.items().has('window.equalizer')).toBe(true));
+    menu.choose('window.equalizer');
+    await vi.waitFor(() => expect(windows.commands).toEqual(['toggle equalizer']));
+    await vi.waitFor(() => expect(menu.items().get('window.equalizer')?.checked).toBe(true));
+
+    menu.choose('app.playlist');
+    await vi.waitFor(() => expect(menu.items().get('app.playlist')?.checked).toBe(false));
+    expect(menu.items().get('app.playlist')?.label).toBe('Titelliste einblenden');
+    localStorage.removeItem('fc.listHidden');
+  });
+
+  it('a shortcut that arrives as key and as menu item runs once', async () => {
+    create();
+    await vi.waitFor(() => expect(menu.items().has('window.equalizer')).toBe(true));
+    press('e', mod);
+    menu.choose('window.equalizer');
+    await vi.waitFor(() => expect(windows.commands).toHaveLength(1));
+    expect(windows.commands).toEqual(['toggle equalizer']);
+  });
+
+  it('only the main window owns the menu', async () => {
+    windows.current = 'playlist';
+    create();
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).not.toBeNull());
+    expect(menu.models).toEqual([]);
   });
 });

@@ -18,6 +18,10 @@ pub const PLAYLIST_STATE: &str = "playlist://state";
 /// `core/skins/skin.models.ts`.
 pub const SKIN_ACTIVE: &str = "skins://active";
 
+/// An item of the native menu that stands for an action was chosen. Payload: the id of the
+/// action (`player.togglePlay`). Sent to the main window only.
+pub const MENU_ACTION: &str = "menu://action";
+
 /// A secondary window was opened or closed. Payload: `windows::WindowsState`.
 pub const WINDOWS_STATE: &str = "windows://state";
 
