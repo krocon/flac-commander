@@ -513,6 +513,10 @@ export class FakeSkinApi extends SkinApi {
     this.command(`fit ${width}x${height}`);
   }
 
+  override async setListHidden(hidden: boolean): Promise<void> {
+    this.command(`list ${hidden ? 'hidden' : 'shown'}`);
+  }
+
   emit(skin: ActiveSkin): void {
     for (const handler of this.handlers) {
       handler(skin);

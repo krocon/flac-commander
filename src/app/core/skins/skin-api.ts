@@ -22,6 +22,8 @@ export abstract class SkinApi {
    * fixed-size skin exactly the room it asks for.
    */
   abstract fitViewport(width: number, height: number): Promise<void>;
+  /** The main window hides (or shows) its track list: a skin may be shorter without it. */
+  abstract setListHidden(hidden: boolean): Promise<void>;
   /** Address of a picture of an installed skin (served by the `skin://` protocol). */
   abstract assetUrl(skinId: string, path: string): string;
 }
@@ -57,6 +59,10 @@ export class TauriSkinApi extends SkinApi {
 
   override fitViewport(width: number, height: number): Promise<void> {
     return call<void>('skins_fit_viewport', { viewportWidth: width, viewportHeight: height });
+  }
+
+  override setListHidden(hidden: boolean): Promise<void> {
+    return call<void>('skins_set_list_hidden', { hidden });
   }
 
   override assetUrl(skinId: string, path: string): string {

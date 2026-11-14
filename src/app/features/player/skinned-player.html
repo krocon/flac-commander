@@ -4,6 +4,7 @@
   [style.width.px]="size().width"
   [style.height.px]="size().height"
   [style.background-image]="slices() ? null : background()"
+  [style.background-size]="layout().width + 'px ' + layout().height + 'px'"
 >
   <!-- a window that has grown: the background in pieces, the line in the middle drawn out -->
   @for (slice of slices() ?? []; track $index) {
@@ -205,5 +206,18 @@
         ></div>
       }
     }
+  }
+  <!-- every skin that can do without its list: a grip at the lower edge hides and shows it -->
+  @if (canCollapse()) {
+    <button
+      type="button"
+      class="grip"
+      [class.closed]="collapsed()"
+      [style.height.px]="gripHeight"
+      [attr.aria-label]="actions.label('app.playlist')"
+      [attr.aria-expanded]="!listAway()"
+      [title]="actions.hint('app.playlist')"
+      (click)="actions.run('app.playlist')"
+    ></button>
   }
 </div>

@@ -215,4 +215,17 @@ describe('App', () => {
     playlist.drag(false);
     await vi.waitFor(() => expect(el.querySelector('.drop')).toBeNull());
   });
+
+  it('hides and shows the track list by key and tells the backend', async () => {
+    localStorage.removeItem('fc.listHidden');
+    create();
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).not.toBeNull());
+    press('j', mod);
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).toBeNull());
+    expect(skins.commands).toContain('list hidden');
+    press('j', mod);
+    await vi.waitFor(() => expect(el.querySelector('app-playlist')).not.toBeNull());
+    expect(skins.commands.at(-1)).toBe('list shown');
+    localStorage.removeItem('fc.listHidden');
+  });
 });

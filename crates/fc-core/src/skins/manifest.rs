@@ -116,6 +116,10 @@ pub struct PlayerWindow {
     /// Colour of the title bar of the window, where the system lets an app choose it.
     #[serde(default)]
     pub title_bar: Option<String>,
+    /// Height of the window while the track list is hidden or has a window of its own: what
+    /// lies below is cut off. Without it the window stays as it is and keeps its list.
+    #[serde(default)]
+    pub collapsed_height: Option<u32>,
     /// How the window may be resized (`absolute` layout only). Without it the size is fixed.
     #[serde(default)]
     pub resize: Option<Resize>,
@@ -141,6 +145,9 @@ pub struct Resize {
     pub max_height: Option<u32>,
 }
 
+/// Height of the strip below a collapsed player: the grip that shows the track list again.
+pub const LIST_GRIP_HEIGHT: u32 = 14;
+
 /// Largest side of a window that a skin lets grow.
 pub const MAX_WINDOW_SIDE: u32 = 4000;
 
@@ -148,10 +155,20 @@ impl PlayerWindow {
     /// Smallest and largest size of the window content, if the layout is `absolute`:
     /// `((width, height), (max_width, max_height))`. A fixed side has the same value twice.
     pub fn size_range(&self) -> Option<((u32, u32), (u32, u32))> {
+        self.size_range_with(false)
+    }
+
+    /// Like [`Self::size_range`]; with the track list hidden a skin that names a
+    /// `collapsedHeight` has exactly that height plus the grip that brings the list back.
+    pub fn size_range_with(&self, list_hidden: bool) -> Option<((u32, u32), (u32, u32))> {
         if self.layout != Layout::Absolute {
             return None;
         }
         let (width, height) = (self.width?, self.height?);
+        if let (true, Some(collapsed)) = (list_hidden, self.collapsed_height) {
+            let size = (width, collapsed + LIST_GRIP_HEIGHT);
+            return Some((size, size));
+        }
         let resize = self.resize.unwrap_or_default();
         let most = |stretch: Option<u32>, max: Option<u32>, least: u32| match stretch {
             Some(_) => max.unwrap_or(MAX_WINDOW_SIDE).max(least),
@@ -275,6 +292,7 @@ pub const ACTIONS: &[&str] = &[
     "player.repeat",
     "player.shuffle",
     "app.skins",
+    "app.playlist",
     "window.playlist",
     "window.equalizer",
 ];
@@ -387,7 +405,8 @@ fn check_player(r: &mut Report, player: &PlayerWindow, file: &dyn Fn(&str) -> Op
         let absolute_only = !player.components.is_empty()
             || player.background.is_some()
             || player.resize.is_some()
-            || player.title_bar.is_some();
+            || player.title_bar.is_some()
+            || player.collapsed_height.is_some();
         if absolute_only {
             r.add(at, "components, background, titleBar and resize need \"layout\": \"absolute\"");
         }
@@ -402,6 +421,9 @@ fn check_player(r: &mut Report, player: &PlayerWindow, file: &dyn Fn(&str) -> Op
     }
     if let Some(background) = &player.background {
         check_image(r, &format!("{at}.background"), background, file);
+    }
+    if player.collapsed_height.is_some_and(|h| h < 60 || h >= height) {
+        r.add(format!("{at}.collapsedHeight"), "must be at least 60 and less than the height");
     }
     // opaque, six digits: the system takes no other
     if player.title_bar.as_ref().is_some_and(|c| !is_colour(c) || c.len() != 7) {

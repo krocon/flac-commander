@@ -86,16 +86,27 @@ export interface SkinResize {
   readonly maxHeight: number | null;
 }
 
+/** Height of the strip below a collapsed player, for the grip (`LIST_GRIP_HEIGHT` in fc-core). */
+export const LIST_GRIP_HEIGHT = 14;
+
 /** Largest side of a window a skin lets grow (`MAX_WINDOW_SIDE` in fc-core). */
 export const MAX_WINDOW_SIDE = 4000;
 
 /** Smallest and largest size of a skin's window; the same where a side is fixed. */
-export function sizeRange(player: SkinPlayerWindow): {
+export function sizeRange(
+  player: SkinPlayerWindow,
+  listHidden = false,
+): {
   readonly min: readonly [number, number];
   readonly max: readonly [number, number];
 } {
   const width = player.width ?? 0;
   const height = player.height ?? 0;
+  // without its list a skin that says how tall it is then has exactly that size
+  if (listHidden && typeof player.collapsedHeight === 'number') {
+    const size = [width, player.collapsedHeight + LIST_GRIP_HEIGHT] as const;
+    return { min: size, max: size };
+  }
   const most = (line: number | null | undefined, max: number | null | undefined, least: number) =>
     line === null || line === undefined ? least : Math.max(max ?? MAX_WINDOW_SIDE, least);
   return {
@@ -114,6 +125,8 @@ export interface SkinPlayerWindow {
   readonly height: number | null;
   readonly background: string | null;
   readonly pixelated: boolean;
+  /** Height while the track list is hidden; without it the skin keeps its list. */
+  readonly collapsedHeight?: number | null;
   /** How the window may grow; without it the size is fixed. */
   readonly resize?: SkinResize | null;
   readonly components: readonly SkinComponent[];

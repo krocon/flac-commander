@@ -85,6 +85,7 @@ mitbringen; er nennt Schriften, die das System hat.
 | `background` | Bild im Paket, füllt das Fenster. |
 | `pixelated` | `true`: Bilder ohne Glättung skalieren (Pixel-Art). |
 | `titleBar` | Farbe der Titelleiste des Fensters, `#rrggbb`. Wirkt, wo das System es zulässt (macOS: durchsichtige Titelleiste); sonst bleibt die Titelleiste, wie das System sie zeichnet. Nur bei `absolute`. |
+| `collapsedHeight` | Höhe des Fensters, solange die Titelliste ausgeblendet ist oder ein eigenes Fenster hat (mindestens 60, kleiner als `height`). Alles darunter wird abgeschnitten, die App hängt einen 14 Pixel hohen Griff an, der die Liste zurückholt. Ohne die Angabe behält der Skin seine Liste. Nur bei `absolute`. |
 | `resize` | Regeln, nach denen das Fenster wachsen darf – siehe unten. Nur bei `absolute`; ohne `resize` ist die Größe fest. |
 | `components` | Liste der Bausteine, höchstens 200. Nur bei `absolute`. |
 
@@ -122,7 +123,7 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `pack` | `states.normal`, `from`, `to` (Pflicht), `rest` | Ein rundes Bild, von dem ein Kreis um die Mitte gezeigt wird. Sein Durchmesser (CSS-Pixel, höchstens die Kastengröße) geht mit dem Fortschritt des Titels von `from` nach `to`; ohne Titel `rest`. Beispiel: das Band auf einer Spule – links `from` groß und `to` klein, rechts umgekehrt. |
 
 **Aktionen** (`action`): `player.togglePlay`, `player.play`, `player.pause`, `player.stop`, `player.next`, `player.previous`, `player.open`,
-`player.repeat`, `player.shuffle`, `app.skins`, `window.playlist`, `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
+`player.repeat`, `player.shuffle`, `app.skins`, `app.playlist` (Titelliste aus- und einblenden, ⌘J / Strg+J), `window.playlist` (Titelliste in eigenem Fenster, ⌘L / Strg+L), `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
 
 **Cover:** Das Cover ist das Bild in den Tags der Datei (bevorzugt „Front Cover"), sonst eine Datei `cover`, `folder`, `front` oder `album` (`.jpg`, `.png`, `.webp`) im selben Ordner. Die App liefert nur das Cover des gerade geladenen Titels aus; ein Skin kann keine anderen Dateien ansprechen.
 
@@ -208,7 +209,6 @@ die Dateiliste in `crates/fc-core/src/skins/mod.rs` (`BUILT_IN`) angleichen.
 - Rahmenlose Fenster mit eigener Titelzeile und Ziehbereich.
 - Bitmap-Schriften und Bilder für Regler (heute zeichnet die App Regler in den Farben des Skins).
 - Ganzzahliges Hochskalieren pixeliger Skins.
-- Titelliste ein- und ausblenden (mit eigener, kleinerer Fenstergröße).
 - Kontrastwarnung beim Import. Die mitgelieferten Skins prüft ein Test auf WCAG AA (alle Textpaare ≥ 4,5 : 1,
   `the_built_in_skins_meet_wcag_aa`); importierte Skins werden darauf noch nicht geprüft.
 

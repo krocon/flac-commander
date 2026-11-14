@@ -51,6 +51,7 @@ const ICON = {
     '<g fill="currentColor"><circle cx="7" cy="9" r="2.6"/><circle cx="12" cy="15" r="2.6"/><circle cx="17" cy="8" r="2.6"/></g>',
   ),
   skins: filled('M12 3.2c3.2 3.8 5.8 7 5.8 10.2a5.8 5.8 0 0 1-11.6 0c0-3.2 2.6-6.4 5.8-10.2z'),
+  list: filled('M4 5.5h2.5V8H4zM9 5.5h11V8H9zM4 10.75h2.5v2.5H4zM9 10.75h11v2.5H9zM4 16h2.5v2.5H4zM9 16h11v2.5H9z'),
 };
 
 // ---------------------------------------------------------------- the designs
@@ -1574,7 +1575,7 @@ function lower({ width, y, margin = 24, look, playLook = look, toggleLook = look
   const [tw, th] = toggle;
   const toggleY = rowY + big + 8;
   const volumeX = margin + 3 * tw + 12;
-  const volumeWidth = width - margin - tw - 10 - volumeX;
+  const volumeWidth = width - margin - 2 * tw - 10 - volumeX;
   const volumeY = toggleY + Math.round(th / 2) - 4;
   const listY = toggleY + th + 10;
   return {
@@ -1593,6 +1594,7 @@ function lower({ width, y, margin = 24, look, playLook = look, toggleLook = look
       button('player.repeat', 'repeat', margin - 2, toggleY, tw, th, toggleLook, TOGGLE),
       button('player.shuffle', 'shuffle', margin - 2 + tw, toggleY, tw, th, toggleLook, TOGGLE),
       button('window.equalizer', 'equalizer', margin - 2 + 2 * tw, toggleY, tw, th, toggleLook, TOGGLE),
+      button('app.playlist', 'list', width - margin - 2 * tw + 2, toggleY, tw, th, toggleLook, TOGGLE),
       button('app.skins', 'skins', width - margin - tw + 2, toggleY, tw, th, toggleLook),
     ],
     components: [
@@ -2811,6 +2813,10 @@ function build(design, mockDir) {
 
   writeFileSync(join(out, 'assets/background.png'), whole(shot('none')));
 
+  // without its track list a skin ends just above it; the two wide ones keep their list
+  const list = design.components.find((c) => c.type === 'playlist');
+  const collapsedHeight = ['vinyl', 'reel'].includes(design.folder) || !list ? null : list.y - 8;
+
   const states = {};
   for (const state of ['normal', 'hover', 'pressed', 'active']) {
     states[state] = shot(state);
@@ -2877,6 +2883,7 @@ function build(design, mockDir) {
         height: design.height,
         background: 'assets/background.png',
         ...(design.titleBar ? { titleBar: design.titleBar } : {}),
+        ...(collapsedHeight ? { collapsedHeight } : {}),
         resize: design.resize ?? MORE[design.folder]?.resize,
         components: [...packs, ...spinners, ...overlays, ...components.filter((c) => c.type !== 'playlist'), ...buttons, ...components.filter((c) => c.type === 'playlist'), ...needles],
       },

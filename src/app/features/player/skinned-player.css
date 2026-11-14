@@ -7,7 +7,6 @@
   overflow: hidden;
   background-color: var(--player-background);
   background-repeat: no-repeat;
-  background-size: 100% 100%;
   color: var(--player-foreground);
   font-family: var(--player-font-family);
 
@@ -147,6 +146,43 @@ input[type='range'] {
   &:focus-visible {
     outline: 2px solid var(--player-focus);
     outline-offset: 2px;
+  }
+}
+
+/* the grip at the lower edge: hides the track list and brings it back */
+button.grip {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+  opacity: 0.55;
+
+  /* a short bar; an arrow down while the list is away */
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 36px;
+    height: 4px;
+    margin: -2px 0 0 -18px;
+    border-radius: 2px;
+    background: var(--player-foreground);
+    box-shadow: 0 0 0 1px var(--player-background);
+  }
+
+  &.closed {
+    background: var(--player-background);
+    opacity: 1;
+  }
+
+  &:hover {
+    opacity: 1;
   }
 }
 

@@ -36,6 +36,7 @@
       "width": 380,
       "height": 610,
       "background": "assets/background.png",
+      "collapsedHeight": 414,
       "resize": {
         "stretchY": 500
       },

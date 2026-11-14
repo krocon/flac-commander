@@ -219,4 +219,31 @@ describe('SkinnedPlayer', () => {
     expect(label?.style.backgroundImage).toContain('assets/label.png');
     expect(label?.style.animationDuration).toBe('1800ms');
   });
+
+  it('without its list a skin that has a height for that is cut off above it', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', { ...RETRO_SKIN.player, collapsedHeight: 158 });
+    const page = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(page.querySelector('app-playlist')).toBeTruthy());
+    const grip = page.querySelector<HTMLButtonElement>('button.grip');
+    expect(grip?.getAttribute('aria-expanded')).toBe('true');
+    expect(page.querySelector<HTMLElement>('.window')?.style.height).toBe('440px');
+
+    fixture.componentRef.setInput('listAway', true);
+    await vi.waitFor(() => expect(page.querySelector('app-playlist')).toBeNull());
+    // the skin's height without the list, and the grip below it
+    expect(page.querySelector<HTMLElement>('.window')?.style.height).toBe('172px');
+    expect(page.querySelector('button[aria-label="Pause"]')).toBeTruthy();
+    expect(grip?.getAttribute('aria-expanded')).toBe('false');
+    expect(grip?.classList.contains('closed')).toBe(true);
+  });
+
+  it('a skin without such a height keeps its list and has no grip', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', RETRO_SKIN.player);
+    fixture.componentRef.setInput('listAway', true);
+    const page = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(page.querySelector('app-playlist')).toBeTruthy());
+    expect(page.querySelector('button.grip')).toBeNull();
+  });
 });

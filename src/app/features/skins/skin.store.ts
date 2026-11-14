@@ -11,6 +11,16 @@ import { applyTheme } from './theme';
 const MAX_FIT_ATTEMPTS = 3;
 
 /** Id of the skin every installation has (`DEFAULT_SKIN` in fc-core). */
+const LIST_HIDDEN_KEY = 'fc.listHidden';
+
+function storedListHidden(): boolean {
+  try {
+    return localStorage.getItem(LIST_HIDDEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export const DEFAULT_SKIN_ID = 'io.github.krocon.vinyl';
 
 /**
@@ -27,6 +37,9 @@ export class SkinStore {
   private readonly errorState = signal<AppError | null>(null);
   private readonly noticeState = signal<string | null>(null);
   private readonly chooserOpenState = signal(false);
+  private readonly listHiddenState = signal(storedListHidden());
+  /** What the backend knows about the list (it starts with a list): told when that changes. */
+  private listAwayTold = false;
   private activeReceived = false;
   /** Corrections of the window size asked for since the skin became active. */
   private fitAttempts = 0;
@@ -63,6 +76,32 @@ export class SkinStore {
     } catch (e) {
       this.fail('skins_active', e);
     }
+  }
+
+  /** The user has hidden the track list of the main window. Kept between starts. */
+  readonly listHidden = this.listHiddenState.asReadonly();
+
+  toggleList(): void {
+    const hidden = !this.listHiddenState();
+    this.listHiddenState.set(hidden);
+    try {
+      localStorage.setItem(LIST_HIDDEN_KEY, hidden ? '1' : '0');
+    } catch {
+      // no storage: the choice lasts until the app is closed
+    }
+  }
+
+  /**
+   * The main window shows no track list (hidden, or in a window of its own): the backend
+   * gives a skin that has a height for that its shorter window.
+   */
+  tellListAway(away: boolean): void {
+    if (this.listAwayTold === away) {
+      return;
+    }
+    this.listAwayTold = away;
+    this.fitAttempts = 0;
+    void this.send('skins_set_list_hidden', () => this.api.setListHidden(away));
   }
 
   /** Address of a picture of the active skin. */
@@ -135,13 +174,13 @@ export class SkinStore {
    * its share), the backend is told the real size and corrects the window. Called when the
    * skin changes and when the window is resized; a few tries, then it is left as it is.
    */
-  fitWindow(viewportWidth: number, viewportHeight: number): void {
+  fitWindow(viewportWidth: number, viewportHeight: number, listAway = false): void {
     const player = this.absolutePlayer();
     if (!player || player.width === null || player.height === null) {
       return;
     }
     // any size the skin's rules for resizing allow is fine
-    const { min, max } = sizeRange(player);
+    const { min, max } = sizeRange(player, listAway);
     const fits = (now: number, axis: 0 | 1) => now >= min[axis] && now <= max[axis];
     if (fits(viewportWidth, 0) && fits(viewportHeight, 1)) {
       return;

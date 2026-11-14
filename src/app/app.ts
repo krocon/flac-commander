@@ -1,4 +1,4 @@
-import { afterRenderEffect, Component, computed, DestroyRef, inject } from '@angular/core';
+import { afterRenderEffect, Component, computed, DestroyRef, effect, inject } from '@angular/core';
 import { APP_TEXTS } from './app-texts';
 import { ActionService } from './core/actions/action.service';
 import { LogApi } from './core/log/log-api';
@@ -36,7 +36,7 @@ import { WindowsStore } from './features/windows/windows.store';
       <app-skin-chooser [page]="true" />
     } @else if (skins.absolutePlayer(); as layout) {
       <!-- a skin that places everything itself: nothing of the app's own layout around it -->
-      <app-skinned-player [layout]="layout" />
+      <app-skinned-player [layout]="layout" [listAway]="listAway()" />
     } @else {
       <div class="flow">
         <header>
@@ -73,7 +73,7 @@ import { WindowsStore } from './features/windows/windows.store';
         </header>
         <main>
           <app-player />
-          @if (!windows.playlistDetached()) {
+          @if (!listAway()) {
             <app-playlist />
           }
           <details>
@@ -107,6 +107,10 @@ export class App {
   protected readonly p = PLAYLIST_TEXTS;
   protected readonly s = SKINS_TEXTS;
   protected readonly e = EQUALIZER_TEXTS;
+  /** The main window shows no track list: hidden by the user, or in a window of its own. */
+  protected readonly listAway = computed(
+    () => this.skins.listHidden() || this.windows.playlistDetached(),
+  );
   protected readonly version = computed(() => this.diagnostics.info()?.app.version ?? null);
 
   constructor() {
@@ -119,6 +123,13 @@ export class App {
         shortcut: { key: 'k', mod: true },
         active: () => this.windows.skinsOpen(),
         run: () => void this.openSkins(),
+      },
+      {
+        id: 'app.playlist',
+        label: () => (this.skins.listHidden() ? this.t.showList : this.t.hideList),
+        shortcut: { key: 'j', mod: true },
+        active: () => !this.listAway(),
+        run: () => this.skins.toggleList(),
       },
       {
         id: 'window.playlist',
@@ -146,6 +157,13 @@ export class App {
     inject(DestroyRef).onDestroy(unregister);
     // one line per window in the log file: a window that never says this did not come up
     inject(LogApi).info(`window ${this.windows.label} ready`);
+    // the backend sizes the window of a skin that is shorter without its list
+    effect(() => {
+      const away = this.listAway();
+      if (this.windows.isMain) {
+        this.skins.tellListAway(away);
+      }
+    });
     // once a fixed-size skin is on screen: does the window give it the room it asks for?
     afterRenderEffect(() => {
       if (this.windows.isMain && this.skins.absolutePlayer()) {
@@ -165,7 +183,7 @@ export class App {
   protected fitWindow(): void {
     // only the main window is sized by the skin
     if (this.windows.isMain) {
-      this.skins.fitWindow(window.innerWidth, window.innerHeight);
+      this.skins.fitWindow(window.innerWidth, window.innerHeight, this.listAway());
     }
   }
 }

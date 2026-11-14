@@ -190,6 +190,23 @@ fn keywords_and_the_stretch_line_are_checked() {
 }
 
 #[test]
+fn a_skin_may_say_how_tall_it_is_without_its_track_list() {
+    let at = "windows.player.collapsedHeight";
+    assert_eq!(problems_of(|j| j["windows"]["player"]["collapsedHeight"] = 120.into()), [""; 0]);
+    assert_eq!(problems_of(|j| j["windows"]["player"]["collapsedHeight"] = 200.into()), [at]);
+    assert_eq!(problems_of(|j| j["windows"]["player"]["collapsedHeight"] = 20.into()), [at]);
+
+    let files = package(|j| {
+        j["windows"]["player"]["collapsedHeight"] = 120.into();
+        j["windows"]["player"]["resize"] = serde_json::json!({ "stretchY": 150 });
+    });
+    let player = Skin::from_files(files, false, APP).unwrap().manifest.windows.player.unwrap();
+    assert_eq!(player.size_range_with(false), Some(((300, 200), (300, 4000))));
+    // without the list: one size, and room for the grip that brings the list back
+    assert_eq!(player.size_range_with(true), Some(((300, 134), (300, 134))));
+}
+
+#[test]
 fn the_colour_of_the_title_bar_is_six_digits() {
     let at = "windows.player.titleBar";
     assert_eq!(problems_of(|j| j["windows"]["player"]["titleBar"] = "#e9621a".into()), [""; 0]);

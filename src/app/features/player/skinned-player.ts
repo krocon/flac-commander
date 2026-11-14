@@ -2,7 +2,12 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { ActionService } from '../../core/actions/action.service';
 import { describeError } from '../../core/errors/app-error';
 import { PlayerApi } from '../../core/player/player-api';
-import { sizeRange, SkinComponent, SkinPlayerWindow } from '../../core/skins/skin.models';
+import {
+  LIST_GRIP_HEIGHT,
+  sizeRange,
+  SkinComponent,
+  SkinPlayerWindow,
+} from '../../core/skins/skin.models';
 import { Playlist } from '../playlist/playlist';
 import { SkinStore } from '../skins/skin.store';
 import { Visualizer } from '../visualizer/visualizer';
@@ -40,6 +45,14 @@ interface Placed {
 })
 export class SkinnedPlayer {
   readonly layout = input.required<SkinPlayerWindow>();
+  /** The track list is hidden or has a window of its own. */
+  readonly listAway = input(false);
+
+  /** The skin says how tall it is without its list: it can be cut off above it. */
+  protected readonly canCollapse = computed(() => (this.layout().collapsedHeight ?? null) !== null);
+  protected readonly collapsed = computed(() => this.listAway() && this.canCollapse());
+  /** Room below a collapsed player for the grip that brings the list back. */
+  protected readonly gripHeight = LIST_GRIP_HEIGHT;
 
   protected readonly store = inject(PlayerStore);
   private readonly playerApi = inject(PlayerApi);
@@ -66,7 +79,7 @@ export class SkinnedPlayer {
 
   /** The size of the player: the skin's own, or larger as far as its rules allow. */
   protected readonly size = computed(() => {
-    const { min, max } = sizeRange(this.layout());
+    const { min, max } = sizeRange(this.layout(), this.listAway());
     const [width, height] = this.viewport();
     return {
       width: Math.min(Math.max(width, min[0]), max[0]),
@@ -78,6 +91,9 @@ export class SkinnedPlayer {
   private readonly growth = computed(() => {
     const layout = this.layout();
     const size = this.size();
+    if (this.collapsed()) {
+      return { x: { line: null, extra: 0 }, y: { line: null, extra: 0 } };
+    }
     return {
       x: { line: layout.resize?.stretchX ?? null, extra: size.width - (layout.width ?? 0) },
       y: { line: layout.resize?.stretchY ?? null, extra: size.height - (layout.height ?? 0) },
@@ -90,7 +106,7 @@ export class SkinnedPlayer {
    */
   protected readonly slices = computed(() => {
     const layout = this.layout();
-    if (!layout.resize || !layout.background) {
+    if (!layout.resize || !layout.background || this.collapsed()) {
       return null;
     }
     const pieces = (line: number | null, full: number, extra: number) =>
@@ -127,7 +143,12 @@ export class SkinnedPlayer {
           : start + length > axis.line
             ? [start, length + axis.extra]
             : [start, length];
-    return this.layout().components.map((component) => {
+    // without the list: nothing of what lies below the cut
+    const cut = this.collapsed() ? (this.layout().collapsedHeight ?? 0) : null;
+    const shown = this.layout().components.filter(
+      (c) => cut === null || (c.type !== 'playlist' && c.y < cut),
+    );
+    return shown.map((component) => {
       const states = component.states;
       const of = (path: string | null | undefined) => (path ? this.url(path) : null);
       const [left, width] = along(component.x, component.width, x);

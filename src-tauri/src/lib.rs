@@ -27,6 +27,8 @@ pub struct AppState {
     pub skins: Arc<Mutex<SkinLibrary>>,
     /// True while a test tone plays.
     pub tone_busy: Arc<AtomicBool>,
+    /// The main window does not show the track list: its skin may be shorter then.
+    pub list_hidden: AtomicBool,
 }
 
 const LOG_FILE: &str = "flac-commander";
@@ -194,6 +196,7 @@ pub fn run() {
                 skins,
                 spectrum_windows: Mutex::default(),
                 tone_busy: Arc::default(),
+                list_hidden: AtomicBool::new(false),
             };
             // the window of a fixed-size skin has its size before it shows anything
             if let (Ok(skin), Some(window)) =
@@ -241,6 +244,7 @@ pub fn run() {
             commands::skins::skins_remove,
             commands::skins::skins_export,
             commands::skins::skins_fit_viewport,
+            commands::skins::skins_set_list_hidden,
             commands::windows::windows_state,
             commands::windows::windows_toggle,
         ])
