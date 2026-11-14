@@ -148,7 +148,7 @@ Details: [AUDIO-ENGINE.md](AUDIO-ENGINE.md).
 ## Mehrere Fenster
 
 Jedes Fenster ist eine eigene WebView mit eigenem JavaScript-Kontext und zeigt dasselbe Frontend; das Fenster-Label
-(`main`, `playlist`, `equalizer`) entscheidet, welcher Teil erscheint. Fenster teilen nichts in der WebView: Sie bleiben synchron,
+(`main`, `playlist`, `equalizer`, `skins`, `library`) entscheidet, welcher Teil erscheint. Fenster teilen nichts in der WebView: Sie bleiben synchron,
 weil alle dieselben Events aus Rust hören und beim Start einen Schnappschuss holen. Kein Fenster startet eine Engine.
 
 ```text
@@ -161,6 +161,24 @@ Verschieben / Größe ändern → windows.rs merkt sich den Platz → state.json
 Die Fensterliste ist fest (`windows.rs`), Nebenfenster werden beim Schließen nur versteckt. Messung und Begründung:
 [ADR 0008](decisions/0008-mehrere-fenster.md).
 
+## Bibliothek
+
+Ordner statt Datenbank ([ADR 0011](decisions/0011-bibliothek-ohne-datenbank.md)). `fc_core::library::Library` kennt
+die Wurzelordner, liest Ordner auf Anfrage und hält den Suchindex im Speicher; das Fenster `library` zeigt sie.
+
+```text
+Fenster öffnet → LibraryStore → call('library_state') → erster Aufruf startet den Scan (Thread „library-scan")
+  → Event library://state { roots, scan { scanning, folders, tracks } } alle 200 ms und am Ende
+Kachel / Breadcrumb → call('library_browse', path) → Library::resolve (im Wurzelordner?) → Ordner, Titel, Tags
+Suchfeld → call('library_search', query) → Index im Speicher → Alben + Titel (je höchstens 200)
+<img src="libcover://…/pfad"> → lib.rs → einer von vier Cover-Threads → resolve → erster Titel
+  → metadata::read_cover → thumbnail (JPEG ≤ 360 px) → Speicher + Cache-Ordner
+Doppelklick / ▶ / + → call('library_play', path, replace) → Session::replace_with bzw. add_paths
+  → playlist://state an alle Fenster
+```
+
+Das Fenster trägt nicht den Skin: eigene Farben nach `prefers-color-scheme`, Systemschrift.
+
 ## Projektstruktur
 
 ```text
@@ -168,6 +186,7 @@ crates/fc-core/          Rust-Kern (kein Tauri)
   src/audio/             player, decode, resample, equalizer, spectrum, dts, formats, output, tone
   src/session.rs         Player + Playlist + Persistenz
   src/playlist.rs, metadata.rs, storage.rs, error.rs
+  src/library/           Wurzelordner, Durchsuchen, Suchindex; thumbnail (kleine Cover, Cache)
   src/skins/             manifest (Schema, Prüfung), Bibliothek, ZIP-Import/-Export,
                          wsz (Import klassischer Skins), image (BMP lesen, PNG schreiben)
   tests/formats.rs       Dekodieren und Seek an echten Dateien
@@ -176,8 +195,8 @@ crates/fc-core/          Rust-Kern (kein Tauri)
   tests/fixtures/        selbst erzeugte Sinus-Dateien (scripts/make-fixtures.sh)
   examples/              play (Engine ohne App), probe (Symphonia + Lofty)
 src-tauri/               Tauri-Schale: commands/, events.rs, windows.rs, lib.rs, capabilities/
-src/app/core/            actions, backend, errors, i18n, log, player, playlist, skins, system, windows
-src/app/features/        player (auch SkinnedPlayer), playlist, equalizer, visualizer, skins, windows,
+src/app/core/            actions, backend, errors, i18n, library, log, player, playlist, skins, system, windows
+src/app/features/        player (auch SkinnedPlayer), playlist, library, equalizer, visualizer, skins, windows,
                          diagnostics
 skins/                   mitgelieferte Skins (ins Programm eingebettet)
 src/testing/             Fake-Fassaden für Tests
@@ -206,6 +225,7 @@ Neue Abhängigkeiten nur mit Begründung in dieser Tabelle. Reines Rust ohne Sys
 | `log` | 0.4 | MIT/Apache-2.0 | Logging-Fassade im Kern | |
 | `rtrb` | 0.4.1 | MIT/Apache-2.0 | lock-freier SPSC-Ringpuffer Engine → Callback | |
 | `lofty` | 0.25.5 | MIT/Apache-2.0 | Tags: Titel, Interpret, Album, Dauer | reines Rust |
+| `image` | 0.25.10 | MIT/Apache-2.0 | Cover der Bibliothek verkleinern | reines Rust; nur `jpeg`, `png`, `webp`; bringt acht Crates mit ([ADR 0011](decisions/0011-bibliothek-ohne-datenbank.md)) |
 
 ### npm
 

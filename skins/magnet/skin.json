@@ -1,0 +1,257 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.magnet",
+  "name": "Magnet",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "A silver radio recorder: a speaker grille, chrome keys in a row and a pink cassette.",
+  "keywords": [
+    "radio recorder",
+    "boombox",
+    "silver",
+    "light",
+    "pink",
+    "cassette",
+    "eighties"
+  ],
+  "preview": "preview.webp",
+  "theme": {
+    "background": "#cfd2d6",
+    "surface": "#eceef0",
+    "surfaceRaised": "#ffffff",
+    "foreground": "#1a1c1f",
+    "muted": "#474b50",
+    "accent": "#a80f49",
+    "accentContrast": "#ffffff",
+    "border": "#7f858c",
+    "ok": "#0b5a2b",
+    "danger": "#8f1d16",
+    "focus": "#1f5fbf",
+    "fontFamily": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "fontMono": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "radius": 3
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 360,
+      "height": 538,
+      "background": "assets/background.png",
+      "collapsedHeight": 370,
+      "resize": {
+        "stretchY": 449
+      },
+      "components": [
+        {
+          "type": "spinner",
+          "x": 128,
+          "y": 150,
+          "width": 28,
+          "height": 28,
+          "period": 2600,
+          "states": {
+            "normal": "assets/hub-left.png"
+          }
+        },
+        {
+          "type": "spinner",
+          "x": 204,
+          "y": 150,
+          "width": 28,
+          "height": 28,
+          "period": 2600,
+          "states": {
+            "normal": "assets/hub-right.png"
+          }
+        },
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 54,
+          "y": 90,
+          "width": 252,
+          "height": 22,
+          "fontSize": 15,
+          "color": "#1a1c1f"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 54,
+          "y": 112,
+          "width": 150,
+          "height": 18,
+          "fontSize": 12,
+          "color": "#a80f49"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 206,
+          "y": 112,
+          "width": 100,
+          "height": 18,
+          "fontSize": 13,
+          "align": "right",
+          "color": "#474b50"
+        },
+        {
+          "type": "seekbar",
+          "x": 24,
+          "y": 235,
+          "width": 312,
+          "height": 8
+        },
+        {
+          "type": "volume",
+          "x": 174,
+          "y": 340,
+          "width": 60,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 30,
+          "y": 256,
+          "width": 60,
+          "height": 60,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 90,
+          "y": 256,
+          "width": 60,
+          "height": 60,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 150,
+          "y": 256,
+          "width": 60,
+          "height": 60,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 210,
+          "y": 256,
+          "width": 60,
+          "height": 60,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 270,
+          "y": 256,
+          "width": 60,
+          "height": 60,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 22,
+          "y": 324,
+          "width": 46,
+          "height": 40,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 68,
+          "y": 324,
+          "width": 46,
+          "height": 40,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 114,
+          "y": 324,
+          "width": 46,
+          "height": 40,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 246,
+          "y": 324,
+          "width": 46,
+          "height": 40,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 292,
+          "y": 324,
+          "width": 46,
+          "height": 40,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 28,
+          "y": 378,
+          "width": 304,
+          "height": 142
+        }
+      ]
+    }
+  }
+}

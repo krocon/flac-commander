@@ -5,7 +5,7 @@ unabhängige Fenster und eine native Audio-Engine in Rust. Die Bedienung greift 
 Architektur und Skin-Format sind eigenständig.
 
 **Stand: alle sieben Phasen des ersten Plans umgesetzt.** Die App spielt Playlists aus lokalen Dateien, merkt sich ihren
-Zustand und lässt sich mit Skins umgestalten – mitgeliefert sind zehn Skins vom Plattenspieler „Vinyl" (Standard) bis zum Tonbandgerät „Reel", eigene Skins lassen sich als
+Zustand und lässt sich mit Skins umgestalten – mitgeliefert sind 39 Skins vom Plattenspieler „Vinyl" (Standard) bis zum Tonbandgerät „Reel", eigene Skins lassen sich als
 ZIP importieren. Playlist und Equalizer haben eigene Fenster; Titel gehen lückenlos ineinander über. Klassische
 Winamp-Skins lassen sich importieren (erster Schritt: Hauptfenster). Was offen ist und was noch niemand gehört oder
 gesehen hat, steht in der [Roadmap](docs/ROADMAP.md) und in den [manuellen Tests](docs/MANUAL-TESTS.md).
@@ -24,12 +24,14 @@ gesehen hat, steht in der [Roadmap](docs/ROADMAP.md) und in den [manuellen Tests
 | Robustheit | nicht abspielbare Dateien werden markiert und übersprungen; fehlende Dateien nach dem Neustart markiert; Geräteverlust pausiert |
 | Skins | zur Laufzeit wechselbar; eigenes, rein deklaratives Format mit vollständiger Prüfung; sicherer ZIP-Import und Export ([SKIN-FORMAT.md](docs/SKIN-FORMAT.md)) |
 | Winamp-Skins | Import klassischer `.wsz` als Konvertierung: Hauptfenster, Tasten, Farben – nicht pixelgenau, an echten Skins noch ungeprüft ([WINAMP-SKINS.md](docs/WINAMP-SKINS.md)) |
-| Fenster | Playlist und Equalizer als eigene Fenster; alle Fenster bleiben über das Backend synchron |
-| Gemerkt wird | Playlist, aktueller Titel mit Position, Lautstärke, Wiederholen, Zufall, Skin, Fensterplätze |
+| Bibliothek | eigenes Fenster: Musikordner wählen, durch Ordner gehen, Alben als Cover-Raster, Suche über Ordner, Album, Interpret und Titel, sofort abspielen oder zur Playlist hinzufügen – in der laufenden App noch ungeprüft ([ADR 0011](docs/decisions/0011-bibliothek-ohne-datenbank.md)) |
+| Fenster | Playlist, Equalizer, Bibliothek und Skin-Auswahl als eigene Fenster; alle Fenster bleiben über das Backend synchron |
+| Gemerkt wird | Playlist, aktueller Titel mit Position, Lautstärke, Wiederholen, Zufall, Skin, Fensterplätze, Ordner der Bibliothek |
 | Tastatur | zentrales Aktionssystem, Playlist als Listbox bedienbar |
 | Fehler und Protokoll | einheitliche Fehlercodes, Texte in Deutsch und Englisch, Logdatei |
 
-Noch nicht vorhanden: Bibliothek, Albumcover, Umsortieren der Playlist, Mehrfachauswahl.
+Noch nicht vorhanden: Umsortieren der Playlist, Mehrfachauswahl; die Bibliothek kennt keine Sortierung nach Jahr
+und keine Ansicht „alle Alben eines Interpreten" über Ordner hinweg.
 Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft.
 
 ### Tastatur
@@ -45,10 +47,13 @@ Die Audio-Ausgabe unter Windows und Linux ist an echter Hardware noch ungeprüft
 | ⌘O bzw. Strg+O | Dateien hinzufügen |
 | ⌘L bzw. Strg+L | Playlist in eigenem Fenster / im Hauptfenster |
 | ⌘E bzw. Strg+E | Equalizer-Fenster |
+| ⌘B bzw. Strg+B | Bibliothek-Fenster |
 | ⌘K bzw. Strg+K | Skin wählen |
 | ⌘0 bzw. Strg+0 | zurück zum Standard-Skin (gilt in jedem Skin) |
 | in der Playlist: ↑ ↓ Pos1 Ende | Auswahl bewegen |
 | in der Playlist: Enter / Entf | ausgewählten Titel abspielen / entfernen |
+| in der Bibliothek: ⌘F bzw. Strg+F | Suchfeld; Esc leert die Suche |
+| in der Bibliothek: Tab, Enter | Kachel oder Titel wählen; Enter öffnet ein Album bzw. spielt einen Titel |
 
 ## Voraussetzungen
 

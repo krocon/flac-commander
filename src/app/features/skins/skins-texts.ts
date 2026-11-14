@@ -21,6 +21,9 @@ export const SKINS_TEXTS_EN = {
   imported: (name: string) => `“${name}” was installed.`,
   refused: 'The skin was not accepted:',
   previewOf: (name: string) => `Preview of ${name}`,
+  filter: 'Filter skins',
+  filterHint: 'Name or keyword …',
+  noMatch: 'No skin matches.',
 };
 
 export const SKINS_TEXTS = translatable('skins', SKINS_TEXTS_EN, { de: SKINS_TEXTS_DE });

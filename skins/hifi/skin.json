@@ -5,7 +5,15 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "Brushed aluminium, turned knobs and an amber display: a receiver from the rack.",
-  "preview": "preview.png",
+  "keywords": [
+    "hi-fi",
+    "receiver",
+    "aluminium",
+    "amber",
+    "dark",
+    "skeuomorphic"
+  ],
+  "preview": "preview.webp",
   "theme": {
     "background": "#191612",
     "surface": "#0e0c09",
@@ -28,6 +36,10 @@
       "width": 400,
       "height": 528,
       "background": "assets/background.png",
+      "collapsedHeight": 258,
+      "resize": {
+        "stretchY": 400
+      },
       "components": [
         {
           "type": "text",

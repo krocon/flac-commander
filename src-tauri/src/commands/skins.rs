@@ -3,7 +3,7 @@
 use super::blocking;
 use crate::AppState;
 use crate::events::SKIN_ACTIVE;
-use fc_core::skins::manifest::{Layout, PlayerWindow, Theme};
+use fc_core::skins::manifest::{PlayerWindow, Theme};
 use fc_core::skins::{DEFAULT_SKIN, Skin, SkinInfo, SkinLibrary};
 use fc_core::{AppError, AppResult};
 use serde::Serialize;
@@ -52,10 +52,22 @@ pub fn active_skin(state: &AppState) -> AppResult<Arc<Skin>> {
 
 /// Gives the main window the size the skin asks for.
 pub fn fit_window(window: &WebviewWindow, skin: &Skin) {
-    let fixed = fixed_size(skin);
+    let hidden = list_hidden(window);
+    let fixed = fixed_size(skin, hidden);
+    let no_limit = None::<LogicalSize<f64>>;
     let result = match fixed {
+        // a skin with rules for resizing: between its own size and the largest it allows
+        Some((width, height)) if largest_size(skin, hidden) != Some((width, height)) => {
+            let (max_width, max_height) = largest_size(skin, hidden).unwrap_or((width, height));
+            window
+                .set_resizable(true)
+                .and_then(|()| window.set_min_size(Some(LogicalSize::new(width, height))))
+                .and_then(|()| window.set_max_size(Some(LogicalSize::new(max_width, max_height))))
+                .and_then(|()| window.set_size(LogicalSize::new(width, height)))
+        }
         Some((width, height)) => window
-            .set_min_size(None::<LogicalSize<f64>>)
+            .set_min_size(no_limit)
+            .and_then(|()| window.set_max_size(no_limit))
             .and_then(|()| window.set_resizable(false))
             .and_then(|()| window.set_size(LogicalSize::new(width, height))),
         None => {
@@ -63,7 +75,8 @@ pub fn fit_window(window: &WebviewWindow, skin: &Skin) {
             // standard size back; a window the user has sized keeps its size
             let was_fixed = !window.is_resizable().unwrap_or(true);
             window
-                .set_resizable(true)
+                .set_max_size(no_limit)
+                .and_then(|()| window.set_resizable(true))
                 .and_then(|()| {
                     window.set_min_size(Some(LogicalSize::new(FLOW_MIN_SIZE.0, FLOW_MIN_SIZE.1)))
                 })
@@ -79,17 +92,58 @@ pub fn fit_window(window: &WebviewWindow, skin: &Skin) {
     if let Err(e) = result {
         log::warn!("window not fitted to the skin {}: {e}", skin.id());
     }
+    // the title bar is see-through where the system allows it (macOS): it takes this colour
+    if let Err(e) = window.set_background_color(title_bar_colour(skin)) {
+        log::warn!("title bar not coloured for the skin {}: {e}", skin.id());
+    }
+}
+
+/// The colour a skin wants its title bar in; `None` leaves it to the system.
+fn title_bar_colour(skin: &Skin) -> Option<tauri::window::Color> {
+    let colour = skin.manifest.windows.player.as_ref()?.title_bar.as_deref()?;
+    let part = |at: usize| u8::from_str_radix(colour.get(at..at + 2)?, 16).ok();
+    Some(tauri::window::Color(part(1)?, part(3)?, part(5)?, 255))
+}
+
+/// The largest size the skin lets its window grow to; its own size where a side is fixed.
+fn largest_size(skin: &Skin, list_hidden: bool) -> Option<(f64, f64)> {
+    let (_, (width, height)) =
+        skin.manifest.windows.player.as_ref()?.size_range_with(list_hidden)?;
+    Some((f64::from(width), f64::from(height)))
+}
+
+/// Whether the track list is hidden in the main window (or has a window of its own).
+fn list_hidden(window: &WebviewWindow) -> bool {
+    window
+        .try_state::<AppState>()
+        .is_some_and(|state| state.list_hidden.load(std::sync::atomic::Ordering::Relaxed))
+}
+
+/// The main window hides or shows its track list: a skin that has a height for that is
+/// given it.
+#[tauri::command]
+pub async fn skins_set_list_hidden(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    hidden: bool,
+) -> AppResult<()> {
+    let was = state.list_hidden.swap(hidden, std::sync::atomic::Ordering::Relaxed);
+    if was != hidden
+        && let Some(window) = app.get_webview_window("main")
+    {
+        fit_window(&window, &*active_skin(&state)?);
+    }
+    Ok(())
 }
 
 /// Largest correction `skins_fit_viewport` makes: title bars and frames are far smaller.
 const MAX_FIT_CORRECTION: f64 = 200.0;
 
 /// The size of the skin's fixed window content, if it has one.
-fn fixed_size(skin: &Skin) -> Option<(f64, f64)> {
-    let player = skin.manifest.windows.player.as_ref()?;
-    (player.layout == Layout::Absolute)
-        .then(|| Some((f64::from(player.width?), f64::from(player.height?))))
-        .flatten()
+fn fixed_size(skin: &Skin, list_hidden: bool) -> Option<(f64, f64)> {
+    let ((width, height), _) =
+        skin.manifest.windows.player.as_ref()?.size_range_with(list_hidden)?;
+    Some((f64::from(width), f64::from(height)))
 }
 
 /// How much to add to a window so that a viewport of `viewport` becomes `wanted`. `None`: it
@@ -112,9 +166,20 @@ pub async fn skins_fit_viewport(
     viewport_height: f64,
 ) -> AppResult<()> {
     let skin = active_skin(&state)?;
-    let Some(wanted) = fixed_size(&skin) else {
+    let hidden = state.list_hidden.load(std::sync::atomic::Ordering::Relaxed);
+    let Some(mut wanted) = fixed_size(&skin, hidden) else {
         return Ok(());
     };
+    // a window the user has made larger, as far as the skin allows, is as it should be
+    if let Some(largest) = largest_size(&skin, hidden) {
+        let within = |least: f64, most: f64, now: f64| {
+            if now.is_finite() && most > least { now.clamp(least, most) } else { least }
+        };
+        wanted = (
+            within(wanted.0, largest.0, viewport_width),
+            within(wanted.1, largest.1, viewport_height),
+        );
+    }
     let Some((add_width, add_height)) = fit_correction(wanted, (viewport_width, viewport_height))
     else {
         return Ok(());
@@ -292,7 +357,7 @@ fn content_type(bytes: &[u8]) -> &'static str {
 }
 
 /// `%2F` → `/` and so on; the frontend builds the address with `convertFileSrc`.
-fn percent_decode(text: &str) -> String {
+pub(crate) fn percent_decode(text: &str) -> String {
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;
@@ -365,7 +430,7 @@ mod tests {
     fn only_an_absolute_layout_fixes_the_window_size() {
         let library = SkinLibrary::load(None, "0.1.0");
         assert_eq!(
-            fixed_size(&library.get("io.github.krocon.retro").unwrap()),
+            fixed_size(&library.get("io.github.krocon.retro").unwrap(), false),
             Some((320.0, 440.0))
         );
         // a skin that only brings colours leaves the window to the user
@@ -380,8 +445,16 @@ mod tests {
             "0.1.0",
         )
         .unwrap();
-        assert_eq!(fixed_size(&flow), None);
-        assert!(fixed_size(&library.get(DEFAULT_SKIN).unwrap()).is_some());
+        assert_eq!(fixed_size(&flow, false), None);
+        assert!(fixed_size(&library.get(DEFAULT_SKIN).unwrap(), false).is_some());
+    }
+
+    #[test]
+    fn a_skin_may_colour_its_title_bar() {
+        let library = SkinLibrary::load(None, "0.1.0");
+        let walk = library.get("io.github.krocon.walk").unwrap();
+        assert_eq!(title_bar_colour(&walk), Some(tauri::window::Color(0xe9, 0x62, 0x1a, 255)));
+        assert_eq!(title_bar_colour(&library.get("io.github.krocon.retro").unwrap()), None);
     }
 
     #[test]

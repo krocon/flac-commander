@@ -1,3 +1,4 @@
+import { convertFileSrc, isTauri } from '@tauri-apps/api/core';
 import { call } from '../backend/call';
 import { subscribe, Unsubscribe } from '../backend/events';
 import { toAppError } from '../errors/app-error';
@@ -23,6 +24,11 @@ export abstract class PlayerApi {
   abstract setEqualizer(settings: EqualizerSettings): Promise<void>;
   abstract equalizerPresets(): Promise<readonly EqualizerPreset[]>;
   abstract onState(handler: (state: PlayerState) => void): Promise<Unsubscribe>;
+  /**
+   * Address of the cover of the loaded track (the `cover://` protocol knows no other). `key`
+   * only tells one track from the next, so that a new track is asked for anew.
+   */
+  abstract coverUrl(key: string): string;
   /** This window shows (or stops showing) a spectrum: the engine analyses only while one does. */
   abstract setSpectrum(enabled: boolean): Promise<void>;
   /** Levels of the frequency bands (0…1), about 25 times per second while music plays. */
@@ -69,6 +75,10 @@ export class TauriPlayerApi extends PlayerApi {
 
   override onState(handler: (state: PlayerState) => void): Promise<Unsubscribe> {
     return subscribe<PlayerState>(EV_PLAYER_STATE, (state) => handler(checked(state)));
+  }
+
+  override coverUrl(key: string): string {
+    return isTauri() ? convertFileSrc(encodeURIComponent(key), 'cover') : '';
   }
 
   override setSpectrum(enabled: boolean): Promise<void> {

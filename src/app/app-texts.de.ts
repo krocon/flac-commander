@@ -7,4 +7,6 @@ export const APP_TEXTS_DE: Translation<typeof APP_TEXTS_EN> = {
   diagnostics: 'Diagnose und Audioformate',
   playlistWindow: 'Playlist in eigenem Fenster',
   playlistDocked: 'Playlist im Hauptfenster',
+  hideList: 'Titelliste ausblenden',
+  showList: 'Titelliste einblenden',
 };

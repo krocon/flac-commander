@@ -1,0 +1,303 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.crimson",
+  "name": "Crimson",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "Two steel reels full of red tape on black cloth, and a thin red line between them.",
+  "keywords": [
+    "reel",
+    "dark",
+    "red",
+    "steel",
+    "minimal",
+    "skeuomorphic"
+  ],
+  "preview": "preview.webp",
+  "theme": {
+    "background": "#1c1c1d",
+    "surface": "#111112",
+    "surfaceRaised": "#2f2f31",
+    "foreground": "#f3f1ee",
+    "muted": "#b3afa9",
+    "accent": "#ff6257",
+    "accentContrast": "#1c0200",
+    "border": "#000000",
+    "ok": "#7fdca0",
+    "danger": "#ffa39b",
+    "focus": "#7fc4ff",
+    "fontFamily": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "fontMono": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "radius": 3
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 380,
+      "height": 584,
+      "background": "assets/background.png",
+      "collapsedHeight": 416,
+      "resize": {
+        "stretchY": 495
+      },
+      "components": [
+        {
+          "type": "pack",
+          "x": 36,
+          "y": 24,
+          "width": 136,
+          "height": 136,
+          "from": 136,
+          "to": 60,
+          "states": {
+            "normal": "assets/tape-left.png"
+          }
+        },
+        {
+          "type": "pack",
+          "x": 208,
+          "y": 24,
+          "width": 136,
+          "height": 136,
+          "from": 60,
+          "to": 136,
+          "states": {
+            "normal": "assets/tape-right.png"
+          }
+        },
+        {
+          "type": "spinner",
+          "x": 29,
+          "y": 17,
+          "width": 150,
+          "height": 150,
+          "period": 3000,
+          "states": {
+            "normal": "assets/reel-left.png"
+          }
+        },
+        {
+          "type": "spinner",
+          "x": 201,
+          "y": 17,
+          "width": 150,
+          "height": 150,
+          "period": 3000,
+          "states": {
+            "normal": "assets/reel-right.png"
+          }
+        },
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 24,
+          "y": 214,
+          "width": 332,
+          "height": 22,
+          "fontSize": 16,
+          "align": "center",
+          "color": "#f3f1ee"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 24,
+          "y": 236,
+          "width": 332,
+          "height": 16,
+          "fontSize": 12,
+          "align": "center",
+          "color": "#ff6257"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 24,
+          "y": 252,
+          "width": 80,
+          "height": 14,
+          "fontSize": 11,
+          "color": "#b3afa9"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 110,
+          "y": 252,
+          "width": 160,
+          "height": 14,
+          "fontSize": 10,
+          "align": "center",
+          "color": "#b3afa9"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 276,
+          "y": 252,
+          "width": 80,
+          "height": 14,
+          "fontSize": 11,
+          "align": "right",
+          "color": "#b3afa9"
+        },
+        {
+          "type": "seekbar",
+          "x": 24,
+          "y": 273,
+          "width": 332,
+          "height": 8
+        },
+        {
+          "type": "volume",
+          "x": 168,
+          "y": 384,
+          "width": 90,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 54,
+          "y": 300,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 106,
+          "y": 300,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 158,
+          "y": 294,
+          "width": 64,
+          "height": 64,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 222,
+          "y": 300,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 274,
+          "y": 300,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 22,
+          "y": 366,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 66,
+          "y": 366,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 110,
+          "y": 366,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 270,
+          "y": 366,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 314,
+          "y": 366,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 28,
+          "y": 424,
+          "width": 324,
+          "height": 142
+        }
+      ]
+    }
+  }
+}

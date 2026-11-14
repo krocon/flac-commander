@@ -54,6 +54,7 @@ nicht an der Endung. SVG ist nicht erlaubt (kann Skripte und externe Verweise en
 | `author`, `description` | nein | höchstens 100 bzw. 500 Zeichen. Werden als Text angezeigt, nie als HTML. |
 | `minAppVersion` | nein | drei Zahlen. Ist die App älter, wird der Skin mit Hinweis abgelehnt. |
 | `preview` | nein | Bild im Paket, wird in der Auswahl gezeigt. |
+| `keywords` | nein | höchstens 12 Stichwörter mit je 1–30 Zeichen. Die Auswahl filtert nach Name, Beschreibung und Stichwörtern. |
 | `theme` | nein | siehe unten. |
 | `windows.player` | nein | siehe unten. Fehlt es, legt die App ihren Standard-Player an. |
 
@@ -83,7 +84,25 @@ mitbringen; er nennt Schriften, die das System hat.
 | `width`, `height` | nur bei `absolute`, dann Pflicht: 200–2000 × 100–2000 CSS-Pixel. Das ist die Größe des Fensterinhalts. |
 | `background` | Bild im Paket, füllt das Fenster. |
 | `pixelated` | `true`: Bilder ohne Glättung skalieren (Pixel-Art). |
+| `titleBar` | Farbe der Titelleiste des Fensters, `#rrggbb`. Wirkt, wo das System es zulässt (macOS: durchsichtige Titelleiste); sonst bleibt die Titelleiste, wie das System sie zeichnet. Nur bei `absolute`. |
+| `collapsedHeight` | Höhe des Fensters, solange die Titelliste ausgeblendet ist oder ein eigenes Fenster hat (mindestens 60, kleiner als `height`). Alles darunter wird abgeschnitten, die App hängt einen 14 Pixel hohen Griff an, der die Liste zurückholt. Ohne die Angabe behält der Skin seine Liste. Nur bei `absolute`. |
+| `resize` | Regeln, nach denen das Fenster wachsen darf – siehe unten. Nur bei `absolute`; ohne `resize` ist die Größe fest. |
 | `components` | Liste der Bausteine, höchstens 200. Nur bei `absolute`. |
+
+### `resize`: wie das Fenster wachsen darf
+
+`width` und `height` sind die kleinste Größe. Je Achse nennt der Skin **eine Linie des Hintergrunds, die sich dehnt**:
+
+| Feld | Regel |
+| --- | --- |
+| `stretchY` | Zeile (CSS-Pixel von oben, innerhalb des Fensters). Wird das Fenster höher, wird diese eine Zeile des Hintergrundbilds in die Länge gezogen. Fehlt sie, ist die Höhe fest. |
+| `stretchX` | Spalte, entsprechend für die Breite. Fehlt sie, ist die Breite fest. |
+| `maxHeight`, `maxWidth` | größte Höhe bzw. Breite, höchstens 4000; braucht die passende Linie. Ohne Angabe: 4000. |
+
+Für die Bausteine gilt je Achse: Ein Baustein, der **über die Linie reicht, wird länger**; einer, der **ganz dahinter
+liegt, rückt mit**; alle anderen bleiben, wo sie sind. Legt ein Skin `stretchY` durch die Playlist, wächst beim
+Aufziehen nach unten genau die Titelliste. Die Linie gehört an eine Stelle, an der das Hintergrundbild in der
+Dehnrichtung gleichförmig ist (das Innere eines Feldes, keine runde Ecke).
 
 ### Bausteine
 
@@ -97,13 +116,16 @@ Jeder Baustein hat `type`, `x`, `y`, `width`, `height` (CSS-Pixel, muss ganz im 
 | `text` | `source` (Pflicht), `fontSize` (6–72), `color`, `align` | Eine Zeile Text; zu langer Text wird mit „…" gekürzt. |
 | `time` | `source` (Pflicht), `fontSize`, `color`, `align` | `position` oder `duration`. |
 | `playlist` | – | Die Playlist mit ihren Knöpfen. |
-| `image` | `states.normal` (Pflicht) | Ein Bild ohne Funktion. |
+| `image` | `states.normal` (Pflicht), `source` | Ein Bild ohne Funktion. Mit `"source": "track.cover"` zeigt es das Cover des laufenden Titels; das eigene Bild bleibt, wo ein Titel keines hat. |
 | `spectrum` | `color` | Balken, die der Musik folgen (ohne `color` in der Akzentfarbe). |
 | `needle` | `states.normal`, `pivotX`, `pivotY`, `from`, `to` (alle Pflicht), `rest` | Ein Bild, das sich um einen Drehpunkt dreht: bei Titelbeginn um `from` Grad, am Ende um `to` Grad (im Uhrzeigersinn, −360 bis 360), ohne Titel um `rest`. Ziehen spult; per Tastatur ein Regler (Pfeiltasten ±5 s). Beispiel: Tonarm. |
-| `spinner` | `states.normal`, `period` (Pflicht, 500–120000 ms je Umdrehung) | Ein Bild, das sich um seine Mitte dreht, solange Musik läuft. Beispiel: Spule, Plattenetikett. |
+| `spinner` | `states.normal`, `period` (Pflicht, 500–120000 ms je Umdrehung) | Ein Bild, das sich um seine Mitte dreht, solange Musik läuft. Beispiel: Spule, Plattenetikett. Ist der Kasten nicht quadratisch, dreht sich das Bild als Kreis und wird auf den Kasten gestaucht – so sieht eine schräg fotografierte Spule aus. Mit `"source": "track.cover"` zeigt es das Cover des Titels, rund beschnitten (Vinyl). |
+| `pack` | `states.normal`, `from`, `to` (Pflicht), `rest` | Ein rundes Bild, von dem ein Kreis um die Mitte gezeigt wird. Sein Durchmesser (CSS-Pixel, höchstens die Kastengröße) geht mit dem Fortschritt des Titels von `from` nach `to`; ohne Titel `rest`. Beispiel: das Band auf einer Spule – links `from` groß und `to` klein, rechts umgekehrt. |
 
 **Aktionen** (`action`): `player.togglePlay`, `player.play`, `player.pause`, `player.stop`, `player.next`, `player.previous`, `player.open`,
-`player.repeat`, `player.shuffle`, `app.skins`, `window.playlist`, `window.equalizer`. Es gibt keine frei definierbaren Aktionen.
+`player.repeat`, `player.shuffle`, `app.skins`, `app.playlist` (Titelliste aus- und einblenden, ⌘J / Strg+J), `window.playlist` (Titelliste in eigenem Fenster, ⌘L / Strg+L), `window.equalizer`, `window.library` (Bibliothek-Fenster, ⌘B / Strg+B). Es gibt keine frei definierbaren Aktionen.
+
+**Cover:** Das Cover ist das Bild in den Tags der Datei (bevorzugt „Front Cover"), sonst eine Datei `cover`, `folder`, `front` oder `album` (`.jpg`, `.png`, `.webp`) im selben Ordner. Die App liefert nur das Cover des gerade geladenen Titels aus; ein Skin kann keine anderen Dateien ansprechen.
 
 **Textquellen** (`source` bei `text`): `track.title`, `track.artist`, `track.details`, `player.status` (zeigt auch
 Fehlermeldungen).
@@ -153,6 +175,22 @@ gültig ist, wird beim Start ausgelassen und protokolliert.
 | **Recorder** (`io.github.krocon.recorder`) | `absolute`, 340 × 600 | Taschenrekorder: schwarzes Gehäuse, leuchtendes Display, Tastenring um Play |
 | **Deck** (`io.github.krocon.deck`) | `absolute`, 380 × 600 | Kassette auf dunklem gebürstetem Metall, geriffelte Silbertasten |
 | **Walk** (`io.github.krocon.walk`) | `absolute`, 360 × 580 | tragbarer Kassettenspieler in Orange und Schwarz |
+| **Meter** (`io.github.krocon.meter`) | `absolute`, 380 × 640 | dunkler Stahl, zwei Anzeigefenster, Kassette im Schacht, roter Ring um Play |
+| **Ferro** (`io.github.krocon.ferro`) | `absolute`, 400 × 570 | eine große schwarze Kassette mit weißen Spulenkernen |
+| **Mixtape** (`io.github.krocon.mixtape`) | `absolute`, 400 × 580 | heller Skin: lautes Etikett in Himmelblau, Weiß und Schwarz, Handschrift |
+| **System** (`io.github.krocon.system`) | `absolute`, 380 × 610 | weiße Zeichen auf Schwarz, eine Spule, ein grünes Licht |
+| **Console** (`io.github.krocon.console`) | `absolute`, 400 × 580 | heller Skin: mattes Grau, Mulden-Tasten, eine rote |
+| **Dial** (`io.github.krocon.dial`) | `absolute`, 360 × 680 | heller Skin: ein großer Drehknopf zeigt die Position und spult |
+
+Dazu kommen 23 weitere, alle `absolute` und aus demselben Generator: **Pocket**, **Keys** (Taschenrechner), **Beat**
+(Drum-Machine), **Stripe** (flache Zeichnung), **Amp**, **Lever**, **Switch**, **Patch** (schlichte Fronten), **Magnet**,
+**Classic**, **Radar**, **Chrome** (Kassettengeräte), **Studio**, **Needle**, **Gauge** (Zeigerinstrumente; in Needle zeigt
+der Zeiger die Position und lässt sich ziehen), **Crimson**, **Nano**, **Silver** (Tonbandgeräte mit Bandwickel),
+**Mono**, **Split** (grafisch), **Wheel**, **Click** (Taschenplayer mit Tastenring) und **Ember** (Bernstein auf Schwarz).
+Mono, Wheel und Classic zeigen das Cover des Titels.
+
+Alle mitgelieferten Skins lassen sich nach unten aufziehen (`resize.stretchY` durch die Titelliste) und tragen
+Stichwörter. In Reel folgt das aufgewickelte Band dem Fortschritt (`pack`).
 
 Die Grafiken aller Skins außer Retro beschreibt `scripts/make-designer-skins.mjs` als HTML und CSS; ein
 Headless-Chrome rendert sie in doppelter Auflösung, das Skript schneidet die Tasten je Zustand aus. Es sind eigene

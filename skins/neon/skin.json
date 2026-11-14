@@ -5,7 +5,15 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "Glowing tubes over a night-time grid: cyan, magenta and a setting sun.",
-  "preview": "preview.png",
+  "keywords": [
+    "neon",
+    "synthwave",
+    "retro",
+    "dark",
+    "glow",
+    "eighties"
+  ],
+  "preview": "preview.webp",
   "theme": {
     "background": "#120826",
     "surface": "#0d0620",
@@ -28,6 +36,10 @@
       "width": 380,
       "height": 540,
       "background": "assets/background.png",
+      "collapsedHeight": 288,
+      "resize": {
+        "stretchY": 410
+      },
       "components": [
         {
           "type": "text",

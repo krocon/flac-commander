@@ -115,6 +115,29 @@ Dafür braucht es klassische `.wsz`-Dateien, die Sie besitzen dürfen; im Reposi
 | K5 | Einen Skin exportieren, in der Liste entfernen, die exportierte Datei importieren | identischer Skin ist wieder da |
 | K6 | Ein beliebiges ZIP ohne `main.bmp` und ohne `skin.json` importieren | Ablehnung mit Grund, nichts wird installiert |
 
+## Bibliothek
+
+Braucht eine echte Sammlung: Ordner je Interpret und Album, Cover in den Tags und als `cover.jpg`, einige Alben ohne.
+
+| # | Schritt | Erwartet |
+| --- | --- | --- |
+| B1 | ⌘B / Strg+B im Hauptfenster, auch mit einem Skin mit eigenem Layout | Fenster „Library" öffnet sich; erneut: schließt sich; der Knopf im Standard-Layout zeigt den Zustand |
+| B2 | „Ordner hinzufügen", einen Musikordner wählen | Ordner-Dialog des Systems; der Ordner erscheint als Kachel; unten zählt „Bibliothek wird eingelesen … n Titel" hoch, das Fenster bleibt bedienbar |
+| B3 | Durch Ordner klicken; Breadcrumb zurück | Ordner öffnen mit einem Klick; Breadcrumb zeigt den Weg; „Bibliothek" führt zur Liste der Musikordner |
+| B4 | Einen Interpreten-Ordner mit vielen Alben öffnen, scrollen | **Cover erscheinen zügig, Scrollen ruckelt nicht**; Alben ohne Cover zeigen die Platzhalter-Scheibe; Name und Interpret stehen darunter |
+| B5 | Album einmal anklicken; doppelklicken | Klick: Rahmen und drei Knöpfe; Doppelklick: **Playlist wird ersetzt, das Album spielt ab Titel 1** |
+| B6 | „+" auf einer Kachel bei laufender Musik | Titel hängen an der Playlist, die Musik läuft weiter; unten steht „n Titel zur Playlist hinzugefügt" |
+| B7 | Album öffnen (Listen-Knopf oder Tab + Enter) | großes Cover, Album, Interpret, Titelliste mit Dauern; Doppelklick auf einen Titel spielt genau diesen |
+| B8 | Suchen: Teil eines Albumnamens; Interpret; Titel; zwei Wörter | Alben und Titel erscheinen beim Tippen; Esc leert die Suche; während des Einlesens kommen Treffer nach |
+| B9 | App beenden und neu starten, Bibliothek öffnen | Ordner sind noch da; Fenster am alten Platz; Cover erscheinen sofort (aus dem Cache) |
+| B10 | Kachel eines Musikordners: „✕" | Ordner verschwindet aus der Bibliothek, auf der Platte ändert sich nichts |
+| B11 | System auf hell und auf dunkel stellen; mehrere Skins durchschalten | das Bibliotheksfenster folgt dem System, **nicht** dem Skin; Kontrast in beiden gut lesbar |
+| B12 | Fenster auf Mindestgröße ziehen | Raster bricht um, Kopfzeile bricht um, nichts wird abgeschnitten |
+| B13 | Nur Tastatur: Tab durch Kopfzeile, Kacheln, Knöpfe; ⌘F | sichtbarer Fokus; Enter öffnet ein Album bzw. spielt einen Titel; Leertaste auf einer Kachel wirkt wie Enter |
+| B14 | Externe Platte als Musikordner, abziehen, App neu starten | der Ordner steht noch in der Liste, leer; Öffnen meldet „Datei nicht gefunden"; nach dem Anstecken und „Neu einlesen" ist alles da |
+| B15 | Große Sammlung (> 10 000 Titel): Zeit bis „n Titel in m Ordnern" notieren; währenddessen Musik hören | **keine Aussetzer**; Zeit in die Ergebnistabelle |
+| B16 | Hauptfenster im Standard-Layout auf Mindestbreite | vier Knöpfe in einer Zeile, der Titel „FLAC Commander" weicht |
+
 ## Ergebnisse
 
 | Datum | Plattform | Geprüft | Ergebnis |
@@ -124,9 +147,10 @@ Dafür braucht es klassische `.wsz`-Dateien, die Sie besitzen dürfen; im Reposi
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 3 in der gebündelten App: L1 (Ordner mit 12 MP3), L4 (Sprung ans Ende → nächster Titel), L5 (nur „Nächster"), L10 (Neustart) | bestanden: Tags und Dauern erscheinen, Titelwechsel, Liste, Titel, Position 0:06 und Lautstärke 4 % nach dem Neustart wiederhergestellt. |
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 4 in der gebündelten App: S1, S2, S7 | bestanden nach zwei Korrekturen (Fensterhöhe ohne Titelleiste, Regler und Playlist-Knöpfe im schmalen Skin). |
 | 2026-11-13 | macOS 27, Apple Silicon | Phase 5: Neustart mit gespeichertem Playlist-Fenster (W5 teilweise) | bestanden laut Fensterliste und Protokoll: beide Fenster an ihrem Platz, beide Frontends melden „ready". **Nicht gesehen:** der Bildschirm war gesperrt, Aufnahmen der Fenster waren leer; W1–W4, W6, W7 offen. |
+| 2026-11-14 | macOS 27, Frontend im Browser ohne Backend (Testdaten statt Rust) | Bibliothek: nur das Aussehen – Ordnerliste, Raster, Album, Suche, hell und dunkel, 420 px Breite; B16 (Kopfzeile des Hauptfensters bei 380–640 px) | bestanden. **Nicht in der App geprüft:** Ordner-Dialog, Einlesen, echte Cover über `libcover://`, Abspielen, Fenster öffnen und Wiederherstellen (B1–B15). |
 | – | Windows 10/11, WASAPI | – | **offen** |
 | – | Linux (ALSA/PipeWire) | – | **offen** |
 
 Offen auch unter macOS: Phase 1 M5, M7–M11; Phase 2 P4–P6, P8–P14 und der Rest von P2 und P7; Phase 3 L2, L3,
-L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9; Phase 5 W1–W4, W6, W7; Phase 6 A1–A8; Phase 7 K1–K6. Ab Phase 5
+L6–L9, L11, L12 und der Rest von L5; Phase 4 S3–S6, S8, S9; Phase 5 W1–W4, W6, W7; Phase 6 A1–A8; Phase 7 K1–K6; Bibliothek B1–B15. Ab Phase 5
 wurde nichts davon gesehen oder gehört – der Bildschirm war gesperrt; belegt ist es nur durch Tests.

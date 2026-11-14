@@ -7,6 +7,8 @@ export const APP_TEXTS_EN = {
   diagnostics: 'Diagnostics and audio formats',
   playlistWindow: 'Playlist in its own window',
   playlistDocked: 'Playlist in the main window',
+  hideList: 'Hide track list',
+  showList: 'Show track list',
 };
 
 export const APP_TEXTS = translatable('app', APP_TEXTS_EN, { de: APP_TEXTS_DE });

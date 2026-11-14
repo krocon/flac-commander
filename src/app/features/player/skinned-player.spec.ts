@@ -157,4 +157,93 @@ describe('SkinnedPlayer', () => {
       ),
     );
   });
+
+  it('a skin with a stretch line fills a taller window: the playlist grows, the rest stays', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', {
+      ...RETRO_SKIN.player,
+      resize: { stretchX: null, stretchY: 300, maxWidth: null, maxHeight: null },
+    });
+    const grown = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(grown.querySelector('app-playlist')).toBeTruthy());
+    const extra = window.innerHeight - 440;
+    expect(extra).toBeGreaterThan(0);
+    expect(grown.querySelector<HTMLElement>('.window')?.style.height).toBe(
+      `${window.innerHeight}px`,
+    );
+    // as wide as the skin: only the height has a stretch line
+    expect(grown.querySelector<HTMLElement>('.window')?.style.width).toBe('320px');
+    expect(grown.querySelector<HTMLElement>('app-playlist')?.style.height).toBe(`${264 + extra}px`);
+    expect(grown.querySelector<HTMLElement>('input[type="range"]')?.style.top).toBe('100px');
+    // the background: above the line, the line drawn out, below the line
+    const slices = [...grown.querySelectorAll<HTMLElement>('.slice')];
+    expect(slices.map((slice) => `${slice.style.top} ${slice.style.height}`)).toEqual([
+      '0px 300px',
+      `300px ${extra + 1}px`,
+      `${301 + extra}px 139px`,
+    ]);
+  });
+
+  it('a spinner that asks for the cover shows it round, over its own picture', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', {
+      ...RETRO_SKIN.player,
+      components: [
+        {
+          type: 'spinner',
+          x: 10,
+          y: 10,
+          width: 96,
+          height: 96,
+          action: null,
+          source: 'track.cover',
+          states: {
+            normal: 'assets/label.png',
+            hover: null,
+            pressed: null,
+            active: null,
+            disabled: null,
+          },
+          align: null,
+          fontSize: null,
+          color: null,
+          period: 1800,
+        },
+      ],
+    });
+    const page = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(page.querySelector('.spinner.turning')).toBeTruthy());
+    const label = page.querySelector<HTMLElement>('.spinner');
+    expect(label?.classList.contains('round')).toBe(true);
+    expect(label?.style.backgroundImage).toContain('url("cover://');
+    expect(label?.style.backgroundImage).toContain('assets/label.png');
+    expect(label?.style.animationDuration).toBe('1800ms');
+  });
+
+  it('without its list a skin that has a height for that is cut off above it', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', { ...RETRO_SKIN.player, collapsedHeight: 158 });
+    const page = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(page.querySelector('app-playlist')).toBeTruthy());
+    const grip = page.querySelector<HTMLButtonElement>('button.grip');
+    expect(grip?.getAttribute('aria-expanded')).toBe('true');
+    expect(page.querySelector<HTMLElement>('.window')?.style.height).toBe('440px');
+
+    fixture.componentRef.setInput('listAway', true);
+    await vi.waitFor(() => expect(page.querySelector('app-playlist')).toBeNull());
+    // the skin's height without the list, and the grip below it
+    expect(page.querySelector<HTMLElement>('.window')?.style.height).toBe('172px');
+    expect(page.querySelector('button[aria-label="Pause"]')).toBeTruthy();
+    expect(grip?.getAttribute('aria-expanded')).toBe('false');
+    expect(grip?.classList.contains('closed')).toBe(true);
+  });
+
+  it('a skin without such a height keeps its list and has no grip', async () => {
+    const fixture = TestBed.createComponent(SkinnedPlayer);
+    fixture.componentRef.setInput('layout', RETRO_SKIN.player);
+    fixture.componentRef.setInput('listAway', true);
+    const page = fixture.nativeElement as HTMLElement;
+    await vi.waitFor(() => expect(page.querySelector('app-playlist')).toBeTruthy());
+    expect(page.querySelector('button.grip')).toBeNull();
+  });
 });

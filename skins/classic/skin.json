@@ -1,0 +1,291 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.classic",
+  "name": "Classic",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "An olive-grey cassette player: the time large on its speaker, a cassette with the cover, an orange key.",
+  "keywords": [
+    "cassette",
+    "player",
+    "olive",
+    "grey",
+    "dark",
+    "cover",
+    "orange"
+  ],
+  "preview": "preview.webp",
+  "theme": {
+    "background": "#3c3d37",
+    "surface": "#0f0f0d",
+    "surfaceRaised": "#55564f",
+    "foreground": "#f5f5f0",
+    "muted": "#c9c9bf",
+    "accent": "#ff9a3d",
+    "accentContrast": "#221000",
+    "border": "#1a1a17",
+    "ok": "#9fd96a",
+    "danger": "#ffa39b",
+    "focus": "#7fc4ff",
+    "fontFamily": "\"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", sans-serif",
+    "fontMono": "\"Avenir Next\", \"Segoe UI\", \"Helvetica Neue\", sans-serif",
+    "radius": 4
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 380,
+      "height": 588,
+      "background": "assets/background.png",
+      "collapsedHeight": 420,
+      "resize": {
+        "stretchY": 499
+      },
+      "components": [
+        {
+          "type": "spinner",
+          "x": 118,
+          "y": 190,
+          "width": 28,
+          "height": 28,
+          "period": 2600,
+          "states": {
+            "normal": "assets/hub-left.png"
+          }
+        },
+        {
+          "type": "spinner",
+          "x": 180,
+          "y": 190,
+          "width": 28,
+          "height": 28,
+          "period": 2600,
+          "states": {
+            "normal": "assets/hub-right.png"
+          }
+        },
+        {
+          "type": "image",
+          "x": 44,
+          "y": 136,
+          "width": 38,
+          "height": 38,
+          "source": "track.cover",
+          "states": {
+            "normal": "assets/cover.png"
+          }
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 34,
+          "y": 22,
+          "width": 312,
+          "height": 16,
+          "fontSize": 11,
+          "align": "center",
+          "color": "#c9c9bf"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 34,
+          "y": 36,
+          "width": 312,
+          "height": 60,
+          "fontSize": 48,
+          "align": "center",
+          "color": "#f5f5f0"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 290,
+          "y": 90,
+          "width": 56,
+          "height": 16,
+          "fontSize": 11,
+          "align": "right",
+          "color": "#c9c9bf"
+        },
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 90,
+          "y": 136,
+          "width": 240,
+          "height": 20,
+          "fontSize": 14,
+          "color": "#f5f5f0"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 90,
+          "y": 156,
+          "width": 240,
+          "height": 16,
+          "fontSize": 11,
+          "color": "#ff9a3d"
+        },
+        {
+          "type": "spectrum",
+          "x": 34,
+          "y": 258,
+          "width": 312,
+          "height": 26,
+          "color": "#c3a8f5"
+        },
+        {
+          "type": "volume",
+          "x": 174,
+          "y": 391,
+          "width": 80,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 10,
+          "y": 296,
+          "width": 72,
+          "height": 72,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 82,
+          "y": 296,
+          "width": 72,
+          "height": 72,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 154,
+          "y": 296,
+          "width": 72,
+          "height": 72,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 226,
+          "y": 296,
+          "width": 72,
+          "height": 72,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 298,
+          "y": 296,
+          "width": 72,
+          "height": 72,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 22,
+          "y": 376,
+          "width": 46,
+          "height": 38,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 68,
+          "y": 376,
+          "width": 46,
+          "height": 38,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 114,
+          "y": 376,
+          "width": 46,
+          "height": 38,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 266,
+          "y": 376,
+          "width": 46,
+          "height": 38,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 312,
+          "y": 376,
+          "width": 46,
+          "height": 38,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 28,
+          "y": 428,
+          "width": 324,
+          "height": 142
+        }
+      ]
+    }
+  }
+}

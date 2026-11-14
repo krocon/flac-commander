@@ -1,0 +1,303 @@
+{
+  "formatVersion": 1,
+  "id": "io.github.krocon.silver",
+  "name": "Silver",
+  "version": "1.0.0",
+  "author": "FLAC Commander",
+  "description": "A portable tape machine: a silver front, two smoked reels, a badge and knurled knobs.",
+  "keywords": [
+    "reel",
+    "silver",
+    "light",
+    "portable",
+    "smoked",
+    "skeuomorphic"
+  ],
+  "preview": "preview.webp",
+  "theme": {
+    "background": "#d3d4d1",
+    "surface": "#ecece9",
+    "surfaceRaised": "#ffffff",
+    "foreground": "#1e1f1e",
+    "muted": "#4d4f4c",
+    "accent": "#8f1f17",
+    "accentContrast": "#ffffff",
+    "border": "#858783",
+    "ok": "#0b5a2b",
+    "danger": "#8f1f17",
+    "focus": "#1f5fbf",
+    "fontFamily": "\"Gill Sans\", \"Gill Sans MT\", \"Helvetica Neue\", sans-serif",
+    "fontMono": "\"Gill Sans\", \"Gill Sans MT\", \"Helvetica Neue\", sans-serif",
+    "radius": 2
+  },
+  "windows": {
+    "player": {
+      "layout": "absolute",
+      "width": 380,
+      "height": 572,
+      "background": "assets/background.png",
+      "collapsedHeight": 404,
+      "resize": {
+        "stretchY": 483
+      },
+      "components": [
+        {
+          "type": "pack",
+          "x": 36,
+          "y": 24,
+          "width": 136,
+          "height": 136,
+          "from": 136,
+          "to": 62,
+          "states": {
+            "normal": "assets/tape-left.png"
+          }
+        },
+        {
+          "type": "pack",
+          "x": 208,
+          "y": 24,
+          "width": 136,
+          "height": 136,
+          "from": 62,
+          "to": 136,
+          "states": {
+            "normal": "assets/tape-right.png"
+          }
+        },
+        {
+          "type": "spinner",
+          "x": 29,
+          "y": 17,
+          "width": 150,
+          "height": 150,
+          "period": 3000,
+          "states": {
+            "normal": "assets/reel-left.png"
+          }
+        },
+        {
+          "type": "spinner",
+          "x": 201,
+          "y": 17,
+          "width": 150,
+          "height": 150,
+          "period": 3000,
+          "states": {
+            "normal": "assets/reel-right.png"
+          }
+        },
+        {
+          "type": "text",
+          "source": "track.title",
+          "x": 34,
+          "y": 186,
+          "width": 312,
+          "height": 22,
+          "fontSize": 16,
+          "align": "center",
+          "color": "#1e1f1e"
+        },
+        {
+          "type": "text",
+          "source": "track.artist",
+          "x": 34,
+          "y": 208,
+          "width": 312,
+          "height": 16,
+          "fontSize": 12,
+          "align": "center",
+          "color": "#8f1f17"
+        },
+        {
+          "type": "time",
+          "source": "position",
+          "x": 34,
+          "y": 232,
+          "width": 80,
+          "height": 14,
+          "fontSize": 11,
+          "color": "#4d4f4c"
+        },
+        {
+          "type": "text",
+          "source": "player.status",
+          "x": 120,
+          "y": 232,
+          "width": 140,
+          "height": 14,
+          "fontSize": 10,
+          "align": "center",
+          "color": "#4d4f4c"
+        },
+        {
+          "type": "time",
+          "source": "duration",
+          "x": 266,
+          "y": 232,
+          "width": 80,
+          "height": 14,
+          "fontSize": 11,
+          "align": "right",
+          "color": "#4d4f4c"
+        },
+        {
+          "type": "seekbar",
+          "x": 24,
+          "y": 257,
+          "width": 332,
+          "height": 8
+        },
+        {
+          "type": "volume",
+          "x": 168,
+          "y": 372,
+          "width": 90,
+          "height": 8
+        },
+        {
+          "type": "button",
+          "action": "player.open",
+          "x": 52,
+          "y": 286,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/open.png",
+            "hover": "assets/open-hover.png",
+            "pressed": "assets/open-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.previous",
+          "x": 104,
+          "y": 286,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/previous.png",
+            "hover": "assets/previous-hover.png",
+            "pressed": "assets/previous-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.togglePlay",
+          "x": 156,
+          "y": 278,
+          "width": 68,
+          "height": 68,
+          "states": {
+            "normal": "assets/play.png",
+            "hover": "assets/play-hover.png",
+            "pressed": "assets/play-pressed.png",
+            "active": "assets/play-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.next",
+          "x": 224,
+          "y": 286,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/next.png",
+            "hover": "assets/next-hover.png",
+            "pressed": "assets/next-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.stop",
+          "x": 276,
+          "y": 286,
+          "width": 52,
+          "height": 52,
+          "states": {
+            "normal": "assets/stop.png",
+            "hover": "assets/stop-hover.png",
+            "pressed": "assets/stop-pressed.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.repeat",
+          "x": 22,
+          "y": 354,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/repeat.png",
+            "hover": "assets/repeat-hover.png",
+            "pressed": "assets/repeat-pressed.png",
+            "active": "assets/repeat-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "player.shuffle",
+          "x": 66,
+          "y": 354,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/shuffle.png",
+            "hover": "assets/shuffle-hover.png",
+            "pressed": "assets/shuffle-pressed.png",
+            "active": "assets/shuffle-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "window.equalizer",
+          "x": 110,
+          "y": 354,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/equalizer.png",
+            "hover": "assets/equalizer-hover.png",
+            "pressed": "assets/equalizer-pressed.png",
+            "active": "assets/equalizer-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.playlist",
+          "x": 270,
+          "y": 354,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/playlist.png",
+            "hover": "assets/playlist-hover.png",
+            "pressed": "assets/playlist-pressed.png",
+            "active": "assets/playlist-active.png"
+          }
+        },
+        {
+          "type": "button",
+          "action": "app.skins",
+          "x": 314,
+          "y": 354,
+          "width": 44,
+          "height": 44,
+          "states": {
+            "normal": "assets/skins.png",
+            "hover": "assets/skins-hover.png",
+            "pressed": "assets/skins-pressed.png"
+          }
+        },
+        {
+          "type": "playlist",
+          "x": 28,
+          "y": 412,
+          "width": 324,
+          "height": 142
+        }
+      ]
+    }
+  }
+}

@@ -9,6 +9,9 @@ repository.workspace = true
 
 [dependencies]
 cpal = "0.18.2"
+# Cover thumbnails for the library (docs/decisions/0011): decoders for exactly the three
+# picture formats a cover may have, nothing else of the crate.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 # Tags (title, artist, album) of all supported formats.
 lofty = "0.25.5"
 log.workspace = true

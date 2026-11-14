@@ -5,7 +5,16 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "A soft, dark turntable: a record under the needle and controls pressed out of the surface.",
-  "preview": "preview.png",
+  "keywords": [
+    "turntable",
+    "record",
+    "vinyl",
+    "dark",
+    "soft",
+    "neumorphic",
+    "landscape"
+  ],
+  "preview": "preview.webp",
   "theme": {
     "background": "#23262b",
     "surface": "#1c1f23",
@@ -28,6 +37,9 @@
       "width": 640,
       "height": 400,
       "background": "assets/background.png",
+      "resize": {
+        "stretchY": 340
+      },
       "components": [
         {
           "type": "spinner",
@@ -36,8 +48,19 @@
           "width": 96,
           "height": 96,
           "period": 1800,
+          "source": "track.cover",
           "states": {
             "normal": "assets/label.png"
+          }
+        },
+        {
+          "type": "image",
+          "x": 153,
+          "y": 175,
+          "width": 14,
+          "height": 14,
+          "states": {
+            "normal": "assets/spindle.png"
           }
         },
         {

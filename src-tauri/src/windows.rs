@@ -50,6 +50,14 @@ pub const SECONDARY: &[Secondary] = &[
         min_size: (420.0, 360.0),
         restored: false,
     },
+    // the library: a grid of covers wants room
+    Secondary {
+        label: "library",
+        title: "Library – FLAC Commander",
+        size: (1000.0, 720.0),
+        min_size: (420.0, 360.0),
+        restored: true,
+    },
 ];
 
 fn secondary(label: &str) -> Option<&'static Secondary> {
@@ -249,6 +257,7 @@ mod tests {
         assert!(secondary("playlist").is_some());
         assert!(secondary("equalizer").is_some());
         assert!(secondary("skins").is_some_and(|s| !s.restored));
+        assert!(secondary("library").is_some_and(|s| s.restored));
         assert!(secondary("main").is_none());
         assert!(secondary("../etc").is_none());
         for spec in SECONDARY {

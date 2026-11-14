@@ -5,7 +5,15 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "A cassette on dark brushed metal, ridged silver keys and an orange stripe.",
-  "preview": "preview.png",
+  "keywords": [
+    "cassette",
+    "deck",
+    "metal",
+    "dark",
+    "orange",
+    "skeuomorphic"
+  ],
+  "preview": "preview.webp",
   "theme": {
     "background": "#2b2c2e",
     "surface": "#18191a",
@@ -28,6 +36,10 @@
       "width": 380,
       "height": 600,
       "background": "assets/background.png",
+      "collapsedHeight": 390,
+      "resize": {
+        "stretchY": 490
+      },
       "components": [
         {
           "type": "spinner",

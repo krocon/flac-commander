@@ -9,6 +9,8 @@ pub mod events;
 pub mod windows;
 
 use fc_core::audio::player::DefaultOutput;
+use fc_core::library::Library;
+use fc_core::library::thumbnail::CoverCache;
 use fc_core::session::{PlayAdded, Session, SessionConfig};
 use fc_core::skins::SkinLibrary;
 use std::sync::atomic::AtomicBool;
@@ -27,6 +29,14 @@ pub struct AppState {
     pub skins: Arc<Mutex<SkinLibrary>>,
     /// True while a test tone plays.
     pub tone_busy: Arc<AtomicBool>,
+    /// The main window does not show the track list: its skin may be shorter then.
+    pub list_hidden: AtomicBool,
+    /// The music library: the chosen folders and the index of what is in them.
+    pub library: Library,
+    /// Small cover pictures for the library's grid.
+    pub covers: Arc<CoverCache>,
+    /// The threads that make them.
+    pub cover_pool: commands::library::CoverPool,
 }
 
 const LOG_FILE: &str = "flac-commander";
@@ -112,6 +122,41 @@ pub fn run() {
                     .unwrap_or_default(),
             }
         })
+        // the cover of the track that is loaded right now, and of nothing else
+        .register_uri_scheme_protocol("cover", |context, _request| {
+            use tauri::http::{Response, StatusCode};
+            let cover = context
+                .app_handle()
+                .try_state::<AppState>()
+                .and_then(|state| state.session.player().state().track)
+                .and_then(|track| fc_core::metadata::read_cover(&track.path));
+            match cover {
+                Some((bytes, kind)) => Response::builder()
+                    .status(StatusCode::OK)
+                    .header("Content-Type", kind)
+                    .header("X-Content-Type-Options", "nosniff")
+                    .header("Cache-Control", "no-store")
+                    .body(bytes)
+                    .unwrap_or_default(),
+                None => Response::builder()
+                    .status(StatusCode::NOT_FOUND)
+                    .body(Vec::new())
+                    .unwrap_or_default(),
+            }
+        })
+        // small covers for the library, of files and folders inside its roots and of nothing
+        // else; made off the main thread, a few at a time
+        .register_asynchronous_uri_scheme_protocol("libcover", |context, request, responder| {
+            match context.app_handle().try_state::<AppState>() {
+                Some(state) => commands::library::serve_cover(&state, &request, responder),
+                None => responder.respond(
+                    tauri::http::Response::builder()
+                        .status(tauri::http::StatusCode::SERVICE_UNAVAILABLE)
+                        .body(Vec::new())
+                        .unwrap_or_default(),
+                ),
+            }
+        })
         .setup(|app| {
             log_panics();
             let player_events = app.handle().clone();
@@ -167,11 +212,23 @@ pub fn run() {
             };
             let version = app.package_info().version.to_string();
             let skins = Arc::new(Mutex::new(SkinLibrary::load(skins_folder, &version)));
+            let library = Library::new(&session.library_roots());
+            let covers_folder = match app.path().app_cache_dir() {
+                Ok(folder) => Some(folder.join("covers")),
+                Err(e) => {
+                    log::warn!("no cache folder, covers are not kept: {e}");
+                    None
+                }
+            };
             let state = AppState {
+                library,
+                covers: Arc::new(CoverCache::new(covers_folder)),
+                cover_pool: commands::library::CoverPool::start(),
                 session,
                 skins,
                 spectrum_windows: Mutex::default(),
                 tone_busy: Arc::default(),
+                list_hidden: AtomicBool::new(false),
             };
             // the window of a fixed-size skin has its size before it shows anything
             if let (Ok(skin), Some(window)) =
@@ -219,6 +276,14 @@ pub fn run() {
             commands::skins::skins_remove,
             commands::skins::skins_export,
             commands::skins::skins_fit_viewport,
+            commands::skins::skins_set_list_hidden,
+            commands::library::library_state,
+            commands::library::library_add_root,
+            commands::library::library_remove_root,
+            commands::library::library_rescan,
+            commands::library::library_browse,
+            commands::library::library_search,
+            commands::library::library_play,
             commands::windows::windows_state,
             commands::windows::windows_toggle,
         ])

@@ -23,6 +23,7 @@ export class WindowsStore {
   readonly playlistDetached = computed(() => this.openState().includes('playlist'));
   readonly equalizerOpen = computed(() => this.openState().includes('equalizer'));
   readonly skinsOpen = computed(() => this.openState().includes('skins'));
+  readonly libraryOpen = computed(() => this.openState().includes('library'));
 
   readonly ready: Promise<void>;
 

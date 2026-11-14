@@ -93,18 +93,27 @@ h1 {
   padding-bottom: 3px;
 }
 
-/* a narrow window keeps title and buttons on one line and drops the version */
-@media (max-width: 540px) {
+/* a narrow window keeps the buttons on one line: it drops the version, then the arrows on the
+   buttons, then the title (the title bar has it too) */
+@media (max-width: 700px) {
   .version {
     display: none;
   }
 }
 
-@media (max-width: 440px) {
-  h1 {
-    font-size: 16px;
+@media (max-width: 619px) {
+  header button svg {
+    display: none;
   }
+}
 
+@media (max-width: 520px) {
+  h1 {
+    display: none;
+  }
+}
+
+@media (max-width: 440px) {
   header button {
     padding: 0 8px;
   }

@@ -5,7 +5,14 @@
   "version": "1.0.0",
   "author": "FLAC Commander",
   "description": "A pocket cassette player in orange and black, for music on the way.",
-  "preview": "preview.png",
+  "keywords": [
+    "cassette",
+    "portable",
+    "orange",
+    "eighties",
+    "dark"
+  ],
+  "preview": "preview.webp",
   "theme": {
     "background": "#1b1a19",
     "surface": "#121110",
@@ -28,6 +35,11 @@
       "width": 360,
       "height": 580,
       "background": "assets/background.png",
+      "titleBar": "#e9621a",
+      "collapsedHeight": 388,
+      "resize": {
+        "stretchY": 480
+      },
       "components": [
         {
           "type": "spinner",
